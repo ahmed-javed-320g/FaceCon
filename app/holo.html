@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FaceCon Hologram</title>
+<style>
+  html,body{margin:0;height:100%;background:#02060c;overflow:hidden;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#cfeffb}
+  #c{position:fixed;inset:0;width:100vw;height:100vh;display:block}
+  /* scanline + vignette overlay */
+  .fx{position:fixed;inset:0;pointer-events:none;z-index:3}
+  .scan{background:repeating-linear-gradient(to bottom,
+      rgba(54,227,255,0.05) 0px,rgba(54,227,255,0.05) 1px,transparent 2px,transparent 4px);
+    mix-blend-mode:screen;opacity:.5}
+  .vig{box-shadow:inset 0 0 220px 60px rgba(0,0,0,0.85)}
+  .bar{position:fixed;left:0;right:0;height:120px;z-index:3;pointer-events:none;
+    background:linear-gradient(to bottom,transparent,rgba(54,227,255,0.07),transparent);
+    animation:sweep 6s linear infinite}
+  @keyframes sweep{0%{top:-130px}100%{top:100%}}
+  .ui{position:fixed;z-index:4;pointer-events:none;text-shadow:0 0 12px rgba(54,227,255,.5)}
+  #title{top:28px;left:0;right:0;text-align:center}
+  #title h1{margin:0;font-size:22px;letter-spacing:3px;font-weight:600}
+  #title h1 b{color:#36e3ff}
+  #title p{margin:6px 0 0;font-size:12px;letter-spacing:2px;color:#6fb9d0}
+  #badge{position:fixed;top:24px;right:26px;z-index:4;font-size:11px;letter-spacing:1px;
+    color:#02060c;background:#ffcf6b;font-weight:700;padding:4px 9px;border-radius:5px}
+  #foot{bottom:30px;left:0;right:0;text-align:center}
+  #sid{font-size:13px;letter-spacing:3px;color:#8fd6e6}
+  #phase{font-size:12px;letter-spacing:2px;color:#4a8aa0;margin-top:3px;min-height:14px}
+  #chips{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .chip{display:flex;align-items:center;gap:6px;font-size:12px;letter-spacing:1px;color:#bfe9f4;
+    border:1px solid rgba(54,227,255,0.3);border-radius:20px;padding:4px 11px;background:rgba(10,30,45,0.5)}
+  .chip .sw{width:12px;height:12px;border-radius:3px;border:1px solid #0008}
+  #hint{position:fixed;bottom:8px;right:14px;z-index:4;font-size:10px;color:#2f5565;letter-spacing:1px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="fx scan"></div><div class="fx vig"></div><div class="bar"></div>
+<div id="badge">SYNTHETIC DATA</div>
+<div class="ui" id="title"><h1>Face<b>Con</b> · a face, predicted from DNA</h1>
+  <p>3D SHAPE (FaceCon) + EYE/HAIR/SKIN COLOUR (HIrisPlex-S)</p></div>
+<div class="ui" id="foot">
+  <div id="sid"></div><div id="phase"></div>
+  <div id="chips"></div>
+</div>
+<div id="hint">space: pause · click: next</div>
+
+<script src="three.min.js"></script>
+<script>
+function b64ToArray(o){const bin=atob(o.b64),len=bin.length,bytes=new Uint8Array(len);
+  for(let i=0;i<len;i++)bytes[i]=bin.charCodeAt(i);
+  return o.dtype==="float32"?new Float32Array(bytes.buffer):new Int32Array(bytes.buffer);}
+function hexRGB(h){h=h.replace('#','');if(h.length===8)h=h.slice(0,6);
+  return [parseInt(h.slice(0,2),16)/255,parseInt(h.slice(2,4),16)/255,parseInt(h.slice(4,6),16)/255];}
+
+let D,mean,faces,basis,K,V3,V,scalp,freck,mouth,eyeR,eyeL;
+function decode(beta,t){const out=new Float32Array(V3);out.set(mean);const s=t===undefined?1:t;
+  for(let k=0;k<K;k++){const bk=s*beta[k];if(!bk)continue;const off=k*V3;
+    for(let i=0;i<V3;i++)out[i]+=bk*basis[off+i];}return out;}
+
+function masks(){
+  const ys=[];for(let i=0;i<V;i++)ys.push(mean[i*3+1]);const sr=[...ys].sort((a,b)=>a-b);
+  const topY=sr[Math.floor(V*0.80)],range=sr[V-1]-sr[0];
+  const zs=[];for(let i=0;i<V;i++)zs.push(mean[i*3+2]);const zsr=[...zs].sort((a,b)=>a-b);
+  const zF=zsr[Math.floor(V*0.6)];
+  const rid=b64ToArray(D.region_id),nm=D.region_names;
+  const ci=nm.indexOf('cheeks'),ni=nm.indexOf('nose'),mi=nm.indexOf('mouth');
+  scalp=new Uint8Array(V);freck=new Uint8Array(V);mouth=new Uint8Array(V);
+  for(let i=0;i<V;i++){if(mean[i*3+1]>topY&&mean[i*3+2]<0.35*range)scalp[i]=1;
+    if((rid[i]===ci||rid[i]===ni)&&mean[i*3+2]>zF&&mean[i*3+1]>-0.05*range)freck[i]=1;
+    if(rid[i]===mi)mouth[i]=1;}
+  const lm=b64ToArray(D.landmarks);eyeR=[];eyeL=[];
+  for(let i=36;i<=41;i++)eyeR.push(lm[i]);for(let i=42;i<=47;i++)eyeL.push(lm[i]);
+}
+function colorsFor(app){
+  const col=new Float32Array(V3);const tr=k=>D.appearance_meta.traits.find(t=>t.key===k);
+  let skin=[0.85,0.72,0.62];
+  if(app.skin_tone!=null){const t=tr('skin_tone');skin=hexRGB(t.palette[t.classes[app.skin_tone]]);}
+  for(let i=0;i<V;i++){col[i*3]=skin[0];col[i*3+1]=skin[1];col[i*3+2]=skin[2];}
+  if(app.hair_colour!=null){const t=tr('hair_colour');const hc=hexRGB(t.palette[t.classes[app.hair_colour]]);
+    for(let i=0;i<V;i++)if(scalp[i]){col[i*3]=hc[0];col[i*3+1]=hc[1];col[i*3+2]=hc[2];}}
+  const lip=[Math.min(1,skin[0]*0.98+0.04),skin[1]*0.84,skin[2]*0.82];
+  for(let i=0;i<V;i++)if(mouth[i])for(let a=0;a<3;a++)col[i*3+a]=col[i*3+a]*0.78+lip[a]*0.22;
+  return col;
+}
+
+let renderer,scene,cam,grp,solid,wire,geomS,geomW,eyes=[];
+function init(){
+  const canvas=document.getElementById('c');
+  renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  scene=new THREE.Scene();
+  cam=new THREE.PerspectiveCamera(30,innerWidth/innerHeight,0.1,5000);
+  grp=new THREE.Group();scene.add(grp);
+  scene.add(new THREE.AmbientLight(0x224458,0.9));
+  const key=new THREE.DirectionalLight(0x9fe8ff,0.9);key.position.set(-0.4,0.7,1.2);scene.add(key);
+  const warm=new THREE.DirectionalLight(0xffe9d2,0.25);warm.position.set(0.6,-0.1,0.8);scene.add(warm);
+  // solid coloured face (materializes during colour phase)
+  geomS=new THREE.BufferGeometry();
+  geomS.setAttribute('position',new THREE.BufferAttribute(mean.slice(),3));
+  const c0=new Float32Array(V3);c0.fill(0.5);geomS.setAttribute('color',new THREE.BufferAttribute(c0,3));
+  geomS.setIndex(new THREE.BufferAttribute(new Uint32Array(faces),1));geomS.computeVertexNormals();
+  solid=new THREE.Mesh(geomS,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.8,
+    transparent:true,opacity:0}));grp.add(solid);
+  // glowing cyan wireframe (the hologram)
+  geomW=new THREE.BufferGeometry();
+  geomW.setAttribute('position',new THREE.BufferAttribute(mean.slice(),3));
+  geomW.setIndex(new THREE.BufferAttribute(new Uint32Array(faces),1));
+  wire=new THREE.Mesh(geomW,new THREE.MeshBasicMaterial({color:0x4fe9ff,wireframe:true,
+    transparent:true,opacity:0.0,blending:THREE.AdditiveBlending}));grp.add(wire);
+  // frame camera
+  geomS.computeBoundingBox();const bb=geomS.boundingBox,ctr=new THREE.Vector3();bb.getCenter(ctr);
+  grp.position.set(-ctr.x,-ctr.y,-ctr.z);
+  const sz=new THREE.Vector3();bb.getSize(sz);cam.position.set(0,0,Math.max(sz.x,sz.y)*2.2);cam.lookAt(0,0,0);
+  for(let e=0;e<2;e++){const g=new THREE.Group();
+    // unlit layered eye: off-white sclera · coloured iris · black pupil · glint.
+    // MeshBasic keeps the colours exact under the cyan holographic light.
+    const sc=new THREE.Mesh(new THREE.CircleGeometry(1.0,36),new THREE.MeshBasicMaterial({color:0xe8e3d6,transparent:true,opacity:0,depthWrite:false}));
+    const ir=new THREE.Mesh(new THREE.CircleGeometry(0.64,36),new THREE.MeshBasicMaterial({color:0x5a3b22,transparent:true,opacity:0,depthWrite:false}));ir.position.z=0.02;
+    const li=new THREE.Mesh(new THREE.RingGeometry(0.62,0.66,36),new THREE.MeshBasicMaterial({color:0x201509,transparent:true,opacity:0,depthWrite:false}));li.position.z=0.03;
+    const pu=new THREE.Mesh(new THREE.CircleGeometry(0.22,28),new THREE.MeshBasicMaterial({color:0x050505,transparent:true,opacity:0,depthWrite:false}));pu.position.z=0.04;
+    const gl=new THREE.Mesh(new THREE.CircleGeometry(0.07,14),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthWrite:false}));gl.position.set(0.11,0.12,0.06);
+    g.add(sc,ir,li,pu,gl);g.userData={sc,ir,li,pu,gl};grp.add(g);eyes.push(g);}
+  addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);
+    cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();});
+}
+function setVerts(g,v){g.attributes.position.array.set(v);g.attributes.position.needsUpdate=true;g.computeVertexNormals&&g.computeVertexNormals();}
+function placeEyes(verts,eyeRGB,op){const groups=[eyeR,eyeL];
+  for(let e=0;e<2;e++){const gg=eyes[e],grp3=groups[e];let cx=0,cy=0,cz=0;
+    for(const i of grp3){cx+=verts[i*3];cy+=verts[i*3+1];cz+=verts[i*3+2];}const n=grp3.length;cx/=n;cy/=n;cz/=n;
+    const a=grp3[0],b=grp3[3];const w=Math.hypot(verts[a*3]-verts[b*3],verts[a*3+1]-verts[b*3+1],verts[a*3+2]-verts[b*3+2]);
+    const R=Math.max(w*0.26,0.001);gg.position.set(cx,cy,cz+w*0.15);gg.scale.setScalar(R);
+    const u=gg.userData;u.ir.material.color.setRGB(eyeRGB[0],eyeRGB[1],eyeRGB[2]);
+    u.sc.material.opacity=op;u.ir.material.opacity=op;u.li.material.opacity=op*0.8;
+    u.pu.material.opacity=op;u.gl.material.opacity=op*0.85;}
+}
+
+// ---- animation state machine ----
+let subj=0,phase=0,t0=0,paused=false,predApp=null,predBeta=null,curColors=null;
+const PH=[["materializing shape",1500],["resolving appearance",1300],["hold",3200],["dissolve",700]];
+function appFor(s){const ak=(D.appearance_meta.shape_to_app['mlp_snp_demo'])||'snp_demo';
+  const p=s.appearance.pred[ak],o={};for(const k in p)o[k]=p[k][0];return o;}
+function startSubject(i){subj=((i%D.subjects.length)+D.subjects.length)%D.subjects.length;
+  const s=D.subjects[subj];predBeta=b64ToArray(s.beta_pred['mlp_snp_demo']||s.beta_pred[Object.keys(s.beta_pred)[0]]);
+  predApp=appFor(s);curColors=colorsFor(predApp);geomS.attributes.color.array.set(curColors);geomS.attributes.color.needsUpdate=true;
+  document.getElementById('sid').textContent=s.id+'  ·  ancestry '+s.ancestry;
+  buildChips(s);phase=0;t0=performance.now();}
+function buildChips(s){const host=document.getElementById('chips');host.innerHTML='';
+  const order=['eye_colour','hair_colour','skin_tone'];
+  const label={eye_colour:'eye',hair_colour:'hair',skin_tone:'skin'};
+  order.forEach(k=>{const t=D.appearance_meta.traits.find(x=>x.key===k);const cls=predApp[k];
+    const hex=t.palette&&t.palette[t.classes[cls]];const sw=hex&&hex!=='#00000000'?`<span class="sw" style="background:${hex.slice(0,7)}"></span>`:'';
+    const d=document.createElement('div');d.className='chip';d.innerHTML=sw+label[k]+': '+t.classes[cls].replace(/_/g,' ');host.appendChild(d);});
+}
+function frame(now){requestAnimationFrame(frame);
+  if(!paused)grp.rotation.y=Math.sin(now*0.0002)*0.5;
+  const [label,dur]=PH[phase];const e=now-t0;const p=Math.min(1,e/dur);
+  document.getElementById('phase').textContent=label.toUpperCase();
+  let shapeT=1,wireOp=0.9,solidOp=0,eyeOp=0;
+  if(phase===0){ // glowing wireframe builds the shape
+    shapeT=p;wireOp=0.35+0.6*p;solidOp=0;eyeOp=0;}
+  else if(phase===1){ // colour materializes while the wireframe fades away
+    shapeT=1;wireOp=0.95-0.90*p;solidOp=p;eyeOp=p;}
+  else if(phase===2){ // hold: clean coloured face, only a faint holographic trace
+    shapeT=1;wireOp=0.05;solidOp=1;eyeOp=1;}
+  else if(phase===3){ // dissolve out, a brief re-scan, then next subject
+    shapeT=1;solidOp=1-p;eyeOp=1-p;wireOp=0.05+0.45*Math.sin(p*Math.PI);}
+  const v=decode(predBeta,shapeT);setVerts(geomS,v);setVerts(geomW,v);
+  wire.material.opacity=wireOp;solid.material.opacity=solidOp;
+  const tr=k=>D.appearance_meta.traits.find(t=>t.key===k);
+  const eyeC=predApp.eye_colour!=null?hexRGB(tr('eye_colour').palette[tr('eye_colour').classes[predApp.eye_colour]]):[0.2,0.2,0.2];
+  placeEyes(v,eyeC,eyeOp);
+  renderer.render(scene,cam);
+  if(!paused&&e>=dur){ if(phase<PH.length-1){phase++;t0=now;} else {startSubject(subj+1);} }
+}
+addEventListener('keydown',e=>{if(e.code==='Space'){paused=!paused;e.preventDefault();}});
+addEventListener('click',()=>startSubject(subj+1));
+
+fetch('data/web_data.json').then(r=>r.json()).then(d=>{D=d;
+  mean=b64ToArray(d.mean);faces=b64ToArray(d.faces);basis=b64ToArray(d.basis);
+  K=d.n_shape_dims;V3=mean.length;V=V3/3;masks();init();startSubject(0);requestAnimationFrame(frame);
+}).catch(e=>{document.getElementById('phase').textContent='load error: '+e;});
+</script>
+</body>
+</html>

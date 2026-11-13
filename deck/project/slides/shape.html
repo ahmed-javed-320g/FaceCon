@@ -1,0 +1,27 @@
+<section id="shape" data-section="Prototype results and honest evaluation" style="background:#0c1a26;color:#e8eef7;font-family:'IBM Plex Sans', Arial, sans-serif;padding:96px 128px 160px;display:flex;flex-direction:column;gap:26px">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:24px;letter-spacing:3px;color:#36e3ff;text-transform:uppercase">Prototype · shape results</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:58px;font-weight:600;line-height:1.08">How well does genotype predict 3D shape?</h2>
+<div style="display:flex;gap:44px;align-items:center">
+<div style="flex:1.18;display:flex;flex-direction:column;gap:20px">
+<table style="font-family:'IBM Plex Sans', Arial, sans-serif;font-size:26px;color:#cdddee;border:1px solid #1d3246">
+<tr style="background:#102232"><th style="width:46%;text-align:left;color:#e8eef7">Model</th><th style="width:27%;color:#e8eef7">Shape R²</th><th style="width:27%;color:#e8eef7">Mesh error</th></tr>
+<tr><td>Mean face (floor)</td><td style="text-align:center">−0.00</td><td style="text-align:center">3.5 mm</td></tr>
+<tr><td>Demographics only</td><td style="text-align:center">0.32</td><td style="text-align:center">2.9 mm</td></tr>
+<tr><td>Ridge (SNPs)</td><td style="text-align:center">0.21</td><td style="text-align:center">3.2 mm</td></tr>
+<tr><td>MLP (SNPs)</td><td style="text-align:center">0.17</td><td style="text-align:center">3.2 mm</td></tr>
+<tr><td>MLP (SNPs + demographics)</td><td style="text-align:center">0.29</td><td style="text-align:center">2.9 mm</td></tr>
+</table>
+<p style="font-size:25px;color:#9fb3c9;line-height:1.4">Demographics are a strong baseline; SNP models are clearly above the mean-face floor. Numbers are on synthetic data and in a nominal mm scale.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:23px;color:#9fb3c9;text-transform:uppercase;letter-spacing:2px">Predicted shape vs held-out truth</p>
+<div style="display:flex;gap:18px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px"><img src="/_blob/5d68ab58037e4de572754ad12d21a311" alt="Predicted 3D face mesh" style="width:100%;height:auto;border:1px solid #1d3246;border-radius:12px;background:#060d16"><p style="font-size:22px;color:#7cf6c0;text-align:center">Predicted</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px"><img src="/_blob/bb7be0a22a71bea112ddd98fca3fddd5" alt="Ground-truth 3D face mesh" style="width:100%;height:auto;border:1px solid #1d3246;border-radius:12px;background:#060d16"><p style="font-size:22px;color:#9fb3c9;text-align:center">Ground truth</p></div>
+</div>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:22px;color:#5f7489">FaceCon · F26-082</p>
+<p style="position:absolute;right:128px;bottom:64px;font-size:22px;color:#5f7489">9</p>
+<aside>Shape results on the synthetic test set. The mean-face floor sits at zero R-squared and 3.5 millimetres mesh error — every real model must beat it. Demographics alone are a strong baseline at 0.32. The SNP models land clearly above the floor, and the combined SNP-plus-demographics MLP reaches 0.29 with 2.9 millimetre error. On the right you see a predicted face beside the held-out ground truth. These are synthetic numbers in a nominal millimetre scale — the point is the ladder behaves correctly and the harness measures it cleanly.</aside>
+</section>

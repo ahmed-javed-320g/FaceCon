@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Regenerable datasets (rebuild with scripts/generate_matched.py).
+# outputs/real_match/ IS tracked: it is the dataset behind the reported results.
+outputs/synthetic/
+outputs/_test_synthetic/
+outputs/large/
+*.b64
+
+# Result files ARE tracked on purpose (gpu/controls.json, gpu/report_back.json,
+# gpu/results_*.json): they are the evidence behind the numbers in the report.
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/

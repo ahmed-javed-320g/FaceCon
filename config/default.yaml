@@ -1,0 +1,77 @@
+# FaceCon prototype configuration (synthetic mode)
+# Every stochastic step derives from `seed` so runs are reproducible.
+seed: 20261016
+
+data:
+  mode: synthetic            # swap point: "synthetic" | "real"
+  out_dir: outputs/synthetic
+  n_subjects: 5000
+  n_snps: 5000
+  n_causal_snps: 150          # subset of SNPs that genuinely drive the face
+  ancestry:
+    n_groups: 3
+    # fraction of SNPs whose allele frequency diverges between groups
+    structured_fraction: 0.25
+  demographics:
+    age_min: 18
+    age_max: 75
+  maf_min: 0.05              # minor-allele-frequency floor for drawn SNPs
+  maf_max: 0.5
+
+# How the synthetic face is composed from signal sources.
+# These three weights are variance shares and must sum to ~1.0.
+face_variance:
+  genetic: 0.20              # honest, modest genetic share
+  demographic: 0.35
+  noise: 0.45
+
+face_model:
+  source: ict                # "ict" = realistic ICT-FaceKit model; "synthetic" = procedural fallback
+  n_shape_dims: 50           # length of the shape vector; for ICT this is the identity-mode count
+  identity_scale: 9.5        # amplify identity variation so subjects are visibly distinct (realistic range)
+  mesh_resolution: 48        # (synthetic fallback only) UV-grid resolution
+  regions:                   # vertex groups for region-wise error
+    - nose
+    - jaw
+    - mouth
+    - eyes
+    - cheeks
+    - forehead
+
+qc:
+  snp_missingness_max: 0.05
+  subject_missingness_max: 0.10
+  maf_min: 0.01
+  standardize: true
+  n_pcs: 10                  # ancestry principal components as covariates
+
+split:
+  train: 0.7
+  val: 0.15
+  test: 0.15
+
+models:
+  # core five for mid-term; advanced ones slot into the same registry later
+  enabled:
+    - mean_face
+    - demographics
+    - ridge_snp
+    - mlp_snp
+    - mlp_snp_demo
+  ridge:
+    alpha: 10.0
+  mlp:
+    hidden_layers: [256, 128]
+    max_iter: 400
+    alpha: 0.001
+    snp_pca: 150             # reduce SNPs to this many PCs before the MLP (P >> N)
+
+eval:
+  landmark_count: 12
+  retrieval_gallery: 50
+
+appearance:
+  enable: true
+  n_panel_snps: 300          # dedicated pigmentation/appearance SNP panel
+  structured_fraction: 0.45  # ancestry structure in the panel (pigmentation is ancestry-linked)
+  # per-trait definitions and calibration live in src/appearance/traits.py

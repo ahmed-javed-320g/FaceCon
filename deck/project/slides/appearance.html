@@ -1,0 +1,28 @@
+<section id="appearance" style="background:#0a1119;color:#e8eef7;font-family:'IBM Plex Sans', Arial, sans-serif;padding:76px 128px 132px;display:flex;flex-direction:column;gap:20px">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:24px;letter-spacing:3px;color:#36e3ff;text-transform:uppercase">Prototype · appearance</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:54px;font-weight:600;line-height:1.08">Appearance: we integrate HIrisPlex-S, not retrain it</h2>
+<div style="display:flex;gap:40px;align-items:stretch">
+<div style="flex:1.7;display:flex;flex-direction:column;gap:16px">
+<p style="font-size:25px;color:#9fb3c9;line-height:1.35">The same dbGaP genotype drives two branches. FaceCon trains the facial-shape models; eye, hair, and skin colour come from an established external forensic method.</p>
+<div style="background:#0e2018;border:1px solid #1f4a39;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:8px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:26px;color:#7cf6c0;margin:0">Shape branch · FaceCon trains</h3>
+<p style="font-size:23px;color:#cdddee;line-height:1.35">genotype → facial SNP selection → FaceCon models → FLAME parameters → 3D mesh</p>
+</div>
+<div style="background:#0a1f28;border:1px solid #1f4a4a;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:8px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:26px;color:#36e3ff;margin:0">Appearance branch · integration (not trained)</h3>
+<p style="font-size:23px;color:#cdddee;line-height:1.35">same genotype → HIrisPlex-S markers → HIrisPlex-S predictor → eye · hair · skin colour</p>
+</div>
+<p style="font-size:22px;color:#9fb3c9;line-height:1.35">HIrisPlex-S is the forensic standard, reused as published — no appearance model to train, and no accuracy claimed on 3DFN, which has no colour labels.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px">
+<div style="flex:1;background:#060d16;border:1px solid #1d3246;border-radius:14px;padding:12px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+<div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 40%, rgba(54,227,255,0.12), transparent 60%)"></div>
+<img src="/_blob/786b4c3f1dd50cf395bcde2eb556cda2" alt="Predicted face with skin, eye and hair colour rendered on it" style="max-width:100%;max-height:440px;height:auto;object-fit:contain;position:relative;border-radius:8px">
+</div>
+<p style="font-size:22px;color:#9fb3c9;text-align:center;line-height:1.3">Skin &amp; eye colour rendered on the face; hair colour reported</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:22px;color:#5f7489">FaceCon · F26-082</p>
+<p style="position:absolute;right:128px;bottom:64px;font-size:22px;color:#5f7489">10</p>
+<aside>Appearance, and this is where our design is deliberately honest. The key point: FaceCon does not train a new model for colour. The same DNA feeds two branches. The shape branch is ours — genotype through facial SNP selection and the FaceCon models to FLAME parameters and a 3D mesh. The appearance branch is an integration: we take the same genotype, pull out the HIrisPlex-S marker SNPs, and hand them to HIrisPlex-S, the established forensic standard for eye, hair, and skin colour, which returns those three colours for the visualization. On the right you see skin and eye colour rendered on the predicted face. Because HIrisPlex-S is already validated and published, we report it as-is and we do not invent an accuracy on our own data — the 3DFN resource has no eye, hair, or skin colour labels to test against. We also keep two colour modes separate: the pigmentation colours on the face, and the green-to-red heatmap that shows reconstruction error by region.</aside>
+</section>

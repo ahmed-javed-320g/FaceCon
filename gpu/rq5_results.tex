@@ -1,0 +1,148 @@
+% ---------------------------------------------------------------------------
+% RQ5 results section -- FaceCon FYP (F26-082).  \input{rq5_results} or paste.
+% Source of every number: gpu/report_back.json and gpu/controls.json
+% (RTX A4000 run of `python -m gpu.run_all` and `python -m gpu.controls --power`).
+% ALL DATA ARE SIMULATED. Nothing here is a finding about real faces.
+% Replaces the earlier draft, whose conclusions were a feature-pipeline artefact.
+% ---------------------------------------------------------------------------
+
+\subsection{RQ5: Do more complex models beat simple baselines?}
+\label{sec:rq5}
+
+\paragraph{Scope.}
+All results in this section come from simulated data in which a known share of
+facial-shape variance (20\,\% genetic, 35\,\% demographic, 45\,\% noise) was
+planted. They test whether the pipeline and models behave correctly; they say
+nothing about how well genotype predicts real faces.
+
+\paragraph{Protocol.}
+The matched cohort has $N=3{,}118$ subjects (the size of the real analysis
+sample), a 5{,}000-SNP panel and a 50-dimensional shape target, split
+$2{,}182/467/469$ at subject level. All scaling, feature selection and model
+fitting use the training split only; each deep model is scored at its
+best-validation checkpoint. We report mean test $R^2$ over the 50 shape
+dimensions. The $\pm$ values are standard deviations over three training seeds
+on one dataset and one split, so they capture initialisation noise only.
+Bootstrap intervals on this test set are roughly $\pm0.01$, and differences
+smaller than that should not be read as real.
+
+\paragraph{Feature representation mattered more than architecture.}
+Our first experiments gave every model 256 SNP principal components. A control
+with ground-truth causal SNPs showed that this step keeps only $+0.004$ of the
+$+0.173$ $R^2$ that the SNPs can add beyond covariates and ancestry components.
+We therefore added a second representation: the 256 SNPs most associated with
+shape on the training split after removing demographic effects. Table
+\ref{tab:rq5} reports both.
+
+\begin{table}[t]
+\centering
+\caption{Matched synthetic cohort ($N=3{,}118$): test $R^2$, mean $\pm$ s.d.\
+over three training seeds. The demographic baseline is $0.317$ in both columns.}
+\label{tab:rq5}
+\begin{tabular}{lrr}
+\toprule
+Model (with demographics) & SNP principal components & Screened SNPs \\
+\midrule
+Demographics only (baseline) & $0.317$ & $0.317$ \\
+MLP                          & $0.274\pm0.001$ & $\mathbf{0.396\pm0.002}$ \\
+Contrastive encoder          & $0.220\pm0.004$ & $0.364\pm0.001$ \\
+Transformer SNP encoder      & $0.311\pm0.005$ & $0.319\pm0.002$ \\
+Conditional diffusion        & $-0.368\pm0.006$ & $0.081\pm0.006$ \\
+\midrule
+\multicolumn{2}{l}{Linear reference: covariates + ancestry components} & $0.315\pm0.003$ \\
+\multicolumn{2}{l}{Linear reference: + screened SNPs, ridge (tuned)}   & $0.488\pm0.004$ \\
+\multicolumn{2}{l}{Oracle: + true causal SNPs}                         & $0.488\pm0.005$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+With principal components no deep model exceeds the demographic baseline. With
+screened SNPs the MLP ($0.396$) and the contrastive encoder ($0.364$) both
+exceed it clearly, and mean mesh error for the MLP falls from $3.00$\,mm
+(demographics) to $2.79$\,mm. The Transformer stays at the baseline ($0.319$)
+and the diffusion decoder remains far below it.
+
+\paragraph{Answer to RQ5.}
+On this simulated task, complexity did not pay. The best deep model recovers
+$+0.079$ over demographics, less than half of the $+0.173$ available, while a
+tuned ridge regression on screened SNPs reaches $0.488$ and matches the oracle.
+The linear reference rows come from a separate script with five dataset seeds
+and a tuned number of SNPs, so the comparison with the deep models is indicative
+rather than exact; the gap ($0.09$) is nevertheless far larger than any
+plausible protocol difference. The planted effects are linear and additive, so
+a linear model is the correctly specified one here. This result therefore shows
+that the deep models are less data-efficient on a linear signal, not that deep
+models are worse in general.
+
+\subsection{Controls}
+\label{sec:rq5-controls}
+
+\begin{table}[t]
+\centering
+\caption{Controls on the matched cohort. Positive control: planted signal must
+be found. Negative controls: no signal must be reported when none exists.}
+\label{tab:rq5-controls}
+\begin{tabular}{lr}
+\toprule
+Condition & $\Delta R^2$ from adding SNPs \\
+\midrule
+Screened SNPs, planted share 0.20 (5 seeds)   & $+0.173$ (per-seed 95\,\% CIs within $[+0.159,+0.188]$) \\
+Genotypes permuted across subjects (5 seeds)  & $-0.001$ \\
+Planted genetic share set to zero (3 seeds)   & $-0.001$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The pipeline finds the signal when it is planted and reports none when the
+genotype--face pairing is broken or the genetic share is zero (Table
+\ref{tab:rq5-controls}). The permutation control was also run on the deep
+models: the Transformer scored $0.316$, the MLP $0.252$ and the contrastive
+encoder $0.247$, against $0.317$ for demographics. Two points follow. First, no
+model gains from uninformative SNPs, which rules out leakage. Second, the MLP
+and contrastive encoder lose about $0.07$ when given uninformative SNPs, so on
+data with weak genetic signal they could fall below the demographic baseline.
+The Transformer's permuted score equals its unpermuted score, which indicates
+that at this sample size it is not using the SNPs at all.
+
+\subsection{Effect of sample size}
+\label{sec:rq5-scaling}
+
+To ask whether more subjects would help, we generated a separate dataset of
+$N=10{,}000$ with the same settings and trained on nested subsets, keeping one
+fixed test set of $1{,}500$ (Table \ref{tab:rq5-scaling}). This is a scaling
+experiment only: the real cohort has $3{,}118$ subjects, so results beyond the
+first row describe a cohort we will not have.
+
+\begin{table}[t]
+\centering
+\caption{Learning curve on the $N=10{,}000$ scaling dataset, screened SNPs,
+test $R^2$ (mean $\pm$ s.d.\ over three training seeds).}
+\label{tab:rq5-scaling}
+\begin{tabular}{rrrrrr}
+\toprule
+Train $N$ & Demographics & MLP & Contrastive & Transformer & Diffusion \\
+\midrule
+$2{,}182$ & $0.312$ & $0.389\pm0.001$ & $0.349\pm0.002$ & $0.310\pm0.001$ & $0.058\pm0.003$ \\
+$4{,}000$ & $0.313$ & $0.417\pm0.001$ & $0.392\pm0.001$ & $0.316\pm0.002$ & $0.049\pm0.012$ \\
+$7{,}000$ & $0.314$ & $0.435\pm0.001$ & $0.428\pm0.000$ & $0.338\pm0.003$ & $0.028\pm0.011$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The demographic baseline is flat, as expected for a five-parameter linear model.
+The MLP gains $+0.046$ and the contrastive encoder $+0.079$ from roughly three
+times the data, and the Transformer begins to exceed the baseline only at
+$7{,}000$. The diffusion decoder does not improve; we have not diagnosed why and
+report it as an open negative result. A companion power grid with the linear
+screen gives the same picture: at $N=3{,}118$ the SNPs add $+0.070$ when the
+planted genetic share is 0.10 and $+0.177$ when it is 0.20, and nothing when it
+is zero.
+
+\paragraph{Limits.}
+The simulation is easier than real data in ways that favour detection: 5{,}000
+unlinked SNPs instead of roughly $10^6$ correlated ones, 150 causal SNPs that
+each affect every shape dimension, and three cleanly separated ancestry groups.
+The power figures are therefore an optimistic upper bound. What this section
+establishes is that the pipeline is correct, leak-free and sensitive to planted
+signal, and that the model comparison is ready to be repeated unchanged on real
+data.

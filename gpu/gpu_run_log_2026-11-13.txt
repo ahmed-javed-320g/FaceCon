@@ -1,0 +1,119 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+PS D:\FaceCon\facecon_gpu_package\facecon_gpu>    python scripts/generate_matched.py config/real_match_large.yaml
+OK: N=10000  genotypes=(10000, 5000)  demo=(10000, 8) ['sex', 'age_z', 'age2_z', 'height_z', 'weight_z', 'ancestry_0', 'ancestry_1', 'ancestry_2']
+    beta=(10000, 50)  anthro=(10000, 20)  hps_markers=(10000, 41)
+    ancestry counts=[3391, 3304, 3305]
+    splits train/val/test=7000/1500/1500
+    measure means (mm):
+      intercanthal_width         32.01  (sd  2.62)
+      biocular_width             77.44  (sd  3.84)
+      palpebral_fissure_r        23.38  (sd  1.36)
+      palpebral_fissure_l        23.38  (sd  1.37)
+      nasal_width                21.77  (sd  1.78)
+      nasal_height               43.59  (sd  2.69)
+      nasal_protrusion           19.18  (sd  1.51)
+      nasal_bridge_length        35.38  (sd  2.34)
+      morphological_face_ht      98.32  (sd  4.79)
+      upper_face_height          62.26  (sd  3.55)
+      lower_face_height          56.28  (sd  2.99)
+      mouth_width                44.05  (sd  2.76)
+      upper_lip_height           19.39  (sd  1.62)
+      bizygomatic_width         120.49  (sd  5.73)
+      mandibular_width           99.40  (sd  4.83)
+      upper_facial_depth_r       88.74  (sd  3.93)
+      middle_facial_depth_r     103.00  (sd  4.43)
+      lower_facial_depth_r      130.78  (sd  6.08)
+      cranial_base_width        127.86  (sd  4.99)
+      nasal_ala_length_r         25.85  (sd  1.88)
+    facial_size mm: mean=50.56 sd=2.12
+    hps dosage distribution: [260235, 124370, 25395] (0,1,2 counts)
+    GWAS recovery (covariate-adjusted, 260 SNP x measure pairs):
+      injected links detected (Bonferroni): 14/14  correct sign: 14/14
+      NEGATIVE CONTROL 246 non-injected pairs: FPR@0.05=0.061  Bonferroni hits=0
+      ACCEPT = True
+    wrote outputs/large/dataset.npz, ground_truth.npz, manifest.json, hps_upload.csv
+PS D:\FaceCon\facecon_gpu_package\facecon_gpu>    python -m gpu.run_all --quick
+device=cuda models=['mlp'] seeds=[0] large_dataset=True
+  done A/pca (6s)
+  done A/screen (10s)
+  done B/train_n=2182 (21s)
+  done B/train_n=7000 (34s)
+
+==================== COPY FROM HERE ====================
+test param-R2 (mean±sd over 1 seeds) | device=cuda | SIMULATED DATA
+experiment                               n_train  demographics     ridge_snp           mlp
+A matched N=3118 | pca                      2182        +0.317        +0.112        +0.271
+A matched N=3118 | screen                   2182        +0.317        +0.219        +0.396
+B large, train_n=2182 | screen              2182        +0.312        +0.190        +0.387
+B large, train_n=7000 | screen              7000        +0.314        +0.268        +0.435
+C NEGATIVE CONTROL permuted | screen        2182        +0.317        -0.160        +0.252
+PASS  C: permuted SNP models gain <= 0.01 over demographics
+PASS  B: screened MLP at train_n=7000 >= at 2182
+total time 38s
+==================== TO HERE ====================
+saved gpu/report_back.json
+PS D:\FaceCon\facecon_gpu_package\facecon_gpu>    python -m gpu.run_all
+device=cuda models=['mlp', 'transformer', 'contrastive', 'diffusion'] seeds=[0, 1, 2] large_dataset=True
+  done A/pca (225s)
+  done A/screen (580s)
+  done B/train_n=2182 (938s)
+  done B/train_n=4000 (1649s)
+  done B/train_n=7000 (2859s)
+
+==================== COPY FROM HERE ====================
+test param-R2 (mean±sd over 3 seeds) | device=cuda | SIMULATED DATA
+experiment                               n_train  demographics     ridge_snp           mlp   transformer   contrastive     diffusion
+A matched N=3118 | pca                      2182        +0.317        +0.112  +0.274±0.001  +0.311±0.005  +0.220±0.004  -0.368±0.006
+A matched N=3118 | screen                   2182        +0.317        +0.219  +0.396±0.002  +0.319±0.002  +0.364±0.001  +0.081±0.006
+B large, train_n=2182 | screen              2182        +0.312        +0.190  +0.389±0.001  +0.310±0.001  +0.349±0.002  +0.058±0.003
+B large, train_n=4000 | screen              4000        +0.313        +0.243  +0.417±0.001  +0.316±0.002  +0.392±0.001  +0.049±0.012
+B large, train_n=7000 | screen              7000        +0.314        +0.268  +0.435±0.001  +0.338±0.003  +0.428±0.000  +0.028±0.011
+C NEGATIVE CONTROL permuted | screen        2182        +0.317        -0.160        +0.252        +0.316        +0.247        -0.282
+PASS  C: permuted SNP models gain <= 0.01 over demographics
+PASS  B: screened MLP at train_n=7000 >= at 2182
+total time 2946s
+==================== TO HERE ====================
+saved gpu/report_back.json
+PS D:\FaceCon\facecon_gpu_package\facecon_gpu>    python -m gpu.controls --power
+seed 20261016: done (16s)  screen={'k': 150, 'alpha': 300.0}
+seed 20261017: done (31s)  screen={'k': 150, 'alpha': 300.0}
+seed 20261018: done (48s)  screen={'k': 150, 'alpha': 300.0}
+seed 20261019: done (64s)  screen={'k': 150, 'alpha': 300.0}
+seed 20261020: done (81s)  screen={'k': 150, 'alpha': 300.0}
+
+LADDER  test param-R2, mean +/- sd over 5 seeds  (planted genetic share 0.2)
+  mean          -0.002 +/- 0.000
+  cov           +0.205 +/- 0.015
+  cov+PC        +0.315 +/- 0.003
+  cov+labels    +0.316 +/- 0.003
+  +SNP-PCA256   +0.319 +/- 0.004
+  +SNP-screen   +0.488 +/- 0.004
+  ORACLE        +0.488 +/- 0.005
+
+WHAT SNPs ADD beyond cov+PC (delta R2)
+  +SNP-PCA256 (what deep models saw) +0.004
+  +SNP-screen                         +0.173   per-seed 95% CIs: [+0.170,+0.188] [+0.166,+0.182] [+0.164,+0.179] [+0.163,+0.180] [+0.159,+0.176]
+  ORACLE (true causal SNPs)           +0.173
+  NEG permuted genotypes              -0.001   per-seed 95% CIs: [-0.001,+0.000] [-0.001,+0.000] [-0.001,+0.000] [-0.002,-0.000] [-0.002,-0.000]
+  NEG genetic share = 0               -0.001
+
+ACCEPTANCE
+  PASS  A1 permuted genotypes give no gain: no CI above 0 and |mean delta| <= 0.005
+  PASS  A2 null-share |delta| <= 0.01
+  PASS  A3 positive control: ORACLE delta >= 0.10 and screen CI > 0 (all seeds)
+  PASS  A4 splits disjoint
+
+POWER GRID  delta R2 of +SNP-screen over cov+PC (mean of 2 seeds).
+  OPTIMISTIC: 5,000 independent SNPs, 150 causal. Real arrays have ~10^6 correlated SNPs.
+      N   share=0.0    share=0.1    share=0.2
+   1000   -0.000       +0.022       +0.119
+   2000   -0.001       +0.055       +0.157
+   3118   -0.001       +0.070       +0.177
+   6000   -0.001       +0.087       +0.192
+
+saved gpu/controls.json
+PS D:\FaceCon\facecon_gpu_package\facecon_gpu>

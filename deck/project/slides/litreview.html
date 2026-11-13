@@ -1,0 +1,19 @@
+<section id="litreview" data-section="Related work and the system design" style="background:#0c1a26;color:#e8eef7;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:24px;letter-spacing:3px;color:#36e3ff;text-transform:uppercase">Literature review &amp; related applications</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:60px;font-weight:600;line-height:1.08">What exists, and what it leaves open</h2>
+<table style="font-family:'IBM Plex Sans', Arial, sans-serif;font-size:26px;color:#cdddee;border:1px solid #1d3246">
+<tr style="background:#102232">
+<th style="width:26%;text-align:left;color:#e8eef7;font-size:27px">Work</th>
+<th style="width:40%;text-align:left;color:#e8eef7;font-size:27px">Contribution</th>
+<th style="width:34%;text-align:left;color:#e8eef7;font-size:27px">Gap for FaceCon</th>
+</tr>
+<tr><td>Difface (2024)</td><td>Deep SNP to 3D facial mesh generation</td><td>Private data, undisclosed panel; not reproducible</td></tr>
+<tr><td>Facial-shape GWAS (White 2021; Xiong 2025; Claes)</td><td>Genetic loci for facial morphology</td><td>Motivates GWAS-informed SNP panels</td></tr>
+<tr><td>HIrisPlex-S (Walsh 2013; Chaitanya 2018)</td><td>Eye, hair, skin colour from a validated panel</td><td>Forensic standard — our appearance basis</td></tr>
+<tr><td>Confounding critique</td><td>Accuracy may reflect age / gender / ancestry</td><td>Demands confounder-aware evaluation</td></tr>
+</table>
+<p style="font-size:26px;color:#9fb3c9;line-height:1.35;max-width:1560px">FaceCon builds on the GWAS and forensic-phenotyping literature, but adds the open, documented, demographically-controlled baseline the field lacks.</p>
+<p style="position:absolute;left:128px;bottom:64px;font-size:22px;color:#5f7489">FaceCon · F26-082</p>
+<p style="position:absolute;right:128px;bottom:64px;font-size:22px;color:#5f7489">5</p>
+<aside>A quick tour of the related work. Difface showed deep learning can map SNPs to a 3D mesh, but on private data and not reproducibly. Facial-shape GWAS studies — White, Xiong, Claes — give us the genetic loci that justify an informed SNP panel. HIrisPlex-S is the forensic standard for predicting eye, hair and skin colour; that is the external method we integrate for appearance. And the confounding critique is what pushes us toward a confounder-aware evaluation. FaceCon's contribution is the open, documented, demographically-controlled baseline none of these provide together.</aside>
+</section>

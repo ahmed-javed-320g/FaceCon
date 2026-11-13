@@ -1,0 +1,316 @@
+{
+ "device": "cuda",
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "results": {
+  "A matched N=3118 | pca": {
+   "mean_face": [
+    -0.0021
+   ],
+   "demographics": [
+    0.3173
+   ],
+   "ridge_snp": [
+    0.1122
+   ],
+   "_n_train": 2182,
+   "_mesh_demo": 2.995,
+   "mlp": [
+    0.2745,
+    0.2737,
+    0.275
+   ],
+   "mlp_mesh": [
+    3.076,
+    3.076,
+    3.056
+   ],
+   "transformer": [
+    0.3034,
+    0.3139,
+    0.315
+   ],
+   "transformer_mesh": [
+    3.018,
+    3.013,
+    3.008
+   ],
+   "contrastive": [
+    0.2237,
+    0.2221,
+    0.2146
+   ],
+   "contrastive_mesh": [
+    3.161,
+    3.168,
+    3.195
+   ],
+   "diffusion": [
+    -0.3644,
+    -0.3754,
+    -0.3628
+   ],
+   "diffusion_mesh": [
+    4.14,
+    4.15,
+    4.154
+   ]
+  },
+  "A matched N=3118 | screen": {
+   "mean_face": [
+    -0.0021
+   ],
+   "demographics": [
+    0.3173
+   ],
+   "ridge_snp": [
+    0.2188
+   ],
+   "_n_train": 2182,
+   "_mesh_demo": 2.995,
+   "mlp": [
+    0.3956,
+    0.3981,
+    0.3932
+   ],
+   "mlp_mesh": [
+    2.797,
+    2.781,
+    2.787
+   ],
+   "transformer": [
+    0.3199,
+    0.3215,
+    0.3168
+   ],
+   "transformer_mesh": [
+    2.996,
+    2.993,
+    3.003
+   ],
+   "contrastive": [
+    0.3641,
+    0.3618,
+    0.365
+   ],
+   "contrastive_mesh": [
+    2.902,
+    2.862,
+    2.883
+   ],
+   "diffusion": [
+    0.0868,
+    0.0829,
+    0.0722
+   ],
+   "diffusion_mesh": [
+    3.359,
+    3.445,
+    3.347
+   ]
+  },
+  "B large, train_n=2182 | screen": {
+   "mean_face": [
+    -0.0011
+   ],
+   "demographics": [
+    0.3119
+   ],
+   "ridge_snp": [
+    0.1895
+   ],
+   "_n_train": 2182,
+   "_mesh_demo": 2.952,
+   "mlp": [
+    0.3871,
+    0.3894,
+    0.3891
+   ],
+   "mlp_mesh": [
+    2.79,
+    2.783,
+    2.786
+   ],
+   "transformer": [
+    0.3109,
+    0.3098,
+    0.3097
+   ],
+   "transformer_mesh": [
+    2.956,
+    2.953,
+    2.953
+   ],
+   "contrastive": [
+    0.3504,
+    0.3464,
+    0.3493
+   ],
+   "contrastive_mesh": [
+    2.853,
+    2.875,
+    2.852
+   ],
+   "diffusion": [
+    0.059,
+    0.0533,
+    0.0616
+   ],
+   "diffusion_mesh": [
+    3.476,
+    3.42,
+    3.433
+   ]
+  },
+  "B large, train_n=4000 | screen": {
+   "mean_face": [
+    -0.0009
+   ],
+   "demographics": [
+    0.3131
+   ],
+   "ridge_snp": [
+    0.2431
+   ],
+   "_n_train": 4000,
+   "_mesh_demo": 2.948,
+   "mlp": [
+    0.4165,
+    0.4156,
+    0.4185
+   ],
+   "mlp_mesh": [
+    2.727,
+    2.73,
+    2.73
+   ],
+   "transformer": [
+    0.3167,
+    0.3169,
+    0.3136
+   ],
+   "transformer_mesh": [
+    2.931,
+    2.932,
+    2.939
+   ],
+   "contrastive": [
+    0.3925,
+    0.3908,
+    0.3926
+   ],
+   "contrastive_mesh": [
+    2.794,
+    2.793,
+    2.775
+   ],
+   "diffusion": [
+    0.0463,
+    0.0649,
+    0.0372
+   ],
+   "diffusion_mesh": [
+    3.461,
+    3.415,
+    3.507
+   ]
+  },
+  "B large, train_n=7000 | screen": {
+   "mean_face": [
+    -0.0008
+   ],
+   "demographics": [
+    0.3137
+   ],
+   "ridge_snp": [
+    0.2679
+   ],
+   "_n_train": 7000,
+   "_mesh_demo": 2.946,
+   "mlp": [
+    0.4354,
+    0.4359,
+    0.4343
+   ],
+   "mlp_mesh": [
+    2.676,
+    2.681,
+    2.686
+   ],
+   "transformer": [
+    0.3376,
+    0.3418,
+    0.3344
+   ],
+   "transformer_mesh": [
+    2.885,
+    2.899,
+    2.899
+   ],
+   "contrastive": [
+    0.4277,
+    0.4278,
+    0.4272
+   ],
+   "contrastive_mesh": [
+    2.688,
+    2.698,
+    2.723
+   ],
+   "diffusion": [
+    0.0184,
+    0.044,
+    0.0215
+   ],
+   "diffusion_mesh": [
+    3.53,
+    3.455,
+    3.52
+   ]
+  },
+  "C NEGATIVE CONTROL permuted | screen": {
+   "mean_face": [
+    -0.0021
+   ],
+   "demographics": [
+    0.3173
+   ],
+   "ridge_snp": [
+    -0.1603
+   ],
+   "_n_train": 2182,
+   "_mesh_demo": 2.995,
+   "mlp": [
+    0.2524
+   ],
+   "mlp_mesh": [
+    3.119
+   ],
+   "transformer": [
+    0.3162
+   ],
+   "transformer_mesh": [
+    3.001
+   ],
+   "contrastive": [
+    0.2469
+   ],
+   "contrastive_mesh": [
+    3.126
+   ],
+   "diffusion": [
+    -0.2822
+   ],
+   "diffusion_mesh": [
+    4.021
+   ]
+  }
+ },
+ "checks": {
+  "C: permuted SNP models gain <= 0.01 over demographics": true,
+  "B: screened MLP at train_n=7000 >= at 2182": true
+ }
+}

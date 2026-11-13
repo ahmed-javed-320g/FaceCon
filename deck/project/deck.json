@@ -1,0 +1,19 @@
+{
+  "v": 4,
+  "createdOnFiles": {"v": 1, "at": "2026-10-19T00:00:00Z"},
+  "lists": "css",
+  "title": "FaceCon FYP Mid-term",
+  "order": ["cover","problem","scope","goals","litreview","architecture","methodology","data","shape","appearance","integrity","demo","next"],
+  "sections": {
+    "intro": {"description": "Problem, scope and goals of FaceCon", "start": "cover"},
+    "background": {"description": "Related work and the system design", "start": "litreview"},
+    "method": {"description": "Methodology and synthetic data", "start": "methodology"},
+    "results": {"description": "Prototype results and honest evaluation", "start": "shape"},
+    "close": {"description": "Demonstration and future work", "start": "demo"}
+  },
+  "faces": {
+    "space-grotesk": {"family": "Space Grotesk", "href": "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&display=swap"},
+    "ibm-plex-sans": {"family": "IBM Plex Sans", "href": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"}
+  },
+  "designSystems": []
+}

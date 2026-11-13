@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FaceCon Prototype</title>
+<style>
+  :root{
+    --bg:#070b12; --panel:#0e1623; --line:#1d2a3d; --ink:#e8eef7;
+    --muted:#8aa0bd; --accent:#36e3ff; --accent2:#7cf6c0; --warn:#ffcf6b; --bad:#ff7a8a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  header{display:flex;align-items:center;gap:14px;padding:12px 18px;
+    border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0b1220,#070b12)}
+  header h1{font-size:17px;margin:0;letter-spacing:.5px}
+  header h1 span{color:var(--accent)}
+  .badge{font-size:11px;color:#0a0f17;background:var(--warn);font-weight:700;
+    padding:3px 8px;border-radius:5px;letter-spacing:.5px}
+  .sub{color:var(--muted);font-size:12px;margin-left:auto}
+  nav{display:flex;gap:4px;padding:10px 18px;border-bottom:1px solid var(--line)}
+  nav button{background:transparent;border:1px solid var(--line);color:var(--muted);
+    padding:7px 14px;border-radius:7px;cursor:pointer;font-size:13px}
+  nav button.active{color:var(--ink);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+  main{padding:16px 18px;max-width:1200px;margin:0 auto}
+  .screen{display:none} .screen.active{display:block}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;transition:.15s}
+  .card:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .card h3{margin:0 0 6px;font-size:14px}
+  .card .meta{color:var(--muted);font-size:12px;line-height:1.5}
+  .pill{display:inline-block;font-size:10px;padding:1px 7px;border-radius:20px;border:1px solid var(--line);color:var(--muted);margin-right:4px}
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+  .viewer{background:#060a10;border:1px solid var(--line);border-radius:10px;position:relative;height:400px;overflow:hidden}
+  .viewer .tag{position:absolute;top:10px;left:12px;font-size:12px;color:var(--muted);z-index:2;letter-spacing:.5px}
+  .viewer .tag b{color:var(--ink)}
+  .viewer canvas{width:100%;height:100%;display:block}
+  .controls{display:flex;gap:10px;align-items:center;margin:14px 0;flex-wrap:wrap}
+  select,button.act{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:13px;cursor:pointer}
+  button.act{border-color:var(--accent);color:var(--accent)} button.act:hover{background:#0c2430}
+  /* Shape Error Heatmap controls */
+  .mode-toggle{position:absolute;top:8px;right:10px;z-index:3;display:flex;background:#0a141e;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .mode-toggle button{background:transparent;border:0;color:var(--muted);font-size:11px;letter-spacing:.3px;padding:6px 11px;cursor:pointer}
+  .mode-toggle button.active{background:var(--accent);color:#06121a;font-weight:600}
+  .mode-toggle button:disabled{opacity:.38;cursor:not-allowed}
+  .heat-legend{position:absolute;left:12px;right:12px;bottom:10px;z-index:2;background:rgba(6,12,20,.80);border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:none}
+  .heat-legend.on{display:block}
+  .heat-legend .hl-title{font-size:11px;color:var(--ink);font-weight:600;letter-spacing:.4px;margin-bottom:5px}
+  .heat-bar{height:10px;border-radius:3px;background:linear-gradient(90deg,hsl(120,72%,46%),hsl(60,72%,46%),hsl(0,72%,46%))}
+  .heat-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px}
+  .heat-unavail{position:absolute;inset:0;z-index:3;display:none;align-items:center;justify-content:center;text-align:center;background:rgba(6,10,16,.82);color:var(--muted);font-size:13px;padding:24px;line-height:1.5}
+  .heat-unavail.on{display:flex}
+  .heat-caption{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:10px;display:none}
+  .heat-caption.on{display:block}
+  .heat-caption b{color:#9fd0ff}
+  table{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px}
+  th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--muted);font-weight:600}
+  tr.best td{color:var(--accent2)}
+  .note{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.6}
+  .bar{height:8px;background:#0c1826;border-radius:5px;overflow:hidden;min-width:90px;display:inline-block;vertical-align:middle}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  .kpi{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0}
+  .kpi div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+  .kpi b{display:block;font-size:22px;color:var(--accent)} .kpi small{color:var(--muted)}
+  #loading{padding:40px;text-align:center;color:var(--muted)}
+  /* appearance panel */
+  .appgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:12px}
+  .attr{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .attr .hd{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .sw{width:16px;height:16px;border-radius:4px;border:1px solid #0006}
+  .attr .row{display:flex;align-items:center;justify-content:space-between;font-size:13px;margin:3px 0}
+  .attr .val{display:flex;align-items:center;gap:6px}
+  .tick{font-size:11px;padding:1px 6px;border-radius:10px}
+  .tick.ok{color:#0a0f17;background:var(--accent2)} .tick.no{color:#0a0f17;background:var(--bad)}
+  .conf{color:var(--muted);font-size:11px}
+  .legend{color:var(--muted);font-size:11px;margin-top:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Face<span>Con</span> &nbsp;· Genotype → 3D Face &amp; Appearance</h1>
+  <span class="badge">SYNTHETIC DATA</span>
+  <span class="sub" id="dssub" style="margin-left:auto"></span>
+  <a href="index.html" style="color:var(--muted);text-decoration:none;font-size:13px;border:1px solid var(--line);padding:6px 12px;border-radius:7px;margin-left:14px">⌂ Home</a>
+  <a href="holo.html" style="color:var(--accent);text-decoration:none;font-size:13px;border:1px solid var(--accent);padding:6px 12px;border-radius:7px;margin-left:8px">⬡ Hologram view</a>
+</header>
+<nav>
+  <button data-s="subjects" class="active">1 · Test subjects</button>
+  <button data-s="predict">2 · Prediction</button>
+  <button data-s="results">3 · Evaluation &amp; results</button>
+</nav>
+<main>
+  <div id="loading">Loading model and data…</div>
+
+  <section class="screen" id="screen-subjects">
+    <p class="note">Pick a synthetic test subject. Their genotype drives the predicted face shape and
+      appearance; the true face is held out for comparison. (Prototype on synthetic data.)</p>
+    <div class="grid" id="subjectGrid"></div>
+  </section>
+
+  <section class="screen" id="screen-predict">
+    <div class="controls">
+      <label style="color:var(--muted);font-size:13px">Subject</label>
+      <select id="subjectSel"></select>
+      <label style="color:var(--muted);font-size:13px">Model</label>
+      <select id="modelSel"></select>
+      <button class="act" id="revealBtn">▶ Reveal prediction</button>
+      <button class="act" id="spinBtn">⟳ Auto-rotate</button>
+    </div>
+    <div class="stage">
+      <div class="viewer">
+        <div class="tag">PREDICTED <b id="predName"></b></div>
+        <div class="mode-toggle" id="modeToggle">
+          <button data-mode="appearance" class="active">Appearance</button>
+          <button data-mode="shape_error" id="btnShapeErr">Shape Error</button>
+        </div>
+        <canvas id="cPred"></canvas>
+        <div class="heat-legend" id="heatLegend">
+          <div class="hl-title">Shape Error Heatmap</div>
+          <div class="heat-bar"></div>
+          <div class="heat-scale"><span>0 · closer</span><span id="heatMaxLbl">≥ 8 nominal mm · farther</span></div>
+        </div>
+        <div class="heat-unavail" id="heatUnavail">Shape Error unavailable — reference geometry is not available for this subject.</div>
+      </div>
+      <div class="viewer"><div class="tag">GROUND TRUTH</div><canvas id="cTrue"></canvas></div>
+    </div>
+    <p class="heat-caption" id="heatCaption"><b>Shape Error Heatmap.</b> Green shows areas closer to the synthetic ground truth. Red shows larger differences. &nbsp;·&nbsp; <b>Synthetic reference comparison.</b> This view shows shape error, not prediction uncertainty.</p>
+    <h3 style="margin:16px 0 2px;font-size:15px">Appearance colour — HIrisPlex-S (integrated forensic phenotyping)</h3>
+    <div class="appgrid" id="appGrid"></div>
+    <p class="note" id="predNote"></p>
+  </section>
+
+  <section class="screen" id="screen-results">
+    <div class="kpi" id="kpi"></div>
+    <h3 style="margin:14px 0 2px;font-size:15px">Shape — baseline comparison (test set)</h3>
+    <table id="metricsTable"></table>
+    <h3 style="margin:18px 0 2px;font-size:15px">Ablations — does the harness detect genetic signal?</h3>
+    <table id="ablTable"></table>
+    <p class="note" id="resNote"></p>
+  </section>
+</main>
+
+<script src="three.min.js"></script>
+<script>
+const DATA_URL="data/web_data.json";
+let D=null,FM=null;
+
+function b64ToArray(o){const bin=atob(o.b64),len=bin.length,bytes=new Uint8Array(len);
+  for(let i=0;i<len;i++)bytes[i]=bin.charCodeAt(i);
+  if(o.dtype==="float32")return new Float32Array(bytes.buffer);
+  if(o.dtype==="int32")return new Int32Array(bytes.buffer);
+  throw new Error("dtype "+o.dtype);}
+function hexRGB(h){h=h.replace('#','');if(h.length===8)h=h.slice(0,6);
+  return [parseInt(h.slice(0,2),16)/255,parseInt(h.slice(2,4),16)/255,parseInt(h.slice(4,6),16)/255];}
+
+function makeDecoder(d){
+  const mean=b64ToArray(d.mean),faces=b64ToArray(d.faces),basis=b64ToArray(d.basis);
+  const K=d.n_shape_dims,V3=mean.length,V=V3/3;
+  function decode(beta,t){const out=new Float32Array(V3);out.set(mean);const s=(t===undefined)?1:t;
+    for(let k=0;k<K;k++){const bk=s*beta[k];if(bk===0)continue;const off=k*V3;
+      for(let i=0;i<V3;i++)out[i]+=bk*basis[off+i];}return out;}
+  return {mean,faces,basis,K,V3,V,decode};
+}
+
+// ---- per-vertex masks for appearance rendering (computed from mean) ----
+let scalpMask=null, freckleMask=null, mouthMask=null, eyeR=[], eyeL=[];
+function computeMasks(){
+  const V=FM.V, m=FM.mean;
+  const ys=[]; for(let i=0;i<V;i++) ys.push(m[i*3+1]);
+  const sorted=[...ys].sort((a,b)=>a-b); const topY=sorted[Math.floor(V*0.80)];
+  scalpMask=new Uint8Array(V); for(let i=0;i<V;i++) if(m[i*3+1]>topY && m[i*3+2]<0.35*(sorted[V-1]-sorted[0])) scalpMask[i]=1;
+  // freckles on cheeks + nose regions, restricted to the mid-face front band
+  const rid=b64ToArray(D.region_id); const names=D.region_names;
+  const ci=names.indexOf('cheeks'), ni=names.indexOf('nose');
+  const zmax=sorted[V-1]; // reuse height sort only for scale ref
+  let zarr=[]; for(let i=0;i<V;i++) zarr.push(m[i*3+2]);
+  const zs=[...zarr].sort((a,b)=>a-b); const zFront=zs[Math.floor(V*0.6)];
+  freckleMask=new Uint8Array(V);
+  for(let i=0;i<V;i++){ const front=m[i*3+2]>zFront, midY=m[i*3+1]>-0.05*(sorted[V-1]-sorted[0]);
+    if((rid[i]===ci||rid[i]===ni)&&front&&midY) freckleMask[i]=1; }
+  // mouth/lips region for a subtle lip tint
+  const mi=names.indexOf('mouth');
+  mouthMask=new Uint8Array(V); for(let i=0;i<V;i++) if(rid[i]===mi) mouthMask[i]=1;
+  // eye landmark groups (iBUG68: right 36-41, left 42-47)
+  const lm=b64ToArray(D.landmarks);
+  eyeR=[]; for(let i=36;i<=41;i++) eyeR.push(lm[i]);
+  eyeL=[]; for(let i=42;i<=47;i++) eyeL.push(lm[i]);
+}
+
+function Viewer(canvas){
+  const r=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(32,1,0.1,5000);
+  const grp=new THREE.Group(); scene.add(grp);
+  scene.add(new THREE.AmbientLight(0x5a7a9a,0.75));
+  const key=new THREE.DirectionalLight(0xffffff,0.85); key.position.set(-0.4,0.8,1.2); scene.add(key);
+  const fill=new THREE.DirectionalLight(0xffe9d2,0.35); fill.position.set(0.6,-0.2,0.9); scene.add(fill);
+  const rim=new THREE.DirectionalLight(0x9fd0ff,0.28); rim.position.set(1,0.3,-0.7); scene.add(rim);
+  const mat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.78,metalness:0.0});
+  // unlit material for the Shape Error Heatmap: vertex colours render exactly,
+  // with no directional shading that could obscure the error values.
+  const flatMat=new THREE.MeshBasicMaterial({vertexColors:true});
+  let mesh=null,geom=null,eyes=[];
+  function makeEye(){
+    const g=new THREE.Group();
+    // unlit layered eye so the iris colour and black pupil read true regardless
+    // of scene lighting: off-white sclera · coloured iris · limbal ring · black
+    // pupil · specular glint. Realistic proportions (pupil ~42% of the iris).
+    const sclera=new THREE.Mesh(new THREE.CircleGeometry(1,36),
+      new THREE.MeshBasicMaterial({color:0xe8e3d6,transparent:true,depthWrite:false}));
+    const iris=new THREE.Mesh(new THREE.CircleGeometry(0.64,36),
+      new THREE.MeshBasicMaterial({color:0x5a3b22,transparent:true,depthWrite:false}));
+    iris.position.z=0.02;
+    const limbal=new THREE.Mesh(new THREE.RingGeometry(0.62,0.66,36),
+      new THREE.MeshBasicMaterial({color:0x201509,transparent:true,depthWrite:false}));
+    limbal.position.z=0.03;
+    const pupil=new THREE.Mesh(new THREE.CircleGeometry(0.22,28),
+      new THREE.MeshBasicMaterial({color:0x050505,transparent:true,depthWrite:false}));
+    pupil.position.z=0.04;
+    const glint=new THREE.Mesh(new THREE.CircleGeometry(0.07,14),
+      new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.85,depthWrite:false}));
+    glint.position.set(0.11,0.12,0.06);
+    g.add(sclera,iris,limbal,pupil,glint); g.userData={sclera,iris,limbal,pupil,glint};
+    return g;
+  }
+  function setMesh(){
+    geom=new THREE.BufferGeometry();
+    geom.setAttribute('position',new THREE.BufferAttribute(FM.mean.slice(),3));
+    const col=new Float32Array(FM.V3); col.fill(0.6); geom.setAttribute('color',new THREE.BufferAttribute(col,3));
+    geom.setIndex(new THREE.BufferAttribute(new Uint32Array(FM.faces),1));
+    geom.computeVertexNormals();
+    mesh=new THREE.Mesh(geom,mat); grp.add(mesh);
+    geom.computeBoundingBox(); const bb=geom.boundingBox,c=new THREE.Vector3(); bb.getCenter(c);
+    grp.position.set(-c.x,-c.y,-c.z);
+    const sz=new THREE.Vector3(); bb.getSize(sz); const h=Math.max(sz.x,sz.y);
+    cam.position.set(0,0,h*2.4); cam.lookAt(0,0,0);
+    for(let e=0;e<2;e++){const g=makeEye(); grp.add(g); eyes.push(g);}
+  }
+  function setVerts(v){geom.attributes.position.array.set(v);geom.attributes.position.needsUpdate=true;geom.computeVertexNormals();}
+  function setColors(c){geom.attributes.color.array.set(c);geom.attributes.color.needsUpdate=true;}
+  function placeEyes(verts,eyeColorRGB,intensity){
+    const groups=[eyeR,eyeL];
+    for(let e=0;e<2;e++){const grp2=eyes[e],g=groups[e];let cx=0,cy=0,cz=0;
+      for(const idx of g){cx+=verts[idx*3];cy+=verts[idx*3+1];cz+=verts[idx*3+2];}
+      const n=g.length;cx/=n;cy/=n;cz/=n;
+      const a=g[0],b=g[3];
+      const w=Math.hypot(verts[a*3]-verts[b*3],verts[a*3+1]-verts[b*3+1],verts[a*3+2]-verts[b*3+2]);
+      // modest eyeball, pushed just in front of the (closed) lid so the iris
+      // and pupil are visible without bulging out
+      const R=Math.max(w*0.26,0.001);
+      grp2.position.set(cx,cy,cz+w*0.15); grp2.scale.setScalar(R);
+      const u=grp2.userData;
+      u.iris.material.color.setRGB(eyeColorRGB[0],eyeColorRGB[1],eyeColorRGB[2]);
+      for(const m of [u.sclera.material,u.iris.material,u.pupil.material]) m.opacity=intensity;
+      u.limbal.material.opacity=0.8*intensity;
+      u.glint.material.opacity=0.85*intensity;
+    }
+  }
+  function setFlat(on){ if(mesh) mesh.material = on ? flatMat : mat; }
+  function showEyes(on){ for(const g of eyes) g.visible = on; }
+  function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;
+    if(canvas.width!==w||canvas.height!==h){r.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}}
+  return {scene,cam,grp,setMesh,setVerts,setColors,placeEyes,setFlat,showEyes,render:()=>{resize();r.render(scene,cam);}};
+}
+
+// build the per-vertex colour array for an appearance set at a colour intensity
+function buildColors(appByTrait,intensity){
+  const V=FM.V, col=new Float32Array(FM.V3);
+  const neutral=[0.62,0.6,0.6];
+  // skin base
+  let skin=[0.85,0.72,0.62];
+  const tr=k=>D.appearance_meta.traits.find(t=>t.key===k);
+  if(appByTrait.skin_tone!=null){const t=tr('skin_tone');skin=hexRGB(t.palette[t.classes[appByTrait.skin_tone]]);}
+  for(let i=0;i<V;i++){col[i*3]=skin[0];col[i*3+1]=skin[1];col[i*3+2]=skin[2];}
+  // hair tint on scalp
+  if(appByTrait.hair_colour!=null){const t=tr('hair_colour');const hc=hexRGB(t.palette[t.classes[appByTrait.hair_colour]]);
+    for(let i=0;i<V;i++) if(scalpMask[i]){col[i*3]=hc[0];col[i*3+1]=hc[1];col[i*3+2]=hc[2];}}
+  // very subtle lip tint: nudge the mouth region slightly warmer than skin
+  const lip=[Math.min(1,skin[0]*0.98+0.04), skin[1]*0.84, skin[2]*0.82];
+  for(let i=0;i<V;i++) if(mouthMask[i]){const mix=0.22;
+    for(let a=0;a<3;a++) col[i*3+a]=col[i*3+a]*(1-mix)+lip[a]*mix;}
+  // blend from neutral by intensity
+  for(let i=0;i<FM.V3;i++) col[i]=neutral[i%3]+(col[i]-neutral[i%3])*intensity;
+  return col;
+}
+
+let vPred=null,vTrue=null,spin=true,dragging=false,dragX=0,rotY=0;
+function initViewers(){
+  vPred=Viewer(document.getElementById('cPred')); vTrue=Viewer(document.getElementById('cTrue'));
+  vPred.setMesh(); vTrue.setMesh();
+  for(const c of [document.getElementById('cPred'),document.getElementById('cTrue')]){
+    c.addEventListener('pointerdown',e=>{dragging=true;dragX=e.clientX;spin=false;});
+    window.addEventListener('pointerup',()=>dragging=false);
+    window.addEventListener('pointermove',e=>{if(dragging){rotY+=(e.clientX-dragX)*0.01;dragX=e.clientX;}});
+  }
+  animate();
+}
+function animate(){requestAnimationFrame(animate);if(spin)rotY+=0.004;
+  vPred.grp.rotation.y=rotY;vTrue.grp.rotation.y=rotY;vPred.render();vTrue.render();}
+
+let curSubject=0,curModel=null;
+function appKeyFor(shapeKey){return (D.appearance_meta&&D.appearance_meta.shape_to_app[shapeKey])||'snp_demo';}
+function trueApp(){const s=D.subjects[curSubject];return s.appearance?s.appearance.true:{};}
+function predApp(){const s=D.subjects[curSubject];if(!s.appearance)return{};
+  const ak=appKeyFor(curModel);const p=s.appearance.pred[ak]||{};const o={};
+  for(const k in p)o[k]=p[k][0];return o;}
+// ---- Shape Error Heatmap ----------------------------------------------------
+// Per-vertex Euclidean distance between the predicted and synthetic-reference
+// meshes, in nominal mm — exactly the convention of src/eval/metrics.vertex_dist
+// (decode both meshes, ||pv - tv|| * mm_per_unit). The predicted and reference
+// display meshes are decoded from the SAME decimated basis, so they share
+// topology and index correspondence; the mean term cancels, leaving the real
+// shape error. The display range is a single fixed scale for all subjects and
+// models (see scripts/compute_heatmap_scale.py), never normalised per face.
+let shapeErrorMode=false;
+function heatMaxMM(){ return (D.heatmap&&D.heatmap.display_max_mm)||8.0; }
+function heatUnits(){ return (D.heatmap&&D.heatmap.units)||'nominal mm'; }
+function shapeErrAvailable(){ const s=D.subjects[curSubject];
+  return !!(s&&s.beta_true&&s.beta_pred&&s.beta_pred[curModel]); }
+function heatColor(n){ // n in [0,1] -> green (0) through yellow (0.5) to red (1)
+  n=Math.max(0,Math.min(1,n)); const h=120*(1-n)/360, s=0.72, l=0.46;
+  const a=s*Math.min(l,1-l), f=k=>{const kk=(k+h*12)%12;return l-a*Math.max(-1,Math.min(kk-3,9-kk,1));};
+  return [f(0),f(8),f(4)];
+}
+function shapeErrorColors(pv,tv){ // pv,tv: full predicted/reference verts (units)
+  const V=FM.V,col=new Float32Array(FM.V3),scale=D.mm_per_unit||1,mx=heatMaxMM();
+  for(let i=0;i<V;i++){const dx=pv[i*3]-tv[i*3],dy=pv[i*3+1]-tv[i*3+1],dz=pv[i*3+2]-tv[i*3+2];
+    const mm=Math.sqrt(dx*dx+dy*dy+dz*dz)*scale, c=heatColor(mm/mx);
+    col[i*3]=c[0];col[i*3+1]=c[1];col[i*3+2]=c[2];}
+  return col;
+}
+function renderFaces(shapeT,colorT){
+  const s=D.subjects[curSubject];
+  const tr=k=>D.appearance_meta.traits.find(t=>t.key===k);
+  // --- ground-truth viewer: unchanged (appearance rendering); needs reference geometry ---
+  let tv=null;
+  if(s.beta_true){
+    tv=FM.decode(b64ToArray(s.beta_true));
+    const ta=trueApp();
+    vTrue.setVerts(tv); vTrue.setColors(buildColors(ta,1));
+    const eyeT=ta.eye_colour!=null?hexRGB(tr('eye_colour').palette[tr('eye_colour').classes[ta.eye_colour]]):[0.2,0.2,0.2];
+    vTrue.placeEyes(tv,eyeT,1);
+  }
+  // --- predicted viewer: Appearance OR Shape Error heatmap ---
+  if(shapeErrorMode && shapeErrAvailable()){
+    const pv=FM.decode(b64ToArray(s.beta_pred[curModel]),1);   // full predicted shape
+    vPred.setVerts(pv);
+    vPred.setColors(shapeErrorColors(pv,tv));                  // real per-vertex error
+    vPred.setFlat(true); vPred.showEyes(false);                // unlit, no decorative overlays
+  } else {
+    const pv=FM.decode(b64ToArray(s.beta_pred[curModel]),shapeT); vPred.setVerts(pv);
+    const pa=predApp();
+    vPred.setColors(buildColors(pa,colorT));
+    const eyeP=pa.eye_colour!=null?hexRGB(tr('eye_colour').palette[tr('eye_colour').classes[pa.eye_colour]]):[0.2,0.2,0.2];
+    vPred.placeEyes(pv,eyeP,colorT); vPred.setFlat(false); vPred.showEyes(true);
+  }
+}
+function updateHeatUI(){
+  const avail=shapeErrAvailable(), show=shapeErrorMode&&avail;
+  const btn=document.getElementById('btnShapeErr'); if(btn) btn.disabled=!avail;
+  document.getElementById('heatLegend').classList.toggle('on',show);
+  document.getElementById('heatCaption').classList.toggle('on',show);
+  document.getElementById('heatUnavail').classList.toggle('on',shapeErrorMode&&!avail);
+  document.getElementById('heatMaxLbl').textContent='≥ '+heatMaxMM()+' '+heatUnits()+' · farther';
+  document.querySelectorAll('#modeToggle button').forEach(b=>
+    b.classList.toggle('active',(b.dataset.mode==='shape_error')===shapeErrorMode));
+}
+function setMode(mode){
+  const want = mode==='shape_error';
+  if(want && !shapeErrAvailable()){ updateHeatUI(); return; }   // cannot enter; leave mode as-is
+  shapeErrorMode=want; updateHeatUI(); renderFaces(1,1);   // full shape; rotation/camera preserved
+}
+let revealTimer=null;
+function reveal(){
+  const t0=performance.now(), shapeDur=900, colDur=700;
+  if(revealTimer) clearTimeout(revealTimer);
+  function frame(now){
+    const e=now-t0;
+    const st=Math.min(1, e/shapeDur);
+    const ct=Math.max(0, Math.min(1, (e-shapeDur)/colDur));
+    renderFaces(st, ct);
+    if(e < shapeDur+colDur) requestAnimationFrame(frame);
+    else renderFaces(1,1);
+  }
+  requestAnimationFrame(frame);
+  // safety: guarantee the final coloured state even if rAF is throttled
+  revealTimer=setTimeout(()=>renderFaces(1,1), shapeDur+colDur+400);
+}
+
+function buildSubjects(){
+  const g=document.getElementById('subjectGrid');g.innerHTML='';
+  const sel=document.getElementById('subjectSel');sel.innerHTML='';
+  D.subjects.forEach((s,i)=>{const d=document.createElement('div');d.className='card';
+    d.innerHTML=`<h3>${s.id}</h3><div class="meta"><span class="pill">ancestry ${s.ancestry}</span>
+      <span class="pill">${s.demographics.gender==1?'M':'F'}</span><br>age(z) ${s.demographics.age_z.toFixed(2)}</div>`;
+    d.onclick=()=>{curSubject=i;sel.value=i;gotoScreen('predict');refreshPredict();};
+    g.appendChild(d);
+    const o=document.createElement('option');o.value=i;o.textContent=s.id;sel.appendChild(o);});
+  const m=document.getElementById('modelSel');m.innerHTML='';
+  D.models.forEach(md=>{const o=document.createElement('option');o.value=md.key;o.textContent=md.name;m.appendChild(o);});
+  curModel=(D.models.find(x=>x.key==='mlp_snp_demo')||D.models[0]).key;m.value=curModel;
+  sel.onchange=()=>{curSubject=+sel.value;refreshPredict();};
+  m.onchange=()=>{curModel=m.value;refreshPredict();};
+}
+function refreshPredict(){
+  const md=D.models.find(x=>x.key===curModel);
+  document.getElementById('predName').textContent='· '+md.name;
+  document.getElementById('predNote').textContent=
+    `Shape from "${md.name}" (trained by FaceCon); eye, hair and skin colour from the integrated HIrisPlex-S forensic predictor on the same genotype. Drag to rotate; press Reveal to watch shape then colour emerge.`;
+  updateHeatUI();                 // keep toggle state; show unavailable notice if needed
+  renderFaces(1,1); buildAppGrid();
+}
+// HIrisPlex-S is integrated, not trained/evaluated here, so we show only the
+// three colour outputs it returns — not a predicted-vs-actual comparison.
+const APP_COLOUR_TRAITS={eye_colour:'eye colour',hair_colour:'hair colour',skin_tone:'skin colour'};
+function buildAppGrid(){
+  const host=document.getElementById('appGrid');host.innerHTML='';
+  if(!D.appearance_meta){host.innerHTML='<p class="note">No appearance data.</p>';return;}
+  const s=D.subjects[curSubject];const ak=appKeyFor(curModel);
+  Object.keys(APP_COLOUR_TRAITS).forEach(key=>{
+    const t=D.appearance_meta.traits.find(x=>x.key===key);if(!t)return;
+    const pr=s.appearance.pred[ak][key];const predCls=pr[0];
+    const predName=t.classes[predCls].replace(/_/g,' ');
+    const hex=t.palette&&t.palette[t.classes[predCls]];
+    const sw=hex&&hex!=='#00000000'?`<span class="sw" style="background:${hex.slice(0,7)}"></span>`:'';
+    const rendered=key==='hair_colour'?'reported':'rendered on mesh';
+    const div=document.createElement('div');div.className='attr';
+    div.innerHTML=`<div class="hd">${APP_COLOUR_TRAITS[key]} · ${rendered}</div>
+      <div class="row"><span>HIrisPlex-S</span><span class="val">${sw}${predName}</span></div>`;
+    host.appendChild(div);});
+}
+
+function buildResults(){
+  const ds=D.dataset;
+  document.getElementById('dssub').textContent=
+    `${ds.n_subjects.toLocaleString()} subjects · ${ds.n_snps.toLocaleString()} SNPs · ${ds.n_test} test`;
+  const best=D.metrics.reduce((a,b)=>b.param_r2>a.param_r2?b:a);
+  const ab=D.ablations.gwas_vs_random,sr=D.ablations.signal_recovery;
+  document.getElementById('kpi').innerHTML=`
+    <div><b>${best.param_r2.toFixed(2)}</b><small>best shape param R² (${best.model})</small></div>
+    <div><b>${best.mesh_mean_mm.toFixed(2)} mm</b><small>best mean mesh error</small></div>
+    <div><b>${ab.informed_param_r2.toFixed(2)} vs ${ab.random_param_r2.toFixed(2)}</b><small>informed vs random SNP panel R²</small></div>
+    <div><b>${sr.passes?'PASS':'—'}</b><small>signal-recovery check</small></div>`;
+  const maxR2=Math.max(...D.metrics.map(m=>Math.max(0,m.param_r2)));
+  let h=`<tr><th>Model</th><th>param R²</th><th></th><th>mesh mm</th><th>landmark mm</th><th>top-1</th></tr>`;
+  D.metrics.forEach(m=>{const w=Math.max(0,m.param_r2)/maxR2*100;
+    h+=`<tr class="${m===best?'best':''}"><td>${m.model}</td><td>${m.param_r2.toFixed(3)}</td>
+      <td><span class="bar"><i style="width:${w}%"></i></span></td>
+      <td>${m.mesh_mean_mm.toFixed(2)}</td><td>${m.landmark_mean_mm.toFixed(2)}</td><td>${m.retrieval_top1.toFixed(2)}</td></tr>`;});
+  document.getElementById('metricsTable').innerHTML=h;
+  const rd=D.ablations.remove_demographics;
+  document.getElementById('ablTable').innerHTML=`
+    <tr><th>Check</th><th>result</th><th>reading</th></tr>
+    <tr><td>GWAS-informed SNP panel</td><td>R² ${ab.informed_param_r2.toFixed(3)}</td><td>uses causal SNPs</td></tr>
+    <tr><td>Random SNP panel</td><td>R² ${ab.random_param_r2.toFixed(3)}</td><td>control — much lower</td></tr>
+    <tr><td>Signal recovery vs shuffled</td><td>${sr.signal_param_r2.toFixed(3)} vs ${sr.shuffled_control_r2.toFixed(3)}</td><td>${sr.passes?'passes — no leakage':'—'}</td></tr>
+    <tr><td>SNPs added on top of demographics</td><td>ΔR² ${rd.snp_gain_on_demo_r2}</td><td>honest: small under synthetic conditions</td></tr>`;
+  document.getElementById('resNote').textContent=D.note;
+}
+
+function gotoScreen(name){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.s===name));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='screen-'+name));}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>gotoScreen(b.dataset.s));
+document.getElementById('revealBtn').onclick=reveal;
+document.getElementById('spinBtn').onclick=()=>spin=!spin;
+document.querySelectorAll('#modeToggle button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+
+fetch(DATA_URL).then(r=>r.json()).then(d=>{D=d;FM=makeDecoder(d);
+  document.getElementById('loading').style.display='none';
+  document.getElementById('screen-subjects').classList.add('active');
+  computeMasks();buildSubjects();buildResults();initViewers();refreshPredict();
+}).catch(e=>{document.getElementById('loading').textContent='Failed to load data: '+e;});
+</script>
+</body>
+</html>

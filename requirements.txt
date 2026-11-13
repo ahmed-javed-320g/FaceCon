@@ -1,0 +1,8 @@
+pyyaml
+numpy
+scipy
+scikit-learn
+trimesh
+pytest>=7
+fast-simplification
+scipy

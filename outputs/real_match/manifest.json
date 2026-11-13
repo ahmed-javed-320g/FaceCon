@@ -1,0 +1,298 @@
+{
+  "mode": "synthetic_matched",
+  "n_subjects": 3118,
+  "n_snps": 5000,
+  "n_face_dims": 50,
+  "demographic_names": [
+    "sex",
+    "age_z",
+    "age2_z",
+    "height_z",
+    "weight_z",
+    "ancestry_0",
+    "ancestry_1",
+    "ancestry_2"
+  ],
+  "variance_shares": {
+    "genetic": 0.2,
+    "demographic": 0.35,
+    "noise": 0.45
+  },
+  "regions": [
+    "nose",
+    "jaw",
+    "mouth",
+    "eyes",
+    "cheeks",
+    "forehead"
+  ],
+  "n_hps_markers": 41,
+  "n_anthro_measures": 20,
+  "anthro_names": [
+    "intercanthal_width",
+    "biocular_width",
+    "palpebral_fissure_r",
+    "palpebral_fissure_l",
+    "nasal_width",
+    "nasal_height",
+    "nasal_protrusion",
+    "nasal_bridge_length",
+    "morphological_face_ht",
+    "upper_face_height",
+    "lower_face_height",
+    "mouth_width",
+    "upper_lip_height",
+    "bizygomatic_width",
+    "mandibular_width",
+    "upper_facial_depth_r",
+    "middle_facial_depth_r",
+    "lower_facial_depth_r",
+    "cranial_base_width",
+    "nasal_ala_length_r"
+  ],
+  "matched_target": "dbGaP phs000949 / 3DFN (Shaffer 2016)",
+  "gwas_effects": {
+    "enabled": true,
+    "n_loci": 14,
+    "source": "Shaffer 2016 S1 lead SNPs (p<5e-7; rsID/allele/MAF/beta verbatim, Pittsburgh sample). Injected variance = Z^2/N from the DISCOVERY sample: an upper bound (winner's curse). Affects the measurement phenotype only, not the shape target beta.",
+    "applied": [
+      {
+        "measure": "cranial_base_width",
+        "rsid": "rs6129564",
+        "chr": 20,
+        "trait": "Cranial base width",
+        "sign": -1,
+        "genome_wide_significant": true,
+        "var_explained": 0.0167
+      },
+      {
+        "measure": "nasal_ala_length_r",
+        "rsid": "rs145837285",
+        "chr": 14,
+        "trait": "Nasal ala length",
+        "sign": 1,
+        "genome_wide_significant": true,
+        "var_explained": 0.0142
+      },
+      {
+        "measure": "intercanthal_width",
+        "rsid": "rs11093404",
+        "chr": 23,
+        "trait": "Intercanthal width",
+        "sign": 1,
+        "genome_wide_significant": true,
+        "var_explained": 0.0134
+      },
+      {
+        "measure": "nasal_width",
+        "rsid": "rs2424399",
+        "chr": 20,
+        "trait": "Nasal width",
+        "sign": 1,
+        "genome_wide_significant": true,
+        "var_explained": 0.0118
+      },
+      {
+        "measure": "biocular_width",
+        "rsid": "rs3828785",
+        "chr": 6,
+        "trait": "Outercanthal width",
+        "sign": -1,
+        "genome_wide_significant": false,
+        "var_explained": 0.0115
+      },
+      {
+        "measure": "lower_face_height",
+        "rsid": "rs17649135",
+        "chr": 13,
+        "trait": "Lower facial height",
+        "sign": 1,
+        "genome_wide_significant": false,
+        "var_explained": 0.0091
+      },
+      {
+        "measure": "middle_facial_depth_r",
+        "rsid": "rs12792834",
+        "chr": 11,
+        "trait": "Middle facial depth",
+        "sign": -1,
+        "genome_wide_significant": false,
+        "var_explained": 0.0091
+      },
+      {
+        "measure": "upper_facial_depth_r",
+        "rsid": "rs12792834",
+        "chr": 11,
+        "trait": "Upper facial depth",
+        "sign": -1,
+        "genome_wide_significant": true,
+        "var_explained": 0.0086
+      },
+      {
+        "measure": "mouth_width",
+        "rsid": "rs56203676",
+        "chr": 2,
+        "trait": "Labial fissure width",
+        "sign": -1,
+        "genome_wide_significant": false,
+        "var_explained": 0.0083
+      },
+      {
+        "measure": "lower_facial_depth_r",
+        "rsid": "rs58761416",
+        "chr": 9,
+        "trait": "Lower facial depth",
+        "sign": 1,
+        "genome_wide_significant": false,
+        "var_explained": 0.0082
+      },
+      {
+        "measure": "nasal_bridge_length",
+        "rsid": "rs3751074",
+        "chr": 11,
+        "trait": "Nasal bridge length",
+        "sign": -1,
+        "genome_wide_significant": false,
+        "var_explained": 0.008
+      },
+      {
+        "measure": "upper_lip_height",
+        "rsid": "rs820217",
+        "chr": 17,
+        "trait": "Upper lip height",
+        "sign": 1,
+        "genome_wide_significant": false,
+        "var_explained": 0.008
+      },
+      {
+        "measure": "nasal_protrusion",
+        "rsid": "rs6072091",
+        "chr": 20,
+        "trait": "Nasal protrusion",
+        "sign": 1,
+        "genome_wide_significant": false,
+        "var_explained": 0.0064
+      },
+      {
+        "measure": "nasal_height",
+        "rsid": "rs5786757",
+        "chr": 10,
+        "trait": "Nasal height",
+        "sign": -1,
+        "genome_wide_significant": false,
+        "var_explained": 0.0061
+      }
+    ],
+    "recovery_check": {
+      "n_pairs": 260,
+      "bonferroni_alpha": 0.0001923076923076923,
+      "injected_detected": 14,
+      "injected_total": 14,
+      "injected_sign_ok": 14,
+      "null_pairs": 246,
+      "null_fpr_at_0.05": 0.028455284552845527,
+      "null_bonferroni_hits": 0,
+      "pairs": [
+        {
+          "rsid": "rs6129564",
+          "measure": "cranial_base_width",
+          "p": 6.638267789185013e-17,
+          "sign_ok": true,
+          "detected": true
+        },
+        {
+          "rsid": "rs145837285",
+          "measure": "nasal_ala_length_r",
+          "p": 4.2174524112846424e-14,
+          "sign_ok": true,
+          "detected": true
+        },
+        {
+          "rsid": "rs11093404",
+          "measure": "intercanthal_width",
+          "p": 8.056596358919312e-14,
+          "sign_ok": true,
+          "detected": true
+        },
+        {
+          "rsid": "rs2424399",
+          "measure": "nasal_width",
+          "p": 1.63317933664699e-09,
+          "sign_ok": true,
+          "detected": true
+        },
+        {
+          "rsid": "rs3828785",
+          "measure": "biocular_width",
+          "p": 3.1223171434253583e-13,
+          "sign_ok": true,
+          "detected": true
+        },
+        {
+          "rsid": "rs17649135",
+          "measure": "lower_face_height",
+          "p": 3.3857336368132202e-09,
+          "sign_ok": true,
+          "detected": true
+        },
+        {
+          "rsid": "rs12792834",
+          "measure": "middle_facial_depth_r",
+          "p": 4.2532724213310036e-10,
+          "sign_ok": true,
+          "detected": true
+        },
+        {
+          "rsid": "rs12792834",
+          "measure": "upper_facial_depth_r",
+          "p": 1.0294529083323016e-08,
+          "sign_ok": true,
+          "detected": true
+        },
+        {
+          "rsid": "rs56203676",
+          "measure": "mouth_width",
+          "p": 8.476240392373539e-12,
+          "sign_ok": true,
+          "detected": true
+        },
+        {
+          "rsid": "rs58761416",
+          "measure": "lower_facial_depth_r",
+          "p": 2.1400933908537685e-14,
+          "sign_ok": true,
+          "detected": true
+        },
+        {
+          "rsid": "rs3751074",
+          "measure": "nasal_bridge_length",
+          "p": 1.910769464110872e-06,
+          "sign_ok": true,
+          "detected": true
+        },
+        {
+          "rsid": "rs820217",
+          "measure": "upper_lip_height",
+          "p": 1.0668684608703433e-09,
+          "sign_ok": true,
+          "detected": true
+        },
+        {
+          "rsid": "rs6072091",
+          "measure": "nasal_protrusion",
+          "p": 2.1017953836173486e-05,
+          "sign_ok": true,
+          "detected": true
+        },
+        {
+          "rsid": "rs5786757",
+          "measure": "nasal_height",
+          "p": 3.153502108272197e-07,
+          "sign_ok": true,
+          "detected": true
+        }
+      ],
+      "accept": true
+    }
+  }
+}

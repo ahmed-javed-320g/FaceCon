@@ -1,0 +1,26 @@
+<section id="data" style="background:#0a1119;color:#e8eef7;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:34px">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:24px;letter-spacing:3px;color:#36e3ff;text-transform:uppercase">Data collection &amp; preprocessing</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:60px;font-weight:600;line-height:1.08">Synthetic data, built to be a fair test</h2>
+<p style="font-size:30px;color:#cdddee;line-height:1.4;max-width:1580px">Controlled 3DFN access is still pending, so — on our supervisor's advice — we generate synthetic data that exercises and validates the entire pipeline now. The real-data loader is the only piece that changes later.</p>
+<div style="display:flex;gap:24px">
+<div style="flex:1;background:#0e1a26;border:1px solid #1d3246;border-radius:16px;padding:34px;display:flex;flex-direction:column;gap:14px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:30px;color:#7cf6c0">How it is generated</h3>
+<ul style="font-size:25px;line-height:1.4;color:#bcd0e6;padding-left:24px;display:flex;flex-direction:column;gap:9px">
+<li>Ancestry-structured genotypes, dosages 0 / 1 / 2</li>
+<li>Planted genotype→face mapping: genetic 20% · demographic 35% · noise 45%</li>
+<li>HIrisPlex-S marker SNPs for the integrated colour predictor</li>
+</ul>
+</div>
+<div style="flex:1;background:#0e1a26;border:1px solid #1d3246;border-radius:16px;padding:34px;display:flex;flex-direction:column;gap:14px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:30px;color:#36e3ff">Size &amp; preprocessing</h3>
+<ul style="font-size:25px;line-height:1.4;color:#bcd0e6;padding-left:24px;display:flex;flex-direction:column;gap:9px">
+<li>5,000 subjects × 5,000 SNPs (25M calls) + HIrisPlex-S marker SNPs</li>
+<li>Faces of 26,719 vertices (FLAME-style stand-in)</li>
+<li>QC, standardization, ancestry PCs; subject-level 3,500 / 750 / 750</li>
+</ul>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:22px;color:#5f7489">FaceCon · F26-082</p>
+<p style="position:absolute;right:128px;bottom:64px;font-size:22px;color:#5f7489">8</p>
+<aside>On the data. Our real controlled-access data is still pending, so on our supervisor's advice we built synthetic data that exercises the whole pipeline now — and crucially, the real-data loader is the only thing that changes when access lands. How it is generated: ancestry-structured genotypes as 0/1/2 dosages; a planted genotype-to-face mapping with variance split twenty percent genetic, thirty-five demographic, forty-five noise; and, for appearance, the HIrisPlex-S marker SNPs that the integrated forensic predictor reads to return eye, hair and skin colour — we integrate that external method rather than training a colour model of our own. The scale is dataset-worthy: 5,000 subjects by 5,000 SNPs, plus the HIrisPlex-S marker SNPs, faces of nearly 27,000 vertices, standard QC and preprocessing, and strictly subject-level splits.</aside>
+</section>

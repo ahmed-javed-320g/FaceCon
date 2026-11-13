@@ -1,0 +1,18 @@
+<section id="methodology" data-section="Methodology and synthetic data" style="background:#0c1a26;color:#e8eef7;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:38px">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:24px;letter-spacing:3px;color:#36e3ff;text-transform:uppercase">Methodology of work</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:60px;font-weight:600;line-height:1.08">From genotype to an evaluated face</h2>
+<div style="display:flex;align-items:stretch;gap:14px">
+<div style="flex:1;background:#0e1a26;border:1px solid #1d3246;border-radius:14px;padding:26px;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;color:#36e3ff;font-weight:600">1 · Genotype</p><p style="font-size:23px;color:#bcd0e6;line-height:1.3">QC + GWAS-informed SNP panel</p></div>
+<div style="flex:1;background:#0e1a26;border:1px solid #1d3246;border-radius:14px;padding:26px;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;color:#36e3ff;font-weight:600">2 · Face target</p><p style="font-size:23px;color:#bcd0e6;line-height:1.3">Scans → FLAME shape β</p></div>
+<div style="flex:1;background:#0e1a26;border:1px solid #1d3246;border-radius:14px;padding:26px;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;color:#36e3ff;font-weight:600">3 · Models</p><p style="font-size:23px;color:#bcd0e6;line-height:1.3">Baselines-first progression</p></div>
+<div style="flex:1;background:#0e1a26;border:1px solid #1d3246;border-radius:14px;padding:26px;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;color:#36e3ff;font-weight:600">4 · Decode</p><p style="font-size:23px;color:#bcd0e6;line-height:1.3">β → 3D mesh + appearance</p></div>
+<div style="flex:1;background:#0e1a26;border:1px solid #1d3246;border-radius:14px;padding:26px;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;color:#36e3ff;font-weight:600">5 · Evaluate</p><p style="font-size:23px;color:#bcd0e6;line-height:1.3">Metrics + confounder ablations</p></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:30px;color:#7cf6c0">Baselines-first model progression</h3>
+<p style="font-size:27px;color:#cdddee;line-height:1.4">Mean face → demographics only → ridge (SNPs) → MLP (SNPs) → MLP (SNPs + demographics). Appearance colour is added by integrating the external HIrisPlex-S predictor on the same genotype, not by training a model. Shape complexity is added only when it beats the simpler baseline on identical splits.</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:22px;color:#5f7489">FaceCon · F26-082</p>
+<p style="position:absolute;right:128px;bottom:64px;font-size:22px;color:#5f7489">7</p>
+<aside>The methodology follows the data end to end. One: genotypes go through QC and a GWAS-informed SNP panel. Two: facial scans are fitted to FLAME, giving a compact shape vector beta as the prediction target. Three: models predict beta, using a baselines-first progression. Four: beta decodes to a 3D mesh, and the integrated HIrisPlex-S predictor adds eye, hair and skin colour from the same genotype. Five: we evaluate with mesh, landmark and region metrics plus confounder ablations. The key discipline is baselines-first — mean face, then demographics, then SNP models — and we only accept a more complex model when it actually beats the simpler one on the same splits.</aside>
+</section>

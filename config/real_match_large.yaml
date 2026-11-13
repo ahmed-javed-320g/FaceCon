@@ -1,0 +1,129 @@
+# SCALING-EXPERIMENT config: identical to real_match.yaml except N=10,000.
+# Used only for the learning curve (gpu/run_all.py). NOT the headline dataset:
+# the real cohort has 3,118 subjects, so results at larger N overstate what
+# real data could support.
+# FaceCon synthetic config — MATCHED to the real target dataset spec.
+#
+# Target: dbGaP phs000949 / 3D Facial Norms (3DFN), per Shaffer et al. 2016
+# (PLoS Genetics, GWAS of 20 facial measurements; N=3,118 European-ancestry;
+#  Illumina OmniExpress+Exome v1.2, 964,193 SNPs + 4,322 custom [FaceBase 3DFN
+#  technical notes], imputed to 1000G P3; GWAS adjusted for 4 ancestry PCs).
+# Verification status of every number here: see EVALUATION.md.
+#
+# What we match exactly:
+#   - N subjects = 3118
+#   - demographics/covariates = sex, age, age^2, height, weight, facial_size
+#   - BOTH phenotype representations: FLAME-style beta (50) AND 20 linear
+#     anthropometric measurements (computed from the decoded mesh landmarks)
+#   - the 41 real HIrisPlex-S marker loci embedded as named rsID genotype
+#     features (so appearance runs the real published model; see appearance.mode)
+#
+# Deliberate, DOCUMENTED divergences from the real cohort (and why):
+#   - SNP count: the real array is ~960k imputed to millions — infeasible for a
+#     browser prototype. We use a tractable panel (n_snps) explicitly documented
+#     as a subset of the OmniExpress+Exome v1.2 content, with the 41 HIrisPlex-S
+#     rsIDs embedded as named features. Representation is faithful; raw size is not.
+#   - Ancestry: the real cohort is European-only. We KEEP 3 synthetic ancestry
+#     groups as a deliberate confounding stress-test HARDER than the real data,
+#     so the evaluation's confounder controls are exercised. The real-data path
+#     (data.mode: real) runs European-only with within-ancestry PCs.
+seed: 20261016
+
+data:
+  mode: synthetic            # swap point: "synthetic" | "real"
+  out_dir: outputs/large
+  n_subjects: 10000          # SCALING EXPERIMENT ONLY: larger than the real cohort (3,118)
+  n_snps: 5000               # tractable panel; documented subset of OmniExpress+Exome v1.2
+  n_causal_snps: 150
+  ancestry:
+    n_groups: 3              # kept as a confounding stress-test (real cohort is European-only)
+    structured_fraction: 0.25
+  demographics:
+    age_min: 3               # MATCHED: 3DFN age range (3-49; Denver 3-12)
+    age_max: 49
+  maf_min: 0.05
+  maf_max: 0.5
+
+# Variance shares unchanged (the honesty backbone): modest genetic share so
+# "genetics adds little beyond demographics" stays an acceptable, designed-in result.
+face_variance:
+  genetic: 0.20
+  demographic: 0.35
+  noise: 0.45
+
+face_model:
+  source: ict
+  n_shape_dims: 50
+  identity_scale: 9.5
+  mesh_resolution: 48
+  regions: [nose, jaw, mouth, eyes, cheeks, forehead]
+
+# 20 linear anthropometric measurements (phenotype #2), APPROXIMATING the
+# Shaffer 2016 set (S5 table): 16 of their 20 traits are represented; we lack
+# subnasal width, philtrum length and lower lip height, add bizygomatic and
+# mandibular width, split palpebral fissure L/R, and use right-side landmarks. Each is a Euclidean distance between two named
+# facial landmarks on the decoded mesh (standard craniofacial anthropometry;
+# approximates the Shaffer 2016 measurement set). facial_size = geometric mean
+# of all 20, used as a covariate exactly as the real GWAS adjusts for it.
+anthropometry:
+  enable: true
+  measures:
+    - {name: intercanthal_width,     a: en_r,  b: en_l}
+    - {name: biocular_width,         a: ex_r,  b: ex_l}
+    - {name: palpebral_fissure_r,    a: en_r,  b: ex_r}
+    - {name: palpebral_fissure_l,    a: en_l,  b: ex_l}
+    - {name: nasal_width,            a: al_r,  b: al_l}
+    - {name: nasal_height,           a: n,     b: sn}
+    - {name: nasal_protrusion,       a: sn,    b: prn}
+    - {name: nasal_bridge_length,    a: n,     b: prn}
+    - {name: morphological_face_ht,  a: n,     b: gn}
+    - {name: upper_face_height,      a: n,     b: sto}
+    - {name: lower_face_height,      a: sn,    b: gn}
+    - {name: mouth_width,            a: ch_r,  b: ch_l}
+    - {name: upper_lip_height,       a: sn,    b: sto}
+    - {name: bizygomatic_width,      a: zy_r,  b: zy_l}
+    - {name: mandibular_width,       a: go_r,  b: go_l}
+    - {name: upper_facial_depth_r,   a: t_r,   b: n}
+    - {name: middle_facial_depth_r,  a: t_r,   b: sn}
+    - {name: lower_facial_depth_r,   a: t_r,   b: gn}
+    - {name: cranial_base_width,     a: t_r,   b: t_l}
+    - {name: nasal_ala_length_r,     a: al_r,  b: prn}   # Shaffer 'nasal ala length' (14q11.2); replaces former facial_convexity duplicate of nasal_bridge_length
+
+# Real published GWAS effects (Shaffer 2016) injected onto the measures above,
+# so the measurement-phenotype genetics reflect real loci, not invented weights.
+gwas_effects:
+  enable: true
+  effects_file: src/synth/gwas_effects.json
+
+qc:
+  snp_missingness_max: 0.05
+  subject_missingness_max: 0.10
+  maf_min: 0.01
+  standardize: true
+  n_pcs: 10
+
+split:
+  train: 0.7
+  val: 0.15
+  test: 0.15
+
+models:
+  enabled: [mean_face, demographics, ridge_snp, mlp_snp, mlp_snp_demo]
+  ridge: {alpha: 10.0}
+  mlp: {hidden_layers: [256, 128], max_iter: 400, alpha: 0.001, snp_pca: 150}
+
+eval:
+  landmark_count: 12
+  retrieval_gallery: 50
+
+# Appearance = REAL HIrisPlex-S integration (not a trained stand-in).
+# The 41 real marker rsIDs are embedded as named genotype features; their 0/1/2
+# dosages are exported to the official Erasmus MC HIrisPlex-S webtool, whose
+# published predictions are baked back in per subject. No appearance model is
+# trained; no appearance-accuracy is claimed.
+appearance:
+  mode: hirisplex_s          # was: trained 300-SNP panel + 6 traits (removed)
+  markers_file: src/appearance/hirisplex_model/markers.json
+  # ancestry-structured allele frequencies for the 41 marker loci so predicted
+  # pigmentation varies by synthetic ancestry group (pigmentation is ancestry-linked).
+  marker_structured_fraction: 0.6
