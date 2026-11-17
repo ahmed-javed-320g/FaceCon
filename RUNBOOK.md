@@ -31,8 +31,9 @@ is private until its owner shares it from its page on claude.ai.
 
 ## 1. Prerequisites (the day before)
 
-Nothing to install to **run** the demo: it is three files and a font, no library, no
-network. To **rebuild** its data you need the Python environment:
+Nothing to install to **run** the demo: two pages, a data file, a font, and three.js
+(r147, MIT) in `vendor/`, all local, no network. To **rebuild** its data you need the
+Python environment:
 
 ```bash
 pip install -r requirements.txt -r gpu/requirements.txt    # the second file adds torch, which the export needs
@@ -45,6 +46,7 @@ Committed and required:
 app/index.html, app/holo.html       the two pages
 app/data/demo.js                    2.8 MB: mesh, 36 held-out people, recorded results
 app/instrument-sans.woff2           the typeface (SIL OFL, licence beside it)
+app/vendor/                         three.js r147 and its orbit controls and studio lighting (MIT)
 outputs/real_match/dataset.npz      the simulated cohort the demo is drawn from
 ```
 
@@ -54,7 +56,7 @@ outputs/real_match/dataset.npz      the simulated cohort the demo is drawn from
 
 ```bash
 python scripts/export_demo.py       # about 1 minute on CPU, writes app/data/demo.js
-cp app/index.html app/holo.html deploy/ && cp app/data/demo.js deploy/data/
+cp app/index.html app/holo.html deploy/ && cp app/data/demo.js deploy/data/ && cp -r app/vendor deploy/
 ```
 
 It trains the demo's MLP with a fixed seed, so a rebuild reproduces these exactly
@@ -102,7 +104,8 @@ hold frame for photos.
 
 1. **The app folder on disk** — `app/` or `deploy/` (identical). Opens from
    `file://`; makes no network calls except an optional font request that fails
-   silently offline.
+   silently offline. The hosted copy loads three.js from jsDelivr instead, so it
+   needs internet.
 2. **The same folder on a USB stick.**
 3. **Deck PDF**, exported before the day, on the stick and emailed to all three.
 4. **A 60 to 90 second screen recording** of the Explore flow and one hologram cycle,
@@ -123,6 +126,8 @@ Pre-flight on the actual demo laptop:
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | Grey panel saying WebGL is turned off | venue browser or GPU blocks WebGL | enable hardware acceleration and reload, or play the recording |
+| Panel saying the 3D view could not load three.js | `vendor/` missing, or the hosted copy is offline | copy the whole `app/` folder; the other tabs still work meanwhile |
+| Room too bright to read the dark theme | projector washes out dark pages | press **Light mode** in the header; the choice is remembered |
 | Message saying the data file was not found | `data/demo.js` missing beside `index.html` | copy the whole `app/` folder, not just the HTML |
 | Different typeface than rehearsed | `instrument-sans.woff2` missing | harmless; copy the whole folder next time |
 | Hologram never colours in | tab was in the background | click once to restart the cycle |
@@ -139,6 +144,9 @@ Pre-flight on the actual demo laptop:
   the public calculator and are not yet checked against the paper).
 - **Simulated:** every face, and the genotypes in the Explore tab. The genotype-to-face
   link was planted by us and is additive, which is why ridge is expected to win.
+  The 41 pigmentation markers in the Explore cohort are also simulated, each drawn
+  independently, so a colour combination can be one a real genome would rarely give
+  (very dark skin with blond hair, say). The real-genotype colour check is in Results.
 - **Stale:** the slide deck still carries pre-correction claims (that SNPs add nothing,
   N=5,000). Do not present those slides until the deck is updated. The demonstrator and
   the report are current.

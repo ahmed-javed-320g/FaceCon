@@ -41,6 +41,10 @@ html,body{margin:0;height:100%;background:#02060c;overflow:hidden;font-family:"I
 <div class="ui" id="foot"><div id="sid"></div><div id="model"></div><div id="phase"></div><div id="chips"></div></div>
 <div id="hint">Space pauses, click or the right arrow shows the next person</div>
 
+<script src="vendor/three.min.js"></script>
+<script>if (!window.THREE) document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"><\/script>');</script>
+<script src="vendor/RoomEnvironment.js"></script>
+<script>if (!THREE.RoomEnvironment) document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"><\/script>');</script>
 <script src="data/demo.js"></script>
 <script>
 "use strict";
@@ -61,11 +65,6 @@ const EDGES = (() => { const seen = new Set(), out = [];
 
 function decode(beta, t, out) { out.set(MEAN); const n = NV * 3;
   for (let k = 0; k < K; k++) { const b = beta[k] * t; if (!b) continue; const o = k * n; for (let i = 0; i < n; i++) out[i] += b * BASIS[o + i]; } return out; }
-function normals(P, out) { out.fill(0);
-  for (let t = 0; t < FACES.length; t += 3) { const a = FACES[t] * 3, b = FACES[t + 1] * 3, c = FACES[t + 2] * 3;
-    const ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], vx = P[c] - P[a], vy = P[c + 1] - P[a + 1], vz = P[c + 2] - P[a + 2];
-    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; for (const i of [a, b, c]) { out[i] += nx; out[i + 1] += ny; out[i + 2] += nz; } }
-  for (let i = 0; i < out.length; i += 3) { const l = Math.hypot(out[i], out[i + 1], out[i + 2]) || 1; out[i] /= l; out[i + 1] /= l; out[i + 2] /= l; } return out; }
 
 // ---- regions from geometry: hair cap on the skin part, iris and pupil on each eyeball ----
 let lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
@@ -88,29 +87,32 @@ const PAL = {
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
 const NAMES = {eye: "Eyes", hair: "Hair", skin: "Skin"};
 
-// ---- WebGL: one program, solid and wire passes ----
-const cv = document.getElementById("c"), gl = cv.getContext("webgl", {antialias: true});
-const VS = `attribute vec3 p;attribute vec3 n;attribute vec3 c;uniform mat4 M;uniform mat4 P;varying vec3 vn;varying vec3 vc;varying vec3 vp;
-void main(){vec4 w=M*vec4(p,1.0);vp=w.xyz;vn=mat3(M)*n;vc=c;gl_Position=P*w;}`;
-const FS = `precision mediump float;varying vec3 vn;varying vec3 vc;varying vec3 vp;uniform float A;uniform float W;
-void main(){if(W>0.5){gl_FragColor=vec4(0.31,0.91,1.0,A);return;}
-vec3 N=normalize(vn);vec3 V=normalize(-vp);vec3 L=normalize(vec3(-0.4,0.6,0.8));vec3 L2=normalize(vec3(0.6,-0.1,0.7));
-float d=max(dot(N,L),0.0)*0.75+max(dot(N,L2),0.0)*0.25;float rim=pow(1.0-max(dot(N,V),0.0),2.5);
-vec3 col=vc*(0.28+d)+vec3(0.2,0.75,0.95)*rim*0.45;gl_FragColor=vec4(col*A,A);}`;
-const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); return o; };
-const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
-const B = {}; for (const a of ["p", "n", "c"]) { B[a] = gl.createBuffer(); const l = gl.getAttribLocation(pr, a); gl.bindBuffer(gl.ARRAY_BUFFER, B[a]); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 3, gl.FLOAT, false, 0, 0); }
-const IB = gl.createBuffer(), EB = gl.createBuffer();
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, IB); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, FACES, gl.STATIC_DRAW);
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EB); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, EDGES, gl.STATIC_DRAW);
-const U = n => gl.getUniformLocation(pr, n), uM = U("M"), uP = U("P"), uA = U("A"), uW = U("W");
+// ---- three.js scene: a solid head and a wireframe that share one position buffer ----
+if (!window.THREE || !THREE.RoomEnvironment) { document.getElementById("phase").textContent = "This page could not load three.js. Keep the vendor folder next to it, or connect to the internet for the hosted copy."; throw new Error("three.js missing"); }
+const cv = document.getElementById("c");
+const R = new THREE.WebGLRenderer({canvas: cv, antialias: true});
+R.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); R.outputEncoding = THREE.sRGBEncoding;
+R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 0.95; R.setClearColor(0x02060c, 1);
+const scene = new THREE.Scene();
+const pm = new THREE.PMREMGenerator(R); scene.environment = pm.fromScene(new THREE.RoomEnvironment(), 0.04).texture; pm.dispose();
+const key = new THREE.DirectionalLight(0x9fe8ff, 0.8); key.position.set(-0.4, 0.7, 1.2); scene.add(key);
+const warm = new THREE.DirectionalLight(0xffe9d2, 0.35); warm.position.set(0.6, -0.1, 0.8); scene.add(warm);
+const POS = new THREE.BufferAttribute(new Float32Array(NV * 3), 3); POS.setUsage(THREE.DynamicDrawUsage);
+const COLA = new THREE.BufferAttribute(new Float32Array(NV * 3), 3);
+const geo = new THREE.BufferGeometry(); geo.setAttribute("position", POS); geo.setAttribute("color", COLA); geo.setIndex(new THREE.BufferAttribute(FACES, 1));
+const solidMat = new THREE.MeshStandardMaterial({vertexColors: true, roughness: 0.6, metalness: 0, envMapIntensity: 0.5, transparent: true, opacity: 0});
+const solid = new THREE.Mesh(geo, solidMat); solid.renderOrder = 0; solid.frustumCulled = false;
+const wgeo = new THREE.BufferGeometry(); wgeo.setAttribute("position", POS); wgeo.setIndex(new THREE.BufferAttribute(EDGES, 1));
+const wireMat = new THREE.LineBasicMaterial({color: 0x4fe9ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false});
+const wire = new THREE.LineSegments(wgeo, wireMat); wire.renderOrder = 1; wire.frustumCulled = false;
 const cx = (lo[0] + hi[0]) / 2, cy = lo[1] + ry * 0.44, cz = (lo[2] + hi[2]) / 2, ext = Math.max(hi[0] - lo[0], ry) * 0.80;
-function M(yaw) { const c = Math.cos(yaw), s = Math.sin(yaw), d = ext / Math.tan(15 * Math.PI / 180);
-  return [c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, -c * cx - s * cz, -cy, s * cx - c * cz - d, 1]; }
-function P() { const t = 1 / Math.tan(15 * Math.PI / 180), a = cv.width / cv.height; return [t / a, 0, 0, 0, 0, t, 0, 0, 0, 0, -1.004, -1, 0, 0, -20.04, 0]; }
-function resize() { const r = Math.min(devicePixelRatio || 1, 2); cv.width = innerWidth * r; cv.height = innerHeight * r; }
+const inner = new THREE.Group(); inner.add(solid, wire); inner.position.set(-cx, -cy, -cz);
+const pivot = new THREE.Group(); pivot.add(inner); scene.add(pivot);
+const cam = new THREE.PerspectiveCamera(30, 1, 10, 5000); cam.position.set(0, 0, ext / Math.tan(15 * Math.PI / 180));
+function resize() { R.setSize(innerWidth, innerHeight); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); }
 addEventListener("resize", resize); resize();
-const pos = new Float32Array(NV * 3), nrm = new Float32Array(NV * 3), col = new Float32Array(NV * 3);
+const pos = POS.array;
+const toLin = c => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
 
 // ---- reveal sequence ----
 const PH = [["Building the shape from the genotype", 1600], ["Adding colour from the pigmentation markers", 1300], ["", 3400], ["", 700]];
@@ -120,16 +122,21 @@ function start(i) {
   const pick = t => { const p = s.appearance[t], L = D.appearance_labels[t], j = p.indexOf(Math.max(...p)); return [L[j], p[j]]; };
   const [ec, ep] = pick("eye"), [hc, hp] = pick("hair"), [kc, kp] = pick("skin");
   const E = hex(PAL.eye[ec]), H = hex(PAL.hair[hc]), Sk = hex(PAL.skin[kc]);
-  for (let i = 0; i < NV; i++) { const r = REGION[i], c = r === 1 ? H : r === 2 ? [0.93, 0.92, 0.89] : r === 3 ? E : r === 4 ? [0.04, 0.04, 0.05] : Sk; col.set(c, i * 3); }
-  gl.bindBuffer(gl.ARRAY_BUFFER, B.c); gl.bufferData(gl.ARRAY_BUFFER, col, gl.STATIC_DRAW);
+  const col = COLA.array;
+  for (let i = 0; i < NV; i++) { const r = REGION[i], c = r === 1 ? H : r === 2 ? [0.93, 0.92, 0.89] : r === 3 ? E : r === 4 ? [0.04, 0.04, 0.05] : Sk; col[i * 3] = toLin(c[0]); col[i * 3 + 1] = toLin(c[1]); col[i * 3 + 2] = toLin(c[2]); }
+  COLA.needsUpdate = true;
   document.getElementById("sid").textContent = s.id.replace("SUBJ-", "Person ") + `, ${s.sex}, ${s.age.toFixed(0)}`;
   document.getElementById("model").textContent = `Shape: ridge regression on demographics and SNPs, ${s.mesh_mm[MODEL].toFixed(2)} mm from the true face`;
   document.getElementById("chips").innerHTML = [["eye", ec, ep], ["hair", hc, hp], ["skin", kc, kp]].map(([t, c, p]) =>
     `<div class="chip"><span class="sw" style="background:${PAL[t][c]}"></span>${NAMES[t]}: ${c.replace(/_/g, " ")} <small>${Math.round(100 * p)}%</small></div>`).join("");
   phase = RM ? 2 : 0; t0 = performance.now();
 }
+let last = 0;
 function frame(now) {
   requestAnimationFrame(frame);
+  // a stalled frame (slow start, busy machine) pauses the clock instead of skipping phases
+  if (last && now - last > 250) t0 += now - last - 16;
+  last = now;
   const [label, dur] = PH[phase], e = now - t0, p = Math.min(1, e / dur);
   document.getElementById("phase").textContent = label;
   document.getElementById("chips").style.opacity = phase >= 1 ? 1 : 0;
@@ -137,21 +144,12 @@ function frame(now) {
   if (phase === 0) { shapeT = p; wireA = 0.25 + 0.55 * p; solidA = 0; }
   else if (phase === 1) { wireA = 0.8 - 0.75 * p; solidA = p; }
   else if (phase === 3) { solidA = 1 - p; wireA = 0.05 + 0.4 * Math.sin(p * Math.PI); }
-  decode(beta, shapeT, pos); normals(pos, nrm);
-  gl.bindBuffer(gl.ARRAY_BUFFER, B.p); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.DYNAMIC_DRAW);
-  gl.bindBuffer(gl.ARRAY_BUFFER, B.n); gl.bufferData(gl.ARRAY_BUFFER, nrm, gl.DYNAMIC_DRAW);
-  gl.viewport(0, 0, cv.width, cv.height); gl.clearColor(0.008, 0.024, 0.047, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  gl.uniformMatrix4fv(uM, false, M(paused || RM ? 0.25 : Math.sin(now * 0.0002) * 0.5)); gl.uniformMatrix4fv(uP, false, P());
-  if (solidA > 0.01) { gl.enable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    gl.uniform1f(uW, 0); gl.uniform1f(uA, solidA); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, IB); gl.drawElements(gl.TRIANGLES, FACES.length, gl.UNSIGNED_SHORT, 0); }
-  if (wireA > 0.01) {
-    if (solidA < 0.5) {                     // invisible depth pass, so only the visible surface's edges show
-      gl.enable(gl.DEPTH_TEST); gl.colorMask(false, false, false, false); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1, 1);
-      gl.uniform1f(uW, 0); gl.uniform1f(uA, 1); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, IB); gl.drawElements(gl.TRIANGLES, FACES.length, gl.UNSIGNED_SHORT, 0);
-      gl.colorMask(true, true, true, true); gl.disable(gl.POLYGON_OFFSET_FILL); gl.depthFunc(gl.LEQUAL);
-    } else gl.disable(gl.DEPTH_TEST);
-    gl.depthMask(false); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-    gl.uniform1f(uW, 1); gl.uniform1f(uA, wireA * 0.35); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EB); gl.drawElements(gl.LINES, EDGES.length, gl.UNSIGNED_SHORT, 0); gl.depthMask(true); gl.depthFunc(gl.LESS); }
+  decode(beta, shapeT, pos); POS.needsUpdate = true; geo.computeVertexNormals();
+  // first phase: the solid only writes depth, so the wireframe shows the visible surface alone
+  solidMat.colorWrite = solidA > 0.01; solidMat.opacity = solidA > 0.01 ? solidA : 1; solidMat.depthWrite = true;
+  wireMat.depthTest = solidA <= 0.01; wireMat.opacity = wireA * 0.35;
+  pivot.rotation.y = paused || RM ? 0.25 : Math.sin(now * 0.0002) * 0.5;
+  R.render(scene, cam);
   if (!paused && e >= dur) { if (phase < PH.length - 1) { phase++; t0 = now; } else start(si + 1); }
 }
 addEventListener("keydown", e => { if (e.code === "Space") { paused = !paused; e.preventDefault(); } if (e.key === "ArrowRight") start(si + 1); if (e.key === "ArrowLeft") start(si - 1); });
