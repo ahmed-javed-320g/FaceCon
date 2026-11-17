@@ -76,7 +76,7 @@ def main():
     R["C NEGATIVE CONTROL permuted | screen"] = run(                  # ---- C
         dict(features="screen", permute_snps=True, data_dir=dd), models, seeds[:1], device, epochs, patience)
 
-    cols = ["demographics", "ridge_snp"] + models
+    cols = ["demographics", "ridge_snp", "ridge_demo_snp"] + models
     print("\n==================== COPY FROM HERE ====================")
     print(f"test param-R2 (mean±sd over {len(seeds)} seeds) | device={device} | data={dd} | "
           + ("SIMULATED DATA" if is_default else "REAL GENOTYPES, SIMULATED FACES"))
@@ -87,11 +87,20 @@ def main():
     c = R["C NEGATIVE CONTROL permuted | screen"]
     checks["C: permuted SNP models gain <= 0.01 over demographics"] = bool(
         max(np.mean(c[m]) for m in models) - c["demographics"][0] <= 0.01)
+    checks["C: permuted ridge(demographics+SNP) gains <= 0.01 over demographics"] = bool(
+        np.mean(c["ridge_demo_snp"]) - c["demographics"][0] <= 0.01)
     if have_large:
         checks["B: screened MLP at train_n=7000 >= at 2182"] = bool(
             np.mean(R["B large, train_n=7000 | screen"]["mlp"]) >= np.mean(R["B large, train_n=2182 | screen"]["mlp"]))
     for k, v in checks.items():
         print(f"{'PASS' if v else 'FAIL'}  {k}")
+    print("\nDEEP vs LINEAR, same split and same inputs (best deep model - ridge on demographics+SNP):")
+    for k, v in R.items():
+        if k.startswith("C "):
+            continue
+        bd = max((np.mean(v[m]), m) for m in models)
+        print(f"  {k:40s} best={bd[1]:12s} {bd[0]:+.3f}  ridge(demo+SNP) {np.mean(v['ridge_demo_snp']):+.3f}"
+              f"  gap {bd[0] - np.mean(v['ridge_demo_snp']):+.3f}")
     print(f"total time {time.time()-t0:.0f}s")
     print("==================== TO HERE ====================")
     json.dump({"device": device, "seeds": seeds, "data_dir": dd, "results": R, "checks": checks},

@@ -39,6 +39,25 @@ def baselines(data: FaceConData):
     rows["demographics"] = data.evaluate(b_te, lr.predict(demo_te))
     rg = Ridge(alpha=10.0).fit(snp_tr, b_tr)
     rows["ridge_snp"] = data.evaluate(b_te, rg.predict(snp_te))
+    # Linear model given EXACTLY what the deep nets get (demographics + SNP
+    # features), alpha picked on the validation split. This is the baseline the
+    # deep models have to beat to justify their complexity; ridge_snp above
+    # withholds the covariates and so understates the linear option.
+    # Two-stage, as in the controls ladder: covariates unpenalised by OLS, then
+    # ridge on the SNP features against what the covariates left over. A plain
+    # ridge on [demo, snp] penalises the covariates too, so at the large alpha
+    # that noise features demand it falls BELOW the demographics baseline and
+    # understates the linear option exactly where the comparison matters.
+    snp_va, demo_va, b_va = [t.cpu().numpy() for t in data.tensors("val")]
+    r_tr = b_tr - lr.predict(demo_tr)
+    best, best_r2 = None, -np.inf
+    for alpha in (1.0, 10.0, 100.0, 1e3, 1e4, 1e5, 1e6):
+        m = Ridge(alpha=alpha).fit(snp_tr, r_tr)
+        r2 = _param_r2(b_va, lr.predict(demo_va) + m.predict(snp_va))
+        if r2 > best_r2:
+            best, best_r2 = m, r2
+    rows["ridge_demo_snp"] = data.evaluate(b_te, lr.predict(demo_te) + best.predict(snp_te))
+    rows["ridge_demo_snp"]["alpha"] = float(best.alpha)
     return rows
 
 
