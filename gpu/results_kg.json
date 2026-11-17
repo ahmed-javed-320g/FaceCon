@@ -1,56 +1,425 @@
 {
-  "_source": "Transcribed from the console of the GPU-machine runs of 2026-11-17/18 (outputs/controls_kg.json, outputs/controls_kg_hidden.json, gpu/report_back.json on that machine, outputs/kg_geno/build_report.json). Copy those JSON files into the repo to replace this transcription.",
-  "_mode": "real_genotypes_1000G_simulated_faces",
-  "cohort": {
-    "n_people": 2573, "n_snps": 100009, "missing_rate": 0.00008,
-    "superpop": {"AFR": 680, "AMR": 351, "EAS": 506, "EUR": 525, "SAS": 511},
-    "males": 1276, "females": 1297,
-    "splits": {"train": 1801, "val": 385, "test": 387},
-    "n_causal": 300, "causal_dims": 5, "genetic_share": 0.20,
-    "hps_found": 39, "hps_total": 41, "hps_missing": ["rs312262906 (MC1R N29insA)", "rs201326893 (MC1R Y152OCH)"],
-    "gwas_found": 13, "gwas_total": 13, "gwas_flagged": ["rs56203676", "rs5786757"]
+ "_source": "Built by scripts/summarise_kg.py from gpu/controls_kg.json, gpu/controls_kg_hidden.json, gpu/report_back_kg.json and gpu/build_report_kg.json. Fields under _console_only come from the console output of scripts/generate_matched.py.",
+ "_mode": "real_genotypes_1000G_simulated_faces",
+ "cohort": {
+  "n_people": 2573,
+  "n_snps": 100009,
+  "missing_rate": 7.9e-05,
+  "superpop": {
+   "AFR": 680,
+   "AMR": 351,
+   "EAS": 506,
+   "EUR": 525,
+   "SAS": 511
   },
-  "ladder": {
-    "seeds": 5,
-    "mean":   {"mean": -0.003, "sd": 0.000},
-    "cov":    {"mean": 0.195, "sd": 0.010},
-    "cov+PC": {"mean": 0.335, "sd": 0.008},
-    "cov+labels": {"mean": 0.345, "sd": 0.009},
-    "+SNP-PCA256": {"mean": 0.335, "sd": 0.009},
-    "+SNP-screen": {"mean": 0.435, "sd": 0.006},
-    "ORACLE": {"mean": 0.449, "sd": 0.005}
-  },
-  "delta": {
-    "pca256": 0.001, "screen": 0.100, "oracle": 0.114,
-    "permuted": -0.001, "null_share": -0.000,
-    "screen_ci": [[0.097, 0.112], [0.099, 0.115], [0.091, 0.106], [0.089, 0.104], [0.086, 0.100]],
-    "permuted_ci": [[-0.001, 0.000], [-0.001, 0.000], [-0.001, -0.000], [-0.002, -0.001], [-0.002, -0.000]]
-  },
-  "hidden_causal": {
-    "screen": 0.025,
-    "screen_ci": [[0.018, 0.023], [0.022, 0.029], [0.026, 0.035], [0.024, 0.030], [0.019, 0.026]],
-    "pca256": -0.000,
-    "same_on_unlinked_synthetic_panel": -0.001
-  },
-  "acceptance": {"A1": "PASS", "A2": "PASS", "A3": "PASS", "A4": "PASS", "A3_hidden": "info: yes"},
-  "models": {
-    "seeds": 3,
-    "pca":    {"demographics": 0.338, "ridge_snp": 0.141, "ridge_demo_snp": 0.338,
-               "mlp": [0.242, 0.002], "transformer": [0.327, 0.001], "contrastive": [0.175, 0.002], "diffusion": [-0.523, 0.034]},
-    "screen": {"demographics": 0.338, "ridge_snp": 0.165, "ridge_demo_snp": 0.443,
-               "mlp": [0.366, 0.001], "transformer": [0.333, 0.001], "contrastive": [0.338, 0.002], "diffusion": [-0.045, 0.014]},
-    "permuted_screen_one_run": {"demographics": 0.338, "ridge_snp": -0.190, "ridge_demo_snp": 0.338,
-               "mlp": 0.243, "transformer": 0.330, "contrastive": 0.239, "diffusion": -0.291},
-    "checks": {"C: permuted SNP models gain <= 0.01 over demographics": true,
-               "C: permuted ridge(demographics+SNP) gains <= 0.01 over demographics": true}
-  },
-  "gwas_recovery": {"injected_detected": 14, "injected_total": 14, "correct_sign": 14,
-                    "non_injected": 246, "bonferroni_false_hits": 0, "fpr_at_0_05": 0.061},
-  "appearance_by_superpop": {
-    "AFR": {"eye": ["brown", 99.7], "hair": ["black", 94.1], "skin": ["dark_to_black", 99.1]},
-    "AMR": {"eye": ["brown", 94.3], "hair": ["black", 49.6], "skin": ["dark_to_black", 40.5]},
-    "EAS": {"eye": ["brown", 100.0], "hair": ["black", 100.0], "skin": ["dark_to_black", 89.5]},
-    "EUR": {"eye": ["brown", 52.0], "hair": ["brown", 57.1], "skin": ["intermediate", 89.9]},
-    "SAS": {"eye": ["brown", 99.8], "hair": ["black", 82.0], "skin": ["dark_to_black", 52.6]}
+  "n_causal": 300,
+  "causal_dims": 5,
+  "genetic_share": 0.2,
+  "hps_found": 39,
+  "hps_total": 41,
+  "hps_missing": [
+   "rs312262906",
+   "rs201326893"
+  ],
+  "gwas_found": 13,
+  "gwas_total": 13,
+  "gwas_flagged": [
+   "rs56203676",
+   "rs5786757"
+  ],
+  "males": 1276,
+  "females": 1297,
+  "splits": {
+   "train": 1801,
+   "val": 385,
+   "test": 387
   }
+ },
+ "ladder": {
+  "seeds": 5,
+  "mean": {
+   "mean": -0.003349,
+   "sd": 0.00033
+  },
+  "cov": {
+   "mean": 0.194944,
+   "sd": 0.009742
+  },
+  "cov+PC": {
+   "mean": 0.334766,
+   "sd": 0.00833
+  },
+  "cov+labels": {
+   "mean": 0.344759,
+   "sd": 0.008794
+  },
+  "+SNP-PCA256": {
+   "mean": 0.335289,
+   "sd": 0.008635
+  },
+  "+SNP-screen": {
+   "mean": 0.434813,
+   "sd": 0.005622
+  },
+  "ORACLE": {
+   "mean": 0.449028,
+   "sd": 0.005174
+  }
+ },
+ "delta": {
+  "pca256": 0.000523,
+  "screen": 0.100046,
+  "oracle": 0.114261,
+  "oracle_per_seed": [
+   0.116447,
+   0.123818,
+   0.117207,
+   0.107019,
+   0.106817
+  ],
+  "permuted": -0.000856,
+  "null_share": -0.00019,
+  "screen_ci": [
+   [
+    0.097028,
+    0.11192
+   ],
+   [
+    0.099182,
+    0.115057
+   ],
+   [
+    0.090741,
+    0.10608
+   ],
+   [
+    0.088955,
+    0.103805
+   ],
+   [
+    0.086351,
+    0.099938
+   ]
+  ],
+  "permuted_ci": [
+   [
+    -0.001293,
+    7.9e-05
+   ],
+   [
+    -0.00114,
+    0.000158
+   ],
+   [
+    -0.001379,
+    -0.000165
+   ],
+   [
+    -0.002171,
+    -0.000756
+   ],
+   [
+    -0.001638,
+    -0.000357
+   ]
+  ]
+ },
+ "hidden_causal": {
+  "screen": 0.025112,
+  "screen_ci": [
+   [
+    0.017524,
+    0.023346
+   ],
+   [
+    0.021583,
+    0.028519
+   ],
+   [
+    0.026257,
+    0.035342
+   ],
+   [
+    0.023522,
+    0.029577
+   ],
+   [
+    0.019297,
+    0.025555
+   ]
+  ],
+  "pca256": -6.7e-05,
+  "same_on_unlinked_synthetic_panel": -0.001
+ },
+ "acceptance": {
+  "A1 permuted genotypes give no gain: no CI above 0 and |mean delta| <= 0.005": true,
+  "A2 null-share |delta| <= 0.01": true,
+  "A3 positive control: ORACLE delta >= 0.10 and screen CI > 0 (all seeds)": true,
+  "A4 splits disjoint": true
+ },
+ "acceptance_hidden": {
+  "A1 permuted genotypes give no gain: no CI above 0 and |mean delta| <= 0.005": true,
+  "A2 null-share |delta| <= 0.01": true,
+  "A3 positive control: ORACLE delta >= 0.10 and screen CI > 0 (all seeds)": true,
+  "A4 splits disjoint": true
+ },
+ "models": {
+  "pca": {
+   "demographics": 0.3377,
+   "ridge_snp": 0.1414,
+   "ridge_demo_snp": 0.3376,
+   "mlp": [
+    0.241767,
+    0.002412
+   ],
+   "mlp_mesh": [
+    3.071,
+    0.009
+   ],
+   "transformer": [
+    0.3269,
+    0.001098
+   ],
+   "transformer_mesh": [
+    2.889,
+    0.005
+   ],
+   "contrastive": [
+    0.174933,
+    0.00187
+   ],
+   "contrastive_mesh": [
+    3.21,
+    0.032
+   ],
+   "diffusion": [
+    -0.522967,
+    0.033841
+   ],
+   "diffusion_mesh": [
+    4.264,
+    0.014
+   ],
+   "demographics_mesh": 2.851
+  },
+  "screen": {
+   "demographics": 0.3377,
+   "ridge_snp": 0.1651,
+   "ridge_demo_snp": 0.4433,
+   "mlp": [
+    0.366033,
+    0.001473
+   ],
+   "mlp_mesh": [
+    2.811,
+    0.003
+   ],
+   "transformer": [
+    0.332933,
+    0.001443
+   ],
+   "transformer_mesh": [
+    2.875,
+    0.0
+   ],
+   "contrastive": [
+    0.3379,
+    0.00159
+   ],
+   "contrastive_mesh": [
+    2.856,
+    0.008
+   ],
+   "diffusion": [
+    -0.0452,
+    0.014125
+   ],
+   "diffusion_mesh": [
+    3.562,
+    0.045
+   ],
+   "demographics_mesh": 2.851
+  },
+  "permuted_screen_one_run": {
+   "demographics": 0.3377,
+   "ridge_snp": -0.1899,
+   "ridge_demo_snp": 0.3377,
+   "mlp": 0.2434,
+   "transformer": 0.3297,
+   "contrastive": 0.2387,
+   "diffusion": -0.2915
+  },
+  "checks": {
+   "C: permuted SNP models gain <= 0.01 over demographics": true,
+   "C: permuted ridge(demographics+SNP) gains <= 0.01 over demographics": true
+  },
+  "seeds": 3
+ },
+ "gwas_recovery": {
+  "injected_detected": 14,
+  "injected_total": 14,
+  "correct_sign": 14,
+  "non_injected": 246,
+  "bonferroni_false_hits": 0,
+  "fpr_at_0_05": 0.061
+ },
+ "appearance_by_superpop": {
+  "AFR": {
+   "eye": [
+    "brown",
+    99.7
+   ],
+   "hair": [
+    "black",
+    94.1
+   ],
+   "skin": [
+    "dark_to_black",
+    99.1
+   ]
+  },
+  "AMR": {
+   "eye": [
+    "brown",
+    94.3
+   ],
+   "hair": [
+    "black",
+    49.6
+   ],
+   "skin": [
+    "dark_to_black",
+    40.5
+   ]
+  },
+  "EAS": {
+   "eye": [
+    "brown",
+    100.0
+   ],
+   "hair": [
+    "black",
+    100.0
+   ],
+   "skin": [
+    "dark_to_black",
+    89.5
+   ]
+  },
+  "EUR": {
+   "eye": [
+    "brown",
+    52.0
+   ],
+   "hair": [
+    "brown",
+    57.1
+   ],
+   "skin": [
+    "intermediate",
+    89.9
+   ]
+  },
+  "SAS": {
+   "eye": [
+    "brown",
+    99.8
+   ],
+   "hair": [
+    "black",
+    82.0
+   ],
+   "skin": [
+    "dark_to_black",
+    52.6
+   ]
+  }
+ },
+ "appearance_full": {
+  "AFR": {
+   "eye": {
+    "blue": 0.3,
+    "brown": 99.7
+   },
+   "hair": {
+    "black": 94.1,
+    "brown": 5.9
+   },
+   "skin": {
+    "dark": 0.4,
+    "dark_to_black": 99.1,
+    "intermediate": 0.4
+   }
+  },
+  "AMR": {
+   "eye": {
+    "blue": 5.7,
+    "brown": 94.3
+   },
+   "hair": {
+    "black": 49.6,
+    "blond": 2.0,
+    "brown": 48.1,
+    "red": 0.3
+   },
+   "skin": {
+    "dark": 23.6,
+    "dark_to_black": 40.5,
+    "intermediate": 35.9
+   }
+  },
+  "EAS": {
+   "eye": {
+    "brown": 100.0
+   },
+   "hair": {
+    "black": 100.0
+   },
+   "skin": {
+    "dark": 0.8,
+    "dark_to_black": 89.5,
+    "intermediate": 9.7
+   }
+  },
+  "EUR": {
+   "eye": {
+    "blue": 48.0,
+    "brown": 52.0
+   },
+   "hair": {
+    "black": 1.1,
+    "blond": 37.9,
+    "brown": 57.1,
+    "red": 3.8
+   },
+   "skin": {
+    "dark": 0.8,
+    "dark_to_black": 0.6,
+    "intermediate": 89.9,
+    "pale": 3.8,
+    "very_pale": 5.0
+   }
+  },
+  "SAS": {
+   "eye": {
+    "blue": 0.2,
+    "brown": 99.8
+   },
+   "hair": {
+    "black": 82.0,
+    "brown": 18.0
+   },
+   "skin": {
+    "dark": 41.5,
+    "dark_to_black": 52.6,
+    "intermediate": 5.9
+   }
+  }
+ },
+ "_console_only": [
+  "cohort.males",
+  "cohort.females",
+  "cohort.splits",
+  "gwas_recovery"
+ ]
 }

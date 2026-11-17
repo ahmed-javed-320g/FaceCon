@@ -604,7 +604,7 @@ function renderResults(ds) {
       {label: "Screened, causal SNPs hidden", value: hid, color: MC.diffusion}, {label: "256 principal components", value: dl.pca256, color: MC.grey},
       {label: "Genotypes shuffled", value: dl.permuted, color: MC.grey}], {ticks: [0, 0.05, 0.1, 0.15], min: -0.01, max: (isKg ? 0.14 : 0.2), signed: true, aria: "Gain in R squared from SNPs"}),
     "Gain in test R² over sex, age, height, weight and ten ancestry components. Ridge regression, mean of five generated cohorts.",
-    isKg ? k.source : "gpu/controls.json, five generated cohorts");
+    isKg ? "gpu/controls_kg.json, five generated cohorts" : "gpu/controls.json, five generated cohorts");
   // 2. linkage (kg) or its absence
   html += finding(isKg ? "Linked neighbours carry about a fifth of the signal" : "Unlinked SNPs have no neighbours to carry anything",
     isKg ? `<p>In a real study the causal variant is usually not on the genotyping chip. It is found only because a nearby SNP is correlated with it.</p>
@@ -614,7 +614,7 @@ function renderResults(ds) {
       <p>That is exactly why we repeated everything on real genotypes. Switch to the 1000 Genomes view to see what correlation between SNPs actually carries.</p>`,
     hbars([{label: "Causal SNPs available", value: dl.oracle, color: MC.oracle}, {label: "Only their neighbours", value: hid, color: MC.diffusion}],
       {ticks: [0, 0.05, 0.1, 0.15, 0.2].filter(t => t <= (isKg ? 0.15 : 0.2)), min: -0.01, max: isKg ? 0.14 : 0.2, signed: true, aria: "Signal with and without the causal SNPs"}),
-    "Gain in test R² over covariates and ancestry components. Mean of five generated cohorts.", isKg ? k.source : "gpu/controls.py --hide-causal on config/real_match.yaml");
+    "Gain in test R² over covariates and ancestry components. Mean of five generated cohorts.", isKg ? "gpu/controls_kg_hidden.json, five generated cohorts" : "gpu/controls.py --hide-causal on config/real_match.yaml");
   // 3. models vs linear
   const M = isKg ? k.models.screen : s.models.screen, demo = isKg ? k.models.screen.demographics : s.models.screen.demographics;
   const ridge = isKg ? k.models.screen.ridge_demo_snp : s.ladder["+SNP-screen"][0];
@@ -628,7 +628,7 @@ function renderResults(ds) {
      <p>${isKg ? `The Transformer scores ${num(v("transformer"))} with real SNPs and ${num(k.models.permuted_screen_one_run.transformer)} with shuffled ones: it reads the demographics and ignores the genotype.` : `The Transformer stays at the baseline, and the diffusion model stays far below it.`} ${isKg ? "Diffusion stays below the mean face." : ""}</p>
      ${isKg ? "" : `<p>On this view the ridge figure comes from a separate script with ancestry components, so the comparison is approximate. The 1000 Genomes view fixes that with a same-split reference.</p>`}`,
     hbars(rows, {ref: demo, ticks: [0, 0.1, 0.2, 0.3, 0.4, 0.5], min: Math.min(-0.05, v("diffusion") - 0.02), max: 0.55, lw: 210, aria: "Test R squared by model"}),
-    "Test R² with 256 screened SNPs. Neural nets: mean of three training runs. Dashed line: demographic baseline.", isKg ? k.source : "gpu/report_back.json, three training runs on an RTX A4000");
+    "Test R² with 256 screened SNPs. Neural nets: mean of three training runs. Dashed line: demographic baseline.", isKg ? "gpu/report_back_kg.json, three training runs on an RTX A4000" : "gpu/report_back.json, three training runs on an RTX A4000");
   // 4. controls
   const P = isKg ? k.models.permuted_screen_one_run : s.permuted;
   html += finding("When there is nothing to find, it finds nothing",
@@ -641,7 +641,7 @@ function renderResults(ds) {
       ${isKg ? `<tr><td>Ridge on demographics + shuffled SNPs</td><td class="n">${num(P.ridge_demo_snp ?? demo)}</td><td class="n">${num(demo)}</td></tr>` : ""}
       <tr><td>Best network, shuffled SNPs</td><td class="n">${num(Math.max(P.mlp, P.transformer, P.contrastive))}</td><td class="n">at most ${num(demo + 0.01)}</td></tr>
       <tr><td>Train, validation and test overlap</td><td class="n">none</td><td class="n">none</td></tr></tbody></table>
-     <p class="cap"><span class="pass">All acceptance checks pass.</span> Shuffled-SNP rows are one training run each.</p>`, "", isKg ? k.source : s.source);
+     <p class="cap"><span class="pass">All acceptance checks pass.</span> Shuffled-SNP rows are one training run each.</p>`, "", isKg ? "gpu/controls_kg.json and gpu/report_back_kg.json" : s.source);
   // 5. scaling (simulated) / appearance (kg)
   if (!isKg) {
     const sc = s.scaling, xs = sc.map(r => r.n);
@@ -655,11 +655,11 @@ function renderResults(ds) {
   } else {
     const A = k.appearance_by_superpop, nm = {AFR: "African", EAS: "East Asian", SAS: "South Asian", AMR: "American", EUR: "European"}, lab = x => x.replace(/_/g, " ");
     html += finding("Colour predictions on real genotypes vary the way the published model says they should",
-      `<p>On the real pigmentation markers of the same 2,573 people, predicted blue eyes and lighter skin are far commoner among Europeans than in the other groups.</p>
+      `<p>On the real pigmentation markers of the same 2,573 people, ${(k.appearance_full.EUR.eye.blue || 0).toFixed(0)} per cent of Europeans are predicted to have blue eyes, against at most ${Math.max(...["AFR", "AMR", "EAS", "SAS"].map(g => k.appearance_full[g].eye.blue || 0)).toFixed(1)} per cent in any other group. Lighter skin follows the same pattern.</p>
        <p>This is a sanity check, not an accuracy measure. The 1000 Genomes Project records no eye, hair or skin colour, so there is nothing to compare against. Two rare red-hair markers are missing from the panel, so red hair is under-predicted.</p>`,
       `<table class="t"><thead><tr><th>Group</th><th>Eyes</th><th>Hair</th><th>Skin</th></tr></thead><tbody>
        ${["AFR", "EAS", "SAS", "AMR", "EUR"].map(g => `<tr><td>${nm[g]}</td>${["eye", "hair", "skin"].map(t => `<td>${lab(A[g][t][0])} ${A[g][t][1].toFixed(1)}%</td>`).join("")}</tr>`).join("")}
-       </tbody></table><p class="cap">Most common predicted category in each group, as a share of its people.</p>`, "", k.source);
+       </tbody></table><p class="cap">Most common predicted category in each group, as a share of its people.</p>`, "", "gpu/build_report_kg.json");
   }
   $("#findings").innerHTML = html;
 }

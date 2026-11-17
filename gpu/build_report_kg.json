@@ -1,0 +1,604 @@
+{
+ "n_people": 2573,
+ "n_snps": 100009,
+ "missing_rate": 7.921556783946965e-05,
+ "superpop_counts": {
+  "AFR": 680,
+  "AMR": 351,
+  "EAS": 506,
+  "EUR": 525,
+  "SAS": 511
+ },
+ "hirisplex_markers": [
+  {
+   "rsid": "rs312262906",
+   "target_allele": "A",
+   "found": false,
+   "why_not": "rsID not present in the 1000 Genomes file"
+  },
+  {
+   "rsid": "rs11547464",
+   "target_allele": "A",
+   "found": true,
+   "rule": "exact",
+   "chrom": "16",
+   "pos": 89919683,
+   "alleles": "A/G"
+  },
+  {
+   "rsid": "rs885479",
+   "target_allele": "T",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "16",
+   "pos": 89919746,
+   "alleles": "A/G"
+  },
+  {
+   "rsid": "rs1805008",
+   "target_allele": "T",
+   "found": true,
+   "rule": "exact",
+   "chrom": "16",
+   "pos": 89919736,
+   "alleles": "T/C"
+  },
+  {
+   "rsid": "rs1805005",
+   "target_allele": "T",
+   "found": true,
+   "rule": "exact",
+   "chrom": "16",
+   "pos": 89919436,
+   "alleles": "T/G"
+  },
+  {
+   "rsid": "rs1805006",
+   "target_allele": "A",
+   "found": true,
+   "rule": "exact",
+   "chrom": "16",
+   "pos": 89919510,
+   "alleles": "A/C"
+  },
+  {
+   "rsid": "rs1805007",
+   "target_allele": "T",
+   "found": true,
+   "rule": "exact",
+   "chrom": "16",
+   "pos": 89919709,
+   "alleles": "T/C"
+  },
+  {
+   "rsid": "rs1805009",
+   "target_allele": "C",
+   "found": true,
+   "rule": "exact",
+   "chrom": "16",
+   "pos": 89920138,
+   "alleles": "C/G"
+  },
+  {
+   "rsid": "rs201326893",
+   "target_allele": "A",
+   "found": false,
+   "why_not": "rsID not present in the 1000 Genomes file"
+  },
+  {
+   "rsid": "rs2228479",
+   "target_allele": "A",
+   "found": true,
+   "rule": "exact",
+   "chrom": "16",
+   "pos": 89919532,
+   "alleles": "A/G"
+  },
+  {
+   "rsid": "rs1110400",
+   "target_allele": "C",
+   "found": true,
+   "rule": "exact",
+   "chrom": "16",
+   "pos": 89919722,
+   "alleles": "C/T"
+  },
+  {
+   "rsid": "rs28777",
+   "target_allele": "C",
+   "found": true,
+   "rule": "exact",
+   "chrom": "5",
+   "pos": 33958854,
+   "alleles": "A/C"
+  },
+  {
+   "rsid": "rs16891982",
+   "target_allele": "C",
+   "found": true,
+   "rule": "exact",
+   "chrom": "5",
+   "pos": 33951588,
+   "alleles": "G/C"
+  },
+  {
+   "rsid": "rs12821256",
+   "target_allele": "G",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "12",
+   "pos": 88934558,
+   "alleles": "C/T"
+  },
+  {
+   "rsid": "rs4959270",
+   "target_allele": "A",
+   "found": true,
+   "rule": "exact",
+   "chrom": "6",
+   "pos": 457748,
+   "alleles": "A/C"
+  },
+  {
+   "rsid": "rs12203592",
+   "target_allele": "T",
+   "found": true,
+   "rule": "exact",
+   "chrom": "6",
+   "pos": 396321,
+   "alleles": "T/C"
+  },
+  {
+   "rsid": "rs1042602",
+   "target_allele": "T",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "11",
+   "pos": 89178528,
+   "alleles": "A/C"
+  },
+  {
+   "rsid": "rs1800407",
+   "target_allele": "A",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "15",
+   "pos": 27985172,
+   "alleles": "T/C"
+  },
+  {
+   "rsid": "rs2402130",
+   "target_allele": "G",
+   "found": true,
+   "rule": "exact",
+   "chrom": "14",
+   "pos": 92334859,
+   "alleles": "A/G"
+  },
+  {
+   "rsid": "rs12913832",
+   "target_allele": "T",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "15",
+   "pos": 28120472,
+   "alleles": "G/A"
+  },
+  {
+   "rsid": "rs2378249",
+   "target_allele": "C",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "20",
+   "pos": 34630286,
+   "alleles": "A/G"
+  },
+  {
+   "rsid": "rs12896399",
+   "target_allele": "T",
+   "found": true,
+   "rule": "exact",
+   "chrom": "14",
+   "pos": 92307319,
+   "alleles": "T/G"
+  },
+  {
+   "rsid": "rs1393350",
+   "target_allele": "T",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "11",
+   "pos": 89277878,
+   "alleles": "A/G"
+  },
+  {
+   "rsid": "rs683",
+   "target_allele": "G",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "9",
+   "pos": 12709305,
+   "alleles": "A/C"
+  },
+  {
+   "rsid": "rs3114908",
+   "target_allele": "T",
+   "found": true,
+   "rule": "exact",
+   "chrom": "16",
+   "pos": 89317317,
+   "alleles": "C/T"
+  },
+  {
+   "rsid": "rs1800414",
+   "target_allele": "C",
+   "found": true,
+   "rule": "exact",
+   "chrom": "15",
+   "pos": 27951891,
+   "alleles": "C/T"
+  },
+  {
+   "rsid": "rs10756819",
+   "target_allele": "G",
+   "found": true,
+   "rule": "exact",
+   "chrom": "9",
+   "pos": 16858086,
+   "alleles": "A/G"
+  },
+  {
+   "rsid": "rs2238289",
+   "target_allele": "C",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "15",
+   "pos": 28208069,
+   "alleles": "G/A"
+  },
+  {
+   "rsid": "rs17128291",
+   "target_allele": "C",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "14",
+   "pos": 92416482,
+   "alleles": "G/A"
+  },
+  {
+   "rsid": "rs6497292",
+   "target_allele": "C",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "15",
+   "pos": 28251049,
+   "alleles": "G/A"
+  },
+  {
+   "rsid": "rs1129038",
+   "target_allele": "G",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "15",
+   "pos": 28111713,
+   "alleles": "T/C"
+  },
+  {
+   "rsid": "rs1667394",
+   "target_allele": "C",
+   "found": true,
+   "rule": "exact",
+   "chrom": "15",
+   "pos": 28285036,
+   "alleles": "T/C"
+  },
+  {
+   "rsid": "rs1126809",
+   "target_allele": "A",
+   "found": true,
+   "rule": "exact",
+   "chrom": "11",
+   "pos": 89284793,
+   "alleles": "A/G"
+  },
+  {
+   "rsid": "rs1470608",
+   "target_allele": "A",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "15",
+   "pos": 28042975,
+   "alleles": "T/G"
+  },
+  {
+   "rsid": "rs1426654",
+   "target_allele": "G",
+   "found": true,
+   "rule": "exact",
+   "chrom": "15",
+   "pos": 48134287,
+   "alleles": "G/A"
+  },
+  {
+   "rsid": "rs6119471",
+   "target_allele": "C",
+   "found": true,
+   "rule": "exact",
+   "chrom": "20",
+   "pos": 34197406,
+   "alleles": "G/C"
+  },
+  {
+   "rsid": "rs1545397",
+   "target_allele": "T",
+   "found": true,
+   "rule": "exact",
+   "chrom": "15",
+   "pos": 27942626,
+   "alleles": "T/A"
+  },
+  {
+   "rsid": "rs6059655",
+   "target_allele": "T",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "20",
+   "pos": 34077942,
+   "alleles": "G/A"
+  },
+  {
+   "rsid": "rs12441727",
+   "target_allele": "A",
+   "found": true,
+   "rule": "exact",
+   "chrom": "15",
+   "pos": 28026629,
+   "alleles": "A/G"
+  },
+  {
+   "rsid": "rs3212355",
+   "target_allele": "A",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "16",
+   "pos": 89917970,
+   "alleles": "T/C"
+  },
+  {
+   "rsid": "rs8051733",
+   "target_allele": "C",
+   "found": true,
+   "rule": "strand-flipped",
+   "chrom": "16",
+   "pos": 89957798,
+   "alleles": "G/A"
+  }
+ ],
+ "shaffer_snps": [
+  {
+   "rsid": "rs6129564",
+   "target_allele": "A",
+   "found": true,
+   "rule": "exact",
+   "chrom": "20",
+   "pos": 40275563,
+   "alleles": "A/G",
+   "eur_freq_1kg": 0.11,
+   "published_freq": 0.1163
+  },
+  {
+   "rsid": "rs145837285",
+   "target_allele": "CTATA",
+   "found": true,
+   "rule": "exact",
+   "chrom": "14",
+   "pos": 20887148,
+   "alleles": "CTATA/C",
+   "eur_freq_1kg": 0.095,
+   "published_freq": 0.0749
+  },
+  {
+   "rsid": "rs11093404",
+   "target_allele": "A",
+   "found": true,
+   "rule": "exact",
+   "chrom": "X",
+   "pos": 73069628,
+   "alleles": "G/A",
+   "eur_freq_1kg": 0.252,
+   "published_freq": 0.2427
+  },
+  {
+   "rsid": "rs2424399",
+   "target_allele": "C",
+   "found": true,
+   "rule": "exact",
+   "chrom": "20",
+   "pos": 21651907,
+   "alleles": "C/A",
+   "eur_freq_1kg": 0.244,
+   "published_freq": 0.2346
+  },
+  {
+   "rsid": "rs3828785",
+   "target_allele": "A",
+   "found": true,
+   "rule": "exact",
+   "chrom": "6",
+   "pos": 32661130,
+   "alleles": "A/G",
+   "eur_freq_1kg": 0.064,
+   "published_freq": 0.0317
+  },
+  {
+   "rsid": "rs17649135",
+   "target_allele": "A",
+   "found": true,
+   "rule": "exact",
+   "chrom": "13",
+   "pos": 57420576,
+   "alleles": "A/G",
+   "eur_freq_1kg": 0.035,
+   "published_freq": 0.03
+  },
+  {
+   "rsid": "rs12792834",
+   "target_allele": "C",
+   "found": true,
+   "rule": "exact",
+   "chrom": "11",
+   "pos": 101525652,
+   "alleles": "C/T",
+   "eur_freq_1kg": 0.141,
+   "published_freq": 0.1189
+  },
+  {
+   "rsid": "rs56203676",
+   "target_allele": "CAAA",
+   "found": true,
+   "why_not": "allele CAAA not in CAA/C",
+   "rule": "exact",
+   "chrom": "2",
+   "pos": 77553718,
+   "alleles": "CAAA/C",
+   "eur_freq_1kg": 0.01,
+   "published_freq": 0.4132
+  },
+  {
+   "rsid": "rs58761416",
+   "target_allele": "CT",
+   "found": true,
+   "rule": "exact",
+   "chrom": "9",
+   "pos": 86757153,
+   "alleles": "CT/C",
+   "eur_freq_1kg": 0.228,
+   "published_freq": 0.244
+  },
+  {
+   "rsid": "rs3751074",
+   "target_allele": "T",
+   "found": true,
+   "rule": "exact",
+   "chrom": "11",
+   "pos": 34644378,
+   "alleles": "T/G",
+   "eur_freq_1kg": 0.105,
+   "published_freq": 0.0955
+  },
+  {
+   "rsid": "rs820217",
+   "target_allele": "A",
+   "found": true,
+   "rule": "exact",
+   "chrom": "17",
+   "pos": 75692214,
+   "alleles": "A/G",
+   "eur_freq_1kg": 0.352,
+   "published_freq": 0.3488
+  },
+  {
+   "rsid": "rs6072091",
+   "target_allele": "T",
+   "found": true,
+   "rule": "exact",
+   "chrom": "20",
+   "pos": 40663434,
+   "alleles": "C/T",
+   "eur_freq_1kg": 0.27,
+   "published_freq": 0.2776
+  },
+  {
+   "rsid": "rs5786757",
+   "target_allele": "T",
+   "found": true,
+   "rule": "exact",
+   "chrom": "10",
+   "pos": 87076395,
+   "alleles": "TA/T",
+   "eur_freq_1kg": 0.991,
+   "published_freq": 0.2586
+  }
+ ],
+ "appearance_by_superpop_NOT_accuracy": {
+  "AFR": {
+   "eye": {
+    "blue": 0.3,
+    "brown": 99.7
+   },
+   "hair": {
+    "black": 94.1,
+    "brown": 5.9
+   },
+   "skin": {
+    "dark": 0.4,
+    "dark_to_black": 99.1,
+    "intermediate": 0.4
+   }
+  },
+  "AMR": {
+   "eye": {
+    "blue": 5.7,
+    "brown": 94.3
+   },
+   "hair": {
+    "black": 49.6,
+    "blond": 2.0,
+    "brown": 48.1,
+    "red": 0.3
+   },
+   "skin": {
+    "dark": 23.6,
+    "dark_to_black": 40.5,
+    "intermediate": 35.9
+   }
+  },
+  "EAS": {
+   "eye": {
+    "brown": 100.0
+   },
+   "hair": {
+    "black": 100.0
+   },
+   "skin": {
+    "dark": 0.8,
+    "dark_to_black": 89.5,
+    "intermediate": 9.7
+   }
+  },
+  "EUR": {
+   "eye": {
+    "blue": 48.0,
+    "brown": 52.0
+   },
+   "hair": {
+    "black": 1.1,
+    "blond": 37.9,
+    "brown": 57.1,
+    "red": 3.8
+   },
+   "skin": {
+    "dark": 0.8,
+    "dark_to_black": 0.6,
+    "intermediate": 89.9,
+    "pale": 3.8,
+    "very_pale": 5.0
+   }
+  },
+  "SAS": {
+   "eye": {
+    "blue": 0.2,
+    "brown": 99.8
+   },
+   "hair": {
+    "black": 82.0,
+    "brown": 18.0
+   },
+   "skin": {
+    "dark": 41.5,
+    "dark_to_black": 52.6,
+    "intermediate": 5.9
+   }
+  }
+ }
+}

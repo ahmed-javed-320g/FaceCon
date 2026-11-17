@@ -51,11 +51,11 @@ Panel: NYGC 30x high-coverage GRCh38 callset. 2,573 unrelated people (deg-2 rela
 
 | Result | Value | Status |
 |---|---|---|
-| Ladder: cov 0.195; +PCs 0.335; +PCA256 0.335; +screen 0.435; oracle 0.449 | gain +0.100 screen, +0.114 oracle | Verified, 5 seeds, `outputs/controls_kg.json` |
-| Same quantity from the independent `run_all` path | +0.105 | Verified — two code paths agree to 0.005 |
-| **Causal SNPs hidden, only LD neighbours** | **+0.025** (CIs +0.018…+0.035, none spanning 0) | Verified, 5 seeds, `outputs/controls_kg_hidden.json` |
+| Ladder: cov 0.195; +PCs 0.335; +PCA256 0.335; +screen 0.435; oracle 0.449 | gain +0.100 screen, +0.114 oracle | Verified, 5 seeds, `gpu/controls_kg.json` |
+| Same gain from the `run_all` path (same cohort and split as controls seed 1; separate fitting code, labels instead of PCs, fixed 256 SNPs) | +0.106 vs controls seed 1 +0.105 | Verified — agree to 0.001 on the same people. Seed 1 = the dataset's cohort, checked by regenerating it |
+| **Causal SNPs hidden, only LD neighbours** | **+0.025** (CIs +0.018…+0.035, none spanning 0) | Verified, 5 seeds, `gpu/controls_kg_hidden.json` |
 | Same, on the unlinked synthetic panel | −0.001 | Verified — LD is what carries it |
-| Deep vs linear, same split, same inputs | MLP +0.366 vs ridge +0.443 (gap −0.077) | Verified, 3 seeds, `gpu/report_back.json` |
+| Deep vs linear, same split, same inputs | MLP +0.366 vs ridge +0.443 (gap −0.077) | Verified, 3 seeds, `gpu/report_back_kg.json` |
 | PCA256 features, linear reference | +0.338 = demographics exactly | Verified — the representation is empty, not the models |
 | Negative controls (permuted): ridge and all nets | ≤ demographics; both acceptance checks pass | Verified |
 | GWAS recovery on real LD | 14/14 injected, 0 Bonferroni FPs, FPR 0.061 | Verified |

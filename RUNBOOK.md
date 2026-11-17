@@ -153,7 +153,8 @@ app/holo.html                 hologram reveal
 app/data/demo.js              written by scripts/export_demo.py
 deploy/                       identical copy for static hosting (see deploy/README.md)
 scripts/export_demo.py        corrected-pipeline export (replaces export_web.py)
-gpu/results_kg.json           1000 Genomes results, transcribed; replace with the GPU JSONs
+gpu/*_kg.json                 1000 Genomes runs copied from the GPU machine;
+                              scripts/summarise_kg.py turns them into gpu/results_kg.json
 gpu/controls.json, gpu/report_back.json    simulated-cohort results
 data_prep/README_1KG.md       building the real-genotype panel
 EVALUATION.md                 what is verified and what is not
