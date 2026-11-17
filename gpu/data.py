@@ -53,13 +53,18 @@ class FaceConData:
         self.K = self.beta.shape[1]
 
         # ---- impute + standardise SNPs on TRAIN only ----
-        g = self.geno.copy()
+        # Done in place on one float32 array: with real genotype panels
+        # (e.g. 2,573 x 100,000) every extra full copy costs about 1 GB.
+        g = self.geno
+        self.geno = None
         col_mean = np.nanmean(g[self.tr], axis=0)
         inds = np.where(np.isnan(g))
         g[inds] = np.take(col_mean, inds[1])                   # impute with train mean
-        mu = g[self.tr].mean(0); sd = g[self.tr].std(0) + 1e-6
-        g = (g - mu) / sd
-        self.snp_std = g.astype(np.float32)
+        gt = g[self.tr]
+        mu = gt.mean(0); sd = gt.std(0) + 1e-6
+        del gt
+        g -= mu
+        g /= sd
 
         # ---- SNP features, fit on TRAIN only ----
         # "pca"   : top principal components. On unlinked SNPs these keep ancestry
@@ -76,15 +81,19 @@ class FaceConData:
                 b, *_ = np.linalg.lstsq(C, M, rcond=None)
                 R = M - C @ b
                 return (R - R.mean(0)) / (R.std(0) + 1e-9)
-            score = ((_res(g[self.tr].astype(np.float64)).T
-                      @ _res(self.beta[self.tr].astype(np.float64))) ** 2).sum(1)
+            Yr = _res(self.beta[self.tr].astype(np.float64))
+            score = np.empty(self.M)
+            for s in range(0, self.M, 5000):                     # column chunks: bounded memory
+                blk = g[self.tr, s:s + 5000].astype(np.float64)
+                score[s:s + 5000] = ((_res(blk).T @ Yr) ** 2).sum(1)
             self.screen_idx = np.sort(np.argsort(-score)[:snp_pca])
             self.snp_feat = g[:, self.screen_idx].astype(np.float32)
         elif snp_pca and snp_pca < self.M:
             self.pca = PCA(n_components=snp_pca, random_state=seed).fit(g[self.tr])
             self.snp_feat = self.pca.transform(g).astype(np.float32)
         else:
-            self.snp_feat = self.snp_std
+            self.snp_feat = g
+        del g
         self.P = self.snp_feat.shape[1]
         self.D = self.demo.shape[1]
 

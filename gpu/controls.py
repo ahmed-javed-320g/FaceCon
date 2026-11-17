@@ -55,8 +55,36 @@ ALPHAS = [30.0, 100.0, 300.0, 1000.0, 3000.0, 10000.0]
 KS = [50, 150, 500, 1500]
 
 
+_GENO_CACHE = {}
+
+
+def _load_real(path):
+    """Real genotypes (config data.genotype_source), loaded once, mean-imputed."""
+    if path not in _GENO_CACHE:
+        p = path if os.path.isabs(path) else os.path.join(ROOT, path)
+        K = np.load(p, allow_pickle=True)
+        g = K["genotypes"].astype(np.float32)
+        miss = g < 0
+        if miss.any():
+            g[miss] = np.nan
+            cm = np.nanmean(g, axis=0)
+            g = np.where(miss, cm, g).astype(np.float32)
+        _GENO_CACHE[path] = (g, K["superpop_code"].astype(np.int64), K["sex"].astype(np.float64))
+    return _GENO_CACHE[path]
+
+
+def n_available(cfg):
+    src = cfg["data"].get("genotype_source")
+    return len(_load_real(src)[0]) if src else None
+
+
 def make_data(cfg, seed, n=None, share=None):
-    """Draw genotypes, demographics and shape targets in memory (no files)."""
+    """Build one cohort in memory: genotypes, demographics and shape targets.
+
+    Simulated genotypes are redrawn per seed. With real genotypes
+    (data.genotype_source) the people are fixed and each seed draws a new set of
+    causal SNPs, effects, noise, demographics and splits; `n` then subsamples people.
+    """
     c = copy.deepcopy(cfg)
     c["seed"] = int(seed)
     if n is not None:
@@ -65,8 +93,16 @@ def make_data(cfg, seed, n=None, share=None):
         d = c["face_variance"]["demographic"]
         c["face_variance"] = {"genetic": float(share), "demographic": d,
                               "noise": 1.0 - d - float(share)}
-    G, anc, _, _ = _draw_genotypes(c)
-    demo, names, _ = _draw_matched_demographics(c, anc)
+    src = c["data"].get("genotype_source")
+    if src:
+        G, anc, sex = _load_real(src)
+        if n is not None and n < len(G):
+            keep = np.sort(np.random.default_rng(seed).choice(len(G), int(n), replace=False))
+            G, anc, sex = G[keep], anc[keep], sex[keep]
+        demo, names, _ = _draw_matched_demographics(c, anc, sex=sex)
+    else:
+        G, anc, _, _ = _draw_genotypes(c)
+        demo, names, _ = _draw_matched_demographics(c, anc)
     k = int(c["face_model"]["n_shape_dims"])
     if c["face_variance"]["genetic"] <= 0:           # compose cannot scale a zero share
         c2 = copy.deepcopy(c); c2["face_variance"]["genetic"] = 1e-12
@@ -109,8 +145,13 @@ def _ridge_fit_predict(Xtr, Ytr, Xs, alpha):
     return [X @ W for X in Xs]
 
 
-def ladder(D, do_pca256=True, permute_seed=None):
-    """Run the ladder on one dataset. Returns {row: test prediction} + truth."""
+def ladder(D, do_pca256=True, permute_seed=None, hide_causal=False):
+    """Run the ladder on one dataset. Returns {row: test prediction} + truth.
+
+    hide_causal: remove the causal SNPs from the features the models may use, so
+    signal can only be reached through correlated neighbours (as on a real array,
+    where causal variants are usually not genotyped). The ORACLE still uses them.
+    """
     tr, va, te = D["tr"], D["va"], D["te"]
     G = D["G"]; B = D["B"]
     mu, sd = G[tr].mean(0), G[tr].std(0) + 1e-6
@@ -131,7 +172,12 @@ def ladder(D, do_pca256=True, permute_seed=None):
     base = C_pc @ b
     Rb = B - base                                             # shape residuals
     def resid_snps(M):                                        # SNPs residualised on cov+PC (train fit)
-        return M - C_pc @ _ols(C_pc[tr], M[tr])
+        # by column chunks: each column's result is unchanged, memory stays bounded
+        R = np.empty(M.shape, dtype=np.result_type(M.dtype, C_pc.dtype))
+        for s in range(0, M.shape[1], 10000):
+            blk = M[:, s:s + 10000]
+            R[:, s:s + 10000] = blk - C_pc @ _ols(C_pc[tr], blk[tr])
+        return R
 
     def tuned(Xfull, grid_k=None, score=None):
         best = (-1e9, None)
@@ -150,15 +196,29 @@ def ladder(D, do_pca256=True, permute_seed=None):
 
     info = {}
     Zr = resid_snps(Z)
+    keep_Z = do_pca256 and permute_seed is None
+    if not keep_Z:
+        del Z
     if permute_seed is not None:                              # NEGATIVE CONTROL
-        Zr = Zr[np.random.default_rng(permute_seed).permutation(len(Zr))]
+        perm = np.random.default_rng(permute_seed).permutation(len(Zr))
+        for s in range(0, Zr.shape[1], 10000):                # same row shuffle, done by chunks
+            Zr[:, s:s + 10000] = Zr[perm, s:s + 10000]
     Yn = (Rb[tr] - Rb[tr].mean(0)) / (Rb[tr].std(0) + 1e-9)
-    Xn = (Zr[tr] - Zr[tr].mean(0)) / (Zr[tr].std(0) + 1e-9)
-    score = np.argsort(-((Xn.T @ Yn) ** 2).sum(1))            # train-only screen
+    raw = np.empty(Zr.shape[1])
+    for s in range(0, Zr.shape[1], 10000):                    # train-only screen, by chunks
+        blk = Zr[tr, s:s + 10000]
+        Xn = (blk - blk.mean(0)) / (blk.std(0) + 1e-9)
+        raw[s:s + 10000] = ((Xn.T @ Yn) ** 2).sum(1)
+    score = np.argsort(-raw)
+    if hide_causal:                                           # causal SNPs may never be chosen
+        score = score[~np.isin(score, D["causal"])]
     P["+SNP-screen"], info["screen"] = tuned(Zr, KS, score)
     if permute_seed is None:
         if do_pca256:
+            if hide_causal:
+                Z[:, D["causal"]] = 0.0                       # a zero column is a dropped column for PCA
             pc256 = PCA(256, random_state=0).fit(Z[tr]).transform(Z)[:, N_PC:]
+            del Z
             P["+SNP-PCA256"], info["pca256"] = tuned(pc256)
         ci = D["causal"]
         P["ORACLE"], info["oracle"] = tuned(Zr[:, ci])
@@ -171,7 +231,10 @@ def main():
     ap.add_argument("--seeds", type=int, default=5)
     ap.add_argument("--power", action="store_true")
     ap.add_argument("--out", default="gpu/controls.json")
+    ap.add_argument("--hide-causal", action="store_true",
+                    help="models may not see the causal SNPs, only their neighbours")
     a = ap.parse_args()
+    hc = a.hide_causal
     cfg = load_config(a.config)
     share = float(cfg["face_variance"]["genetic"])
     seeds = [int(cfg["seed"]) + i for i in range(a.seeds)]
@@ -183,14 +246,14 @@ def main():
     for s in seeds:
         D = make_data(cfg, s)
         disjoint &= not (set(D["tr"]) & set(D["va"]) or set(D["tr"]) & set(D["te"]) or set(D["va"]) & set(D["te"]))
-        P, bt, info = ladder(D)
+        P, bt, info = ladder(D, hide_causal=hc)
         for r in rows:
             res[r].append(r2(bt, P[r]))
         lo, hi = boot_ci(bt, P["+SNP-screen"], P["cov+PC"], seed=s)
         d_screen.append((res["+SNP-screen"][-1] - res["cov+PC"][-1], lo, hi))
         d_oracle.append(res["ORACLE"][-1] - res["cov+PC"][-1])
         d_pca.append(res["+SNP-PCA256"][-1] - res["cov+PC"][-1])
-        Pp, _, _ = ladder(D, do_pca256=False, permute_seed=s)
+        Pp, _, _ = ladder(D, do_pca256=False, permute_seed=s, hide_causal=hc)
         lo, hi = boot_ci(bt, Pp["+SNP-screen"], Pp["cov+PC"], seed=s)
         d_perm.append((r2(bt, Pp["+SNP-screen"]) - r2(bt, Pp["cov+PC"]), lo, hi))
         print(f"seed {s}: done ({time.time()-t0:.0f}s)  screen={info['screen']}", flush=True)
@@ -199,7 +262,7 @@ def main():
     d_null = []
     for s in seeds[:3]:
         D = make_data(cfg, s, share=0.0)
-        P, bt, _ = ladder(D, do_pca256=False)
+        P, bt, _ = ladder(D, do_pca256=False, hide_causal=hc)
         d_null.append(r2(bt, P["+SNP-screen"]) - r2(bt, P["cov+PC"]))
 
     print(f"\nLADDER  test param-R2, mean +/- sd over {len(seeds)} seeds  (planted genetic share {share})")
@@ -223,20 +286,33 @@ def main():
             bool(np.mean(d_oracle) >= 0.10 and np.all(ds[:, 1] > 0)),
         "A4 splits disjoint": bool(disjoint),
     }
-    print("\nACCEPTANCE")
+    a3 = [k for k in tests if k.startswith("A3")][0]
+    required = {k: v for k, v in tests.items() if not (hc and k == a3)}
+    print("\nACCEPTANCE" + ("  (causal SNPs hidden: A3 is reported, not required -- "
+                             "whether neighbours carry the signal is the question)" if hc else ""))
     for k, v in tests.items():
-        print(f"  {'PASS' if v else 'FAIL'}  {k}")
+        tag = ("PASS" if v else "FAIL") if k in required else ("info: yes" if v else "info: no")
+        print(f"  {tag:9s} {k}")
 
     out = {"config": a.config, "seeds": seeds, "genetic_share": share,
+           "genotype_source": cfg["data"].get("genotype_source"), "hide_causal": hc,
+           "causal_dims": cfg["data"].get("causal_dims"),
            "ladder_mean": {r: float(np.mean(res[r])) for r in rows},
            "ladder_sd": {r: float(np.std(res[r])) for r in rows},
            "delta_screen": ds.tolist(), "delta_oracle": d_oracle, "delta_pca256": d_pca,
            "delta_permuted": dp.tolist(), "delta_null_share": d_null, "acceptance": tests}
 
     if a.power:
-        print("\nPOWER GRID  delta R2 of +SNP-screen over cov+PC (mean of 2 seeds)."
-              "\n  OPTIMISTIC: 5,000 independent SNPs, 150 causal. Real arrays have ~10^6 correlated SNPs.")
-        Ns, Ss = [1000, 2000, 3118, 6000], [0.0, 0.1, 0.2]
+        nav = n_available(cfg)
+        if nav:
+            Ns = [x for x in (1000, 2000) if x < nav] + [nav]
+            note = (f"  REAL genotypes ({nav} people available), "
+                    f"{cfg['data']['n_causal_snps']} causal SNPs, sparse={cfg['data'].get('causal_dims')}.")
+        else:
+            Ns = [1000, 2000, 3118, 6000]
+            note = "  OPTIMISTIC: 5,000 independent SNPs, 150 causal. Real arrays have ~10^6 correlated SNPs."
+        print("\nPOWER GRID  delta R2 of +SNP-screen over cov+PC (mean of 2 seeds).\n" + note)
+        Ss = [0.0, 0.1, 0.2]
         grid = {}
         print("      N " + "".join(f"  share={x:<5}" for x in Ss))
         for n in Ns:
@@ -245,7 +321,7 @@ def main():
                 v = []
                 for s in seeds[:2]:
                     D = make_data(cfg, s, n=n, share=sh)
-                    P, bt, _ = ladder(D, do_pca256=False)
+                    P, bt, _ = ladder(D, do_pca256=False, hide_causal=hc)
                     v.append(r2(bt, P["+SNP-screen"]) - r2(bt, P["cov+PC"]))
                 grid[f"N={n},share={sh}"] = float(np.mean(v)); line += f"  {np.mean(v):+.3f}     "
             print(line, flush=True)
@@ -253,7 +329,7 @@ def main():
 
     json.dump(out, open(a.out, "w"), indent=2)
     print(f"\nsaved {a.out}")
-    sys.exit(0 if all(tests.values()) else 1)
+    sys.exit(0 if all(required.values()) else 1)
 
 
 if __name__ == "__main__":

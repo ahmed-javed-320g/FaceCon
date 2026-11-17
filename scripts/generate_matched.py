@@ -59,14 +59,19 @@ def _draw_hps_markers(cfg, ancestry, rsids):
     return rng.binomial(2, freq[ancestry]).astype(np.int8)
 
 
-def _draw_matched_demographics(cfg, ancestry):
-    """sex, age_z, age2_z, height_z, weight_z + ancestry one-hot (confounder kept)."""
+def _draw_matched_demographics(cfg, ancestry, sex=None):
+    """sex, age_z, age2_z, height_z, weight_z + ancestry one-hot (confounder kept).
+
+    `sex` may be supplied (real genotypes carry real sex, 1 = male); otherwise it
+    is drawn. Age, height and weight are always simulated.
+    """
     rng = rng_for(cfg["seed"], "demographics")
     n = ancestry.shape[0]
     ng = int(cfg["data"]["ancestry"]["n_groups"])
     dd = cfg["data"]["demographics"]
 
-    sex = rng.integers(0, 2, size=n).astype(np.float64)          # 0/1
+    drawn = rng.integers(0, 2, size=n).astype(np.float64)        # 0/1
+    sex = drawn if sex is None else np.asarray(sex, dtype=np.float64)
     age = rng.uniform(dd["age_min"], dd["age_max"], size=n)
     # height/weight: plausibly correlated with sex (+ mild ancestry + noise)
     sex_c = (sex - 0.5) * 2.0
@@ -250,17 +255,31 @@ def main(cfg_path):
     fm = load_face_model(cfg)
     k = fm.n_dims
 
-    # genotypes + ancestry (reused logic), 3118 x 5000
-    genotypes, ancestry, freq, structured = _draw_genotypes(cfg)
-    n = genotypes.shape[0]
-
-    # 41 real HIrisPlex-S markers (named features)
     markers = json.load(open(os.path.join(ROOT, cfg["appearance"]["markers_file"])))
     rsids = [m["rsid"] for m in markers["markers"]]
-    hps = _draw_hps_markers(cfg, ancestry, rsids)               # (N,41) int8
-
-    # matched demographics (for composition + modeling)
-    demo, demo_names, age = _draw_matched_demographics(cfg, ancestry)
+    src = cfg["data"].get("genotype_source")
+    K = None
+    if src:
+        # REAL genotypes (1000 Genomes, scripts/build_1kg.py). Faces, age, height
+        # and weight remain simulated; sex and ancestry come from the samples.
+        K = np.load(src if os.path.isabs(src) else os.path.join(ROOT, src), allow_pickle=True)
+        graw = K["genotypes"]
+        g_obs = graw.astype(np.float32); g_obs[graw < 0] = np.nan
+        cm = np.nanmean(g_obs, axis=0)
+        genotypes = np.where(np.isnan(g_obs), cm, g_obs)        # used only to compose the truth
+        ancestry = K["superpop_code"].astype(np.int64)
+        if int(cfg["data"]["ancestry"]["n_groups"]) != len(K["superpop_names"]):
+            raise SystemExit("config data.ancestry.n_groups must equal the number of "
+                             f"super-populations in {src} ({len(K['superpop_names'])})")
+        n = genotypes.shape[0]
+        hps = K["hps_markers"].astype(np.int8).copy(); hps[hps < 0] = 0
+        demo, demo_names, age = _draw_matched_demographics(cfg, ancestry, sex=K["sex"])
+    else:
+        # genotypes + ancestry (reused logic), 3118 x 5000
+        genotypes, ancestry, freq, structured = _draw_genotypes(cfg)
+        n = genotypes.shape[0]
+        hps = _draw_hps_markers(cfg, ancestry, rsids)               # (N,41) int8
+        demo, demo_names, age = _draw_matched_demographics(cfg, ancestry)
     beta, gt = _compose_faces(cfg, genotypes, demo, demo_names, k)
 
     # phenotype #2: 20 anthropometric measures + facial_size
@@ -275,7 +294,18 @@ def main(cfg_path):
         gw = json.load(open(os.path.join(ROOT, gwcfg["effects_file"])))
         geff = gw["effects"]
         vpl = float(gw.get("var_explained_per_locus", 0.02))
-        gwas_dos, gwas_rsids, col_of = _draw_gwas_markers(cfg, ancestry, geff, demo[:, 0])
+        if K is not None:                       # real dosages at the published SNPs
+            found = {r: j for j, r in enumerate(K["gwas_rsids"]) if K["gwas_found"][j]}
+            geff = [e for e in geff if e["rsid"] in found]
+            gwas_rsids = [r for r in K["gwas_rsids"] if r in found]
+            col_of = [gwas_rsids.index(e["rsid"]) for e in geff]
+            gd = K["gwas_dosage"][:, [found[r] for r in gwas_rsids]].astype(np.float32)
+            for j in range(gd.shape[1]):
+                bad = gd[:, j] < 0
+                gd[bad, j] = gd[~bad, j].mean()
+            gwas_dos = gd
+        else:
+            gwas_dos, gwas_rsids, col_of = _draw_gwas_markers(cfg, ancestry, geff, demo[:, 0])
         measures, gwas_applied = _inject_gwas_effects(
             measures, measure_names, gwas_dos, geff, col_of, vpl)
     gwas_check = (gwas_recovery_check(measures, measure_names, gwas_dos, gwas_rsids,
@@ -288,10 +318,13 @@ def main(cfg_path):
     splits = _make_splits(cfg, n)
     subject_ids = np.array([f"SUBJ-{i:05d}" for i in range(n)])
 
-    # inject genotype missingness (0.5%), matching the real-data representation
-    rng = rng_for(cfg["seed"], "missingness")
-    g = genotypes.copy()
-    g[rng.random(g.shape) < 0.005] = np.nan
+    if K is not None:
+        g = g_obs                                   # real missingness kept as NaN
+    else:
+        # inject genotype missingness (0.5%), matching the real-data representation
+        rng = rng_for(cfg["seed"], "missingness")
+        g = genotypes.copy()
+        g[rng.random(g.shape) < 0.005] = np.nan
 
     np.savez_compressed(
         os.path.join(out, "dataset.npz"),
@@ -311,7 +344,10 @@ def main(cfg_path):
         demo_weights=gt.demo_weights, **gt_app,
     )
     manifest = {
-        "mode": "synthetic_matched", "n_subjects": int(n), "n_snps": int(genotypes.shape[1]),
+        "mode": ("real_genotypes_1000G_simulated_faces" if K is not None else "synthetic_matched"),
+        "genotype_source": src or None,
+        "causal_dims": cfg["data"].get("causal_dims"),
+        "n_subjects": int(n), "n_snps": int(genotypes.shape[1]),
         "n_face_dims": int(k), "demographic_names": demo_names,
         "variance_shares": gt.variance_shares, "regions": list(fm.region_masks.keys()),
         "n_hps_markers": len(rsids), "n_anthro_measures": len(measure_names),

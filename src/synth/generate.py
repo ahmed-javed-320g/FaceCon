@@ -125,6 +125,16 @@ def _compose_faces(cfg, genotypes, demo, demo_names, k):
     Xc = genotypes[:, causal_idx]
     Xc = Xc - Xc.mean(axis=0, keepdims=True)          # centre
     gen_w = rng.normal(size=(n_causal, k))
+    # Optional sparsity (config data.causal_dims): each causal SNP affects only
+    # this many of the k shape dimensions, as real loci affect particular facial
+    # features. Unset = every causal SNP affects every dimension (the original
+    # behaviour; the random stream is then unchanged, so old results reproduce).
+    cdims = cfg["data"].get("causal_dims")
+    if cdims:
+        mask = np.zeros_like(gen_w, dtype=bool)
+        for i in range(n_causal):
+            mask[i, rng.choice(k, size=int(cdims), replace=False)] = True
+        gen_w = gen_w * mask
     G = Xc @ gen_w
 
     # ---- demographic component (age, gender, ancestry) ----
