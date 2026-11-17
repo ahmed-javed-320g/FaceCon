@@ -1,191 +1,162 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FaceCon Hologram</title>
+<title>FaceCon: hologram reveal</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@75..100,400..700&display=swap" media="print" onload="this.media='all'">
 <style>
-  html,body{margin:0;height:100%;background:#02060c;overflow:hidden;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#cfeffb}
-  #c{position:fixed;inset:0;width:100vw;height:100vh;display:block}
-  /* scanline + vignette overlay */
-  .fx{position:fixed;inset:0;pointer-events:none;z-index:3}
-  .scan{background:repeating-linear-gradient(to bottom,
-      rgba(54,227,255,0.05) 0px,rgba(54,227,255,0.05) 1px,transparent 2px,transparent 4px);
-    mix-blend-mode:screen;opacity:.5}
-  .vig{box-shadow:inset 0 0 220px 60px rgba(0,0,0,0.85)}
-  .bar{position:fixed;left:0;right:0;height:120px;z-index:3;pointer-events:none;
-    background:linear-gradient(to bottom,transparent,rgba(54,227,255,0.07),transparent);
-    animation:sweep 6s linear infinite}
-  @keyframes sweep{0%{top:-130px}100%{top:100%}}
-  .ui{position:fixed;z-index:4;pointer-events:none;text-shadow:0 0 12px rgba(54,227,255,.5)}
-  #title{top:28px;left:0;right:0;text-align:center}
-  #title h1{margin:0;font-size:22px;letter-spacing:3px;font-weight:600}
-  #title h1 b{color:#36e3ff}
-  #title p{margin:6px 0 0;font-size:12px;letter-spacing:2px;color:#6fb9d0}
-  #badge{position:fixed;top:24px;right:26px;z-index:4;font-size:11px;letter-spacing:1px;
-    color:#02060c;background:#ffcf6b;font-weight:700;padding:4px 9px;border-radius:5px}
-  #foot{bottom:30px;left:0;right:0;text-align:center}
-  #sid{font-size:13px;letter-spacing:3px;color:#8fd6e6}
-  #phase{font-size:12px;letter-spacing:2px;color:#4a8aa0;margin-top:3px;min-height:14px}
-  #chips{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
-  .chip{display:flex;align-items:center;gap:6px;font-size:12px;letter-spacing:1px;color:#bfe9f4;
-    border:1px solid rgba(54,227,255,0.3);border-radius:20px;padding:4px 11px;background:rgba(10,30,45,0.5)}
-  .chip .sw{width:12px;height:12px;border-radius:3px;border:1px solid #0008}
-  #hint{position:fixed;bottom:8px;right:14px;z-index:4;font-size:10px;color:#2f5565;letter-spacing:1px}
+@font-face{font-family:"Instrument Sans Local";font-weight:400 700;font-stretch:75% 100%;src:url(instrument-sans.woff2) format("woff2-variations"),url(instrument-sans.woff2) format("woff2")}
+html,body{margin:0;height:100%;background:#02060c;overflow:hidden;font-family:"Instrument Sans Local","Instrument Sans",system-ui,sans-serif;color:#cfeffb}
+#c{position:fixed;inset:0;width:100vw;height:100vh;display:block}
+.fx{position:fixed;inset:0;pointer-events:none;z-index:3}
+.scan{background:repeating-linear-gradient(to bottom,rgba(54,227,255,.05) 0,rgba(54,227,255,.05) 1px,transparent 2px,transparent 4px);mix-blend-mode:screen;opacity:.5}
+.vig{box-shadow:inset 0 0 220px 60px rgba(0,0,0,.85)}
+.sweep{position:fixed;left:0;right:0;height:120px;z-index:3;pointer-events:none;background:linear-gradient(to bottom,transparent,rgba(54,227,255,.07),transparent);animation:sw 6s linear infinite}
+@keyframes sw{0%{top:-130px}100%{top:100%}}
+@media (prefers-reduced-motion:reduce){.sweep{display:none}}
+.ui{position:fixed;z-index:4;pointer-events:none;text-shadow:0 0 12px rgba(54,227,255,.45);left:0;right:0;text-align:center}
+#title{top:26px}
+#title h1{margin:0;font-size:24px;font-weight:600;font-stretch:85%}
+#title h1 b{color:#36e3ff;font-weight:600}
+#title p{margin:6px 0 0;font-size:14px;color:#6fb9d0}
+#badge{position:fixed;top:22px;right:24px;z-index:4;font-size:13px;font-weight:650;color:#02060c;background:#ffcf6b;padding:4px 10px;border-radius:999px}
+#foot{bottom:28px}
+#sid{font-size:17px;font-weight:600;color:#8fd6e6}
+#model{font-size:13px;color:#4a8aa0;margin-top:2px}
+#phase{font-size:13px;color:#4a8aa0;margin-top:2px;min-height:18px}
+#chips{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;transition:opacity .4s}
+.chip{display:flex;align-items:center;gap:7px;font-size:14px;color:#bfe9f4;border:1px solid rgba(54,227,255,.3);border-radius:20px;padding:4px 12px;background:rgba(10,30,45,.55)}
+.chip .sw{width:12px;height:12px;border-radius:3px;border:1px solid #0008}
+.chip small{color:#6fb9d0}
+#hint{position:fixed;bottom:8px;right:14px;z-index:4;font-size:12px;color:#3d6878}
 </style>
 </head>
 <body>
-<canvas id="c"></canvas>
-<div class="fx scan"></div><div class="fx vig"></div><div class="bar"></div>
-<div id="badge">SYNTHETIC DATA</div>
-<a id="homelink" href="index.html" onclick="event.stopPropagation()"
-   style="position:fixed;top:22px;left:26px;z-index:5;pointer-events:auto;color:#9fb3c9;
-   text-decoration:none;font-size:12px;letter-spacing:1px;border:1px solid #27506a;
-   padding:6px 12px;border-radius:7px;background:rgba(8,16,24,.5)">⌂ HOME</a>
-<div class="ui" id="title"><h1>Face<b>Con</b> · a face, predicted from DNA</h1>
-  <p>3D SHAPE (FaceCon) + EYE/HAIR/SKIN COLOUR (HIrisPlex-S)</p></div>
-<div class="ui" id="foot">
-  <div id="sid"></div><div id="phase"></div>
-  <div id="chips"></div>
-</div>
-<div id="hint">space: pause · click: next</div>
+<canvas id="c" aria-label="Predicted face, revealed as a hologram"></canvas>
+<div class="fx scan"></div><div class="fx vig"></div><div class="sweep"></div>
+<div id="badge">Simulated faces</div>
+<div class="ui" id="title"><h1>Face<b>Con</b>: a face, predicted from DNA</h1>
+  <p>3D shape from our model, eye, hair and skin colour from HIrisPlex-S</p></div>
+<div class="ui" id="foot"><div id="sid"></div><div id="model"></div><div id="phase"></div><div id="chips"></div></div>
+<div id="hint">Space pauses, click or the right arrow shows the next person</div>
 
-<script src="three.min.js"></script>
+<script src="data/demo.js"></script>
 <script>
-function b64ToArray(o){const bin=atob(o.b64),len=bin.length,bytes=new Uint8Array(len);
-  for(let i=0;i<len;i++)bytes[i]=bin.charCodeAt(i);
-  return o.dtype==="float32"?new Float32Array(bytes.buffer):new Int32Array(bytes.buffer);}
-function hexRGB(h){h=h.replace('#','');if(h.length===8)h=h.slice(0,6);
-  return [parseInt(h.slice(0,2),16)/255,parseInt(h.slice(2,4),16)/255,parseInt(h.slice(4,6),16)/255];}
+"use strict";
+if (!window.FACECON_DEMO) { document.body.innerHTML = '<p style="max-width:560px;margin:80px auto;font:16px/1.5 system-ui,sans-serif;color:#14212B;padding:0 20px"><b>The demo data file was not found.</b> This page needs <code>data/demo.js</code> in a folder called <code>data</code> next to it. Copy the whole app folder rather than the page alone, or rebuild the file with <code>python scripts/export_demo.py</code>.</p>'; throw new Error("data/demo.js missing"); }
+const D = window.FACECON_DEMO, MODEL = "ridge_demo_snp";
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function buf(o) { const s = atob(o.b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u.buffer; }
+const MEAN = new Float32Array(buf(D.mesh.mean)), NV = MEAN.length / 3;
+const FACES = new Uint16Array(new Uint32Array(buf(D.mesh.faces)));
+const PART = new Uint8Array(buf(D.mesh.part));
+const BI = new Int16Array(buf(D.mesh.basis)), K = D.mesh.basis.shape[0];
+const BASIS = new Float32Array(BI.length); for (let i = 0; i < BI.length; i++) BASIS[i] = BI[i] * D.mesh.basis.scale;
+// unique edges for the wireframe
+const EDGES = (() => { const seen = new Set(), out = [];
+  for (let t = 0; t < FACES.length; t += 3) for (const [a, b] of [[FACES[t], FACES[t + 1]], [FACES[t + 1], FACES[t + 2]], [FACES[t + 2], FACES[t]]]) {
+    const k = a < b ? a * 65536 + b : b * 65536 + a; if (!seen.has(k)) { seen.add(k); out.push(a, b); } }
+  return new Uint16Array(out); })();
 
-let D,mean,faces,basis,K,V3,V,scalp,freck,mouth,eyeR,eyeL;
-function decode(beta,t){const out=new Float32Array(V3);out.set(mean);const s=t===undefined?1:t;
-  for(let k=0;k<K;k++){const bk=s*beta[k];if(!bk)continue;const off=k*V3;
-    for(let i=0;i<V3;i++)out[i]+=bk*basis[off+i];}return out;}
+function decode(beta, t, out) { out.set(MEAN); const n = NV * 3;
+  for (let k = 0; k < K; k++) { const b = beta[k] * t; if (!b) continue; const o = k * n; for (let i = 0; i < n; i++) out[i] += b * BASIS[o + i]; } return out; }
+function normals(P, out) { out.fill(0);
+  for (let t = 0; t < FACES.length; t += 3) { const a = FACES[t] * 3, b = FACES[t + 1] * 3, c = FACES[t + 2] * 3;
+    const ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], vx = P[c] - P[a], vy = P[c + 1] - P[a + 1], vz = P[c + 2] - P[a + 2];
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; for (const i of [a, b, c]) { out[i] += nx; out[i + 1] += ny; out[i + 2] += nz; } }
+  for (let i = 0; i < out.length; i += 3) { const l = Math.hypot(out[i], out[i + 1], out[i + 2]) || 1; out[i] /= l; out[i + 1] /= l; out[i + 2] /= l; } return out; }
 
-function masks(){
-  const ys=[];for(let i=0;i<V;i++)ys.push(mean[i*3+1]);const sr=[...ys].sort((a,b)=>a-b);
-  const topY=sr[Math.floor(V*0.80)],range=sr[V-1]-sr[0];
-  const zs=[];for(let i=0;i<V;i++)zs.push(mean[i*3+2]);const zsr=[...zs].sort((a,b)=>a-b);
-  const zF=zsr[Math.floor(V*0.6)];
-  const rid=b64ToArray(D.region_id),nm=D.region_names;
-  const ci=nm.indexOf('cheeks'),ni=nm.indexOf('nose'),mi=nm.indexOf('mouth');
-  scalp=new Uint8Array(V);freck=new Uint8Array(V);mouth=new Uint8Array(V);
-  for(let i=0;i<V;i++){if(mean[i*3+1]>topY&&mean[i*3+2]<0.35*range)scalp[i]=1;
-    if((rid[i]===ci||rid[i]===ni)&&mean[i*3+2]>zF&&mean[i*3+1]>-0.05*range)freck[i]=1;
-    if(rid[i]===mi)mouth[i]=1;}
-  const lm=b64ToArray(D.landmarks);eyeR=[];eyeL=[];
-  for(let i=36;i<=41;i++)eyeR.push(lm[i]);for(let i=42;i<=47;i++)eyeL.push(lm[i]);
-}
-function colorsFor(app){
-  const col=new Float32Array(V3);const tr=k=>D.appearance_meta.traits.find(t=>t.key===k);
-  let skin=[0.85,0.72,0.62];
-  if(app.skin_tone!=null){const t=tr('skin_tone');skin=hexRGB(t.palette[t.classes[app.skin_tone]]);}
-  for(let i=0;i<V;i++){col[i*3]=skin[0];col[i*3+1]=skin[1];col[i*3+2]=skin[2];}
-  if(app.hair_colour!=null){const t=tr('hair_colour');const hc=hexRGB(t.palette[t.classes[app.hair_colour]]);
-    for(let i=0;i<V;i++)if(scalp[i]){col[i*3]=hc[0];col[i*3+1]=hc[1];col[i*3+2]=hc[2];}}
-  const lip=[Math.min(1,skin[0]*0.98+0.04),skin[1]*0.84,skin[2]*0.82];
-  for(let i=0;i<V;i++)if(mouth[i])for(let a=0;a<3;a++)col[i*3+a]=col[i*3+a]*0.78+lip[a]*0.22;
-  return col;
-}
+// ---- regions from geometry: hair cap on the skin part, iris and pupil on each eyeball ----
+let lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
+for (let i = 0; i < NV; i++) if (PART[i] === 0) for (let j = 0; j < 3; j++) { lo[j] = Math.min(lo[j], MEAN[i * 3 + j]); hi[j] = Math.max(hi[j], MEAN[i * 3 + j]); }
+const ry = hi[1] - lo[1], rz = hi[2] - lo[2];
+const REGION = new Uint8Array(NV);            // 0 skin, 1 hair, 2 sclera, 3 iris, 4 pupil
+const eyeC = {};
+for (let i = 0; i < NV; i++) if (PART[i]) { const e = eyeC[PART[i]] || (eyeC[PART[i]] = [0, 0, 0, 0]); e[0] += MEAN[i * 3]; e[1] += MEAN[i * 3 + 1]; e[2] += MEAN[i * 3 + 2]; e[3]++; }
+for (const k in eyeC) { const e = eyeC[k]; e[0] /= e[3]; e[1] /= e[3]; e[2] /= e[3]; }
+for (let i = 0; i < NV; i++) { const x = MEAN[i * 3], y = MEAN[i * 3 + 1], z = MEAN[i * 3 + 2];
+  if (PART[i] === 0) { const yy = (y - lo[1]) / ry, zz = (z - lo[2]) / rz;
+    if (yy > 0.80 || (yy > 0.60 && zz < 0.42) || (yy > 0.70 && zz < 0.62 && Math.abs(x) > 0.55 * (hi[0] - lo[0]) / 2)) REGION[i] = 1; }
+  else { const c = eyeC[PART[i]], dx = x - c[0], dy = y - c[1], dz = z - c[2], fz = dz / (Math.hypot(dx, dy, dz) || 1);
+    REGION[i] = fz > 0.95 ? 4 : fz > 0.82 ? 3 : 2; } }
 
-let renderer,scene,cam,grp,solid,wire,geomS,geomW,eyes=[];
-function init(){
-  const canvas=document.getElementById('c');
-  renderer=new THREE.WebGLRenderer({canvas,antialias:true});
-  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  scene=new THREE.Scene();
-  cam=new THREE.PerspectiveCamera(30,innerWidth/innerHeight,0.1,5000);
-  grp=new THREE.Group();scene.add(grp);
-  scene.add(new THREE.AmbientLight(0x224458,0.9));
-  const key=new THREE.DirectionalLight(0x9fe8ff,0.9);key.position.set(-0.4,0.7,1.2);scene.add(key);
-  const warm=new THREE.DirectionalLight(0xffe9d2,0.25);warm.position.set(0.6,-0.1,0.8);scene.add(warm);
-  // solid coloured face (materializes during colour phase)
-  geomS=new THREE.BufferGeometry();
-  geomS.setAttribute('position',new THREE.BufferAttribute(mean.slice(),3));
-  const c0=new Float32Array(V3);c0.fill(0.5);geomS.setAttribute('color',new THREE.BufferAttribute(c0,3));
-  geomS.setIndex(new THREE.BufferAttribute(new Uint32Array(faces),1));geomS.computeVertexNormals();
-  solid=new THREE.Mesh(geomS,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.8,
-    transparent:true,opacity:0}));grp.add(solid);
-  // glowing cyan wireframe (the hologram)
-  geomW=new THREE.BufferGeometry();
-  geomW.setAttribute('position',new THREE.BufferAttribute(mean.slice(),3));
-  geomW.setIndex(new THREE.BufferAttribute(new Uint32Array(faces),1));
-  wire=new THREE.Mesh(geomW,new THREE.MeshBasicMaterial({color:0x4fe9ff,wireframe:true,
-    transparent:true,opacity:0.0,blending:THREE.AdditiveBlending}));grp.add(wire);
-  // frame camera
-  geomS.computeBoundingBox();const bb=geomS.boundingBox,ctr=new THREE.Vector3();bb.getCenter(ctr);
-  grp.position.set(-ctr.x,-ctr.y,-ctr.z);
-  const sz=new THREE.Vector3();bb.getSize(sz);cam.position.set(0,0,Math.max(sz.x,sz.y)*2.2);cam.lookAt(0,0,0);
-  for(let e=0;e<2;e++){const g=new THREE.Group();
-    // unlit layered eye: off-white sclera · coloured iris · black pupil · glint.
-    // MeshBasic keeps the colours exact under the cyan holographic light.
-    const sc=new THREE.Mesh(new THREE.CircleGeometry(1.0,36),new THREE.MeshBasicMaterial({color:0xe8e3d6,transparent:true,opacity:0,depthWrite:false}));
-    const ir=new THREE.Mesh(new THREE.CircleGeometry(0.64,36),new THREE.MeshBasicMaterial({color:0x5a3b22,transparent:true,opacity:0,depthWrite:false}));ir.position.z=0.02;
-    const li=new THREE.Mesh(new THREE.RingGeometry(0.62,0.66,36),new THREE.MeshBasicMaterial({color:0x201509,transparent:true,opacity:0,depthWrite:false}));li.position.z=0.03;
-    const pu=new THREE.Mesh(new THREE.CircleGeometry(0.22,28),new THREE.MeshBasicMaterial({color:0x050505,transparent:true,opacity:0,depthWrite:false}));pu.position.z=0.04;
-    const gl=new THREE.Mesh(new THREE.CircleGeometry(0.07,14),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthWrite:false}));gl.position.set(0.11,0.12,0.06);
-    g.add(sc,ir,li,pu,gl);g.userData={sc,ir,li,pu,gl};grp.add(g);eyes.push(g);}
-  addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);
-    cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();});
-}
-function setVerts(g,v){g.attributes.position.array.set(v);g.attributes.position.needsUpdate=true;g.computeVertexNormals&&g.computeVertexNormals();}
-function placeEyes(verts,eyeRGB,op){const groups=[eyeR,eyeL];
-  for(let e=0;e<2;e++){const gg=eyes[e],grp3=groups[e];let cx=0,cy=0,cz=0;
-    for(const i of grp3){cx+=verts[i*3];cy+=verts[i*3+1];cz+=verts[i*3+2];}const n=grp3.length;cx/=n;cy/=n;cz/=n;
-    const a=grp3[0],b=grp3[3];const w=Math.hypot(verts[a*3]-verts[b*3],verts[a*3+1]-verts[b*3+1],verts[a*3+2]-verts[b*3+2]);
-    const R=Math.max(w*0.26,0.001);gg.position.set(cx,cy,cz+w*0.15);gg.scale.setScalar(R);
-    const u=gg.userData;u.ir.material.color.setRGB(eyeRGB[0],eyeRGB[1],eyeRGB[2]);
-    u.sc.material.opacity=op;u.ir.material.opacity=op;u.li.material.opacity=op*0.8;
-    u.pu.material.opacity=op;u.gl.material.opacity=op*0.85;}
-}
+const PAL = {
+  eye: {blue: "#5b86b6", intermediate: "#7d7a45", brown: "#5a3b22"},
+  hair: {blond: "#d8b86a", brown: "#5b3a22", red: "#a4492a", black: "#1c1714"},
+  skin: {very_pale: "#f3dccb", pale: "#e6c2a3", intermediate: "#c6946b", dark: "#8b5a3c", dark_to_black: "#4e3424"}};
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
+const NAMES = {eye: "Eyes", hair: "Hair", skin: "Skin"};
 
-// ---- animation state machine ----
-let subj=0,phase=0,t0=0,paused=false,predApp=null,predBeta=null,curColors=null;
-const PH=[["materializing shape",1500],["resolving appearance",1300],["hold",3200],["dissolve",700]];
-function appFor(s){const ak=(D.appearance_meta.shape_to_app['mlp_snp_demo'])||'snp_demo';
-  const p=s.appearance.pred[ak],o={};for(const k in p)o[k]=p[k][0];return o;}
-function startSubject(i){subj=((i%D.subjects.length)+D.subjects.length)%D.subjects.length;
-  const s=D.subjects[subj];predBeta=b64ToArray(s.beta_pred['mlp_snp_demo']||s.beta_pred[Object.keys(s.beta_pred)[0]]);
-  predApp=appFor(s);curColors=colorsFor(predApp);geomS.attributes.color.array.set(curColors);geomS.attributes.color.needsUpdate=true;
-  document.getElementById('sid').textContent=s.id+'  ·  ancestry '+s.ancestry;
-  buildChips(s);phase=0;t0=performance.now();}
-function buildChips(s){const host=document.getElementById('chips');host.innerHTML='';
-  const order=['eye_colour','hair_colour','skin_tone'];
-  const label={eye_colour:'eye',hair_colour:'hair',skin_tone:'skin'};
-  order.forEach(k=>{const t=D.appearance_meta.traits.find(x=>x.key===k);const cls=predApp[k];
-    const hex=t.palette&&t.palette[t.classes[cls]];const sw=hex&&hex!=='#00000000'?`<span class="sw" style="background:${hex.slice(0,7)}"></span>`:'';
-    const d=document.createElement('div');d.className='chip';d.innerHTML=sw+label[k]+': '+t.classes[cls].replace(/_/g,' ');host.appendChild(d);});
-}
-function frame(now){requestAnimationFrame(frame);
-  if(!paused)grp.rotation.y=Math.sin(now*0.0002)*0.5;
-  const [label,dur]=PH[phase];const e=now-t0;const p=Math.min(1,e/dur);
-  document.getElementById('phase').textContent=label.toUpperCase();
-  let shapeT=1,wireOp=0.9,solidOp=0,eyeOp=0;
-  if(phase===0){ // glowing wireframe builds the shape
-    shapeT=p;wireOp=0.35+0.6*p;solidOp=0;eyeOp=0;}
-  else if(phase===1){ // colour materializes while the wireframe fades away
-    shapeT=1;wireOp=0.95-0.90*p;solidOp=p;eyeOp=p;}
-  else if(phase===2){ // hold: clean coloured face, only a faint holographic trace
-    shapeT=1;wireOp=0.05;solidOp=1;eyeOp=1;}
-  else if(phase===3){ // dissolve out, a brief re-scan, then next subject
-    shapeT=1;solidOp=1-p;eyeOp=1-p;wireOp=0.05+0.45*Math.sin(p*Math.PI);}
-  const v=decode(predBeta,shapeT);setVerts(geomS,v);setVerts(geomW,v);
-  wire.material.opacity=wireOp;solid.material.opacity=solidOp;
-  const tr=k=>D.appearance_meta.traits.find(t=>t.key===k);
-  const eyeC=predApp.eye_colour!=null?hexRGB(tr('eye_colour').palette[tr('eye_colour').classes[predApp.eye_colour]]):[0.2,0.2,0.2];
-  placeEyes(v,eyeC,eyeOp);
-  renderer.render(scene,cam);
-  if(!paused&&e>=dur){ if(phase<PH.length-1){phase++;t0=now;} else {startSubject(subj+1);} }
-}
-addEventListener('keydown',e=>{if(e.code==='Space'){paused=!paused;e.preventDefault();}});
-addEventListener('click',()=>startSubject(subj+1));
+// ---- WebGL: one program, solid and wire passes ----
+const cv = document.getElementById("c"), gl = cv.getContext("webgl", {antialias: true});
+const VS = `attribute vec3 p;attribute vec3 n;attribute vec3 c;uniform mat4 M;uniform mat4 P;varying vec3 vn;varying vec3 vc;varying vec3 vp;
+void main(){vec4 w=M*vec4(p,1.0);vp=w.xyz;vn=mat3(M)*n;vc=c;gl_Position=P*w;}`;
+const FS = `precision mediump float;varying vec3 vn;varying vec3 vc;varying vec3 vp;uniform float A;uniform float W;
+void main(){if(W>0.5){gl_FragColor=vec4(0.31,0.91,1.0,A);return;}
+vec3 N=normalize(vn);vec3 V=normalize(-vp);vec3 L=normalize(vec3(-0.4,0.6,0.8));vec3 L2=normalize(vec3(0.6,-0.1,0.7));
+float d=max(dot(N,L),0.0)*0.75+max(dot(N,L2),0.0)*0.25;float rim=pow(1.0-max(dot(N,V),0.0),2.5);
+vec3 col=vc*(0.28+d)+vec3(0.2,0.75,0.95)*rim*0.45;gl_FragColor=vec4(col*A,A);}`;
+const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); return o; };
+const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
+const B = {}; for (const a of ["p", "n", "c"]) { B[a] = gl.createBuffer(); const l = gl.getAttribLocation(pr, a); gl.bindBuffer(gl.ARRAY_BUFFER, B[a]); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 3, gl.FLOAT, false, 0, 0); }
+const IB = gl.createBuffer(), EB = gl.createBuffer();
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, IB); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, FACES, gl.STATIC_DRAW);
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EB); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, EDGES, gl.STATIC_DRAW);
+const U = n => gl.getUniformLocation(pr, n), uM = U("M"), uP = U("P"), uA = U("A"), uW = U("W");
+const cx = (lo[0] + hi[0]) / 2, cy = lo[1] + ry * 0.44, cz = (lo[2] + hi[2]) / 2, ext = Math.max(hi[0] - lo[0], ry) * 0.80;
+function M(yaw) { const c = Math.cos(yaw), s = Math.sin(yaw), d = ext / Math.tan(15 * Math.PI / 180);
+  return [c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, -c * cx - s * cz, -cy, s * cx - c * cz - d, 1]; }
+function P() { const t = 1 / Math.tan(15 * Math.PI / 180), a = cv.width / cv.height; return [t / a, 0, 0, 0, 0, t, 0, 0, 0, 0, -1.004, -1, 0, 0, -20.04, 0]; }
+function resize() { const r = Math.min(devicePixelRatio || 1, 2); cv.width = innerWidth * r; cv.height = innerHeight * r; }
+addEventListener("resize", resize); resize();
+const pos = new Float32Array(NV * 3), nrm = new Float32Array(NV * 3), col = new Float32Array(NV * 3);
 
-fetch('data/web_data.json').then(r=>r.json()).then(d=>{D=d;
-  mean=b64ToArray(d.mean);faces=b64ToArray(d.faces);basis=b64ToArray(d.basis);
-  K=d.n_shape_dims;V3=mean.length;V=V3/3;masks();init();startSubject(0);requestAnimationFrame(frame);
-}).catch(e=>{document.getElementById('phase').textContent='load error: '+e;});
+// ---- reveal sequence ----
+const PH = [["Building the shape from the genotype", 1600], ["Adding colour from the pigmentation markers", 1300], ["", 3400], ["", 700]];
+let si = 0, phase = 0, t0 = 0, paused = false, beta = null;
+function start(i) {
+  si = (i + D.subjects.length) % D.subjects.length; const s = D.subjects[si]; beta = s.pred[MODEL];
+  const pick = t => { const p = s.appearance[t], L = D.appearance_labels[t], j = p.indexOf(Math.max(...p)); return [L[j], p[j]]; };
+  const [ec, ep] = pick("eye"), [hc, hp] = pick("hair"), [kc, kp] = pick("skin");
+  const E = hex(PAL.eye[ec]), H = hex(PAL.hair[hc]), Sk = hex(PAL.skin[kc]);
+  for (let i = 0; i < NV; i++) { const r = REGION[i], c = r === 1 ? H : r === 2 ? [0.93, 0.92, 0.89] : r === 3 ? E : r === 4 ? [0.04, 0.04, 0.05] : Sk; col.set(c, i * 3); }
+  gl.bindBuffer(gl.ARRAY_BUFFER, B.c); gl.bufferData(gl.ARRAY_BUFFER, col, gl.STATIC_DRAW);
+  document.getElementById("sid").textContent = s.id.replace("SUBJ-", "Person ") + `, ${s.sex}, ${s.age.toFixed(0)}`;
+  document.getElementById("model").textContent = `Shape: ridge regression on demographics and SNPs, ${s.mesh_mm[MODEL].toFixed(2)} mm from the true face`;
+  document.getElementById("chips").innerHTML = [["eye", ec, ep], ["hair", hc, hp], ["skin", kc, kp]].map(([t, c, p]) =>
+    `<div class="chip"><span class="sw" style="background:${PAL[t][c]}"></span>${NAMES[t]}: ${c.replace(/_/g, " ")} <small>${Math.round(100 * p)}%</small></div>`).join("");
+  phase = RM ? 2 : 0; t0 = performance.now();
+}
+function frame(now) {
+  requestAnimationFrame(frame);
+  const [label, dur] = PH[phase], e = now - t0, p = Math.min(1, e / dur);
+  document.getElementById("phase").textContent = label;
+  document.getElementById("chips").style.opacity = phase >= 1 ? 1 : 0;
+  let shapeT = 1, wireA = 0.05, solidA = 1;
+  if (phase === 0) { shapeT = p; wireA = 0.25 + 0.55 * p; solidA = 0; }
+  else if (phase === 1) { wireA = 0.8 - 0.75 * p; solidA = p; }
+  else if (phase === 3) { solidA = 1 - p; wireA = 0.05 + 0.4 * Math.sin(p * Math.PI); }
+  decode(beta, shapeT, pos); normals(pos, nrm);
+  gl.bindBuffer(gl.ARRAY_BUFFER, B.p); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.DYNAMIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, B.n); gl.bufferData(gl.ARRAY_BUFFER, nrm, gl.DYNAMIC_DRAW);
+  gl.viewport(0, 0, cv.width, cv.height); gl.clearColor(0.008, 0.024, 0.047, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.uniformMatrix4fv(uM, false, M(paused || RM ? 0.25 : Math.sin(now * 0.0002) * 0.5)); gl.uniformMatrix4fv(uP, false, P());
+  if (solidA > 0.01) { gl.enable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.uniform1f(uW, 0); gl.uniform1f(uA, solidA); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, IB); gl.drawElements(gl.TRIANGLES, FACES.length, gl.UNSIGNED_SHORT, 0); }
+  if (wireA > 0.01) {
+    if (solidA < 0.5) {                     // invisible depth pass, so only the visible surface's edges show
+      gl.enable(gl.DEPTH_TEST); gl.colorMask(false, false, false, false); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1, 1);
+      gl.uniform1f(uW, 0); gl.uniform1f(uA, 1); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, IB); gl.drawElements(gl.TRIANGLES, FACES.length, gl.UNSIGNED_SHORT, 0);
+      gl.colorMask(true, true, true, true); gl.disable(gl.POLYGON_OFFSET_FILL); gl.depthFunc(gl.LEQUAL);
+    } else gl.disable(gl.DEPTH_TEST);
+    gl.depthMask(false); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.uniform1f(uW, 1); gl.uniform1f(uA, wireA * 0.35); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EB); gl.drawElements(gl.LINES, EDGES.length, gl.UNSIGNED_SHORT, 0); gl.depthMask(true); gl.depthFunc(gl.LESS); }
+  if (!paused && e >= dur) { if (phase < PH.length - 1) { phase++; t0 = now; } else start(si + 1); }
+}
+addEventListener("keydown", e => { if (e.code === "Space") { paused = !paused; e.preventDefault(); } if (e.key === "ArrowRight") start(si + 1); if (e.key === "ArrowLeft") start(si - 1); });
+addEventListener("click", () => start(si + 1));
+start(0); requestAnimationFrame(frame);
 </script>
 </body>
 </html>

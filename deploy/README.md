@@ -1,35 +1,29 @@
-# FaceCon — deployable web bundle
+# FaceCon: deployable web bundle
 
-A self-contained static site. **No build step, no server-side code, no API keys.**
-Any static host serves it as-is.
+An identical copy of `app/`, for static hosting. No build step, no server code, no
+API keys, no third-party scripts.
 
 ```
-index.html        landing page (links the two apps)
-prototype.html    interactive prototype (pick subject → reveal → metrics)
-holo.html         hologram reveal view
-three.min.js      3D library (vendored locally — no CDN/network needed)
-data/web_data.json   the model + demo data the apps read (~3.9 MB)
+index.html               demonstrator: Explore, Results, Pipeline
+holo.html                hologram reveal
+data/demo.js             mesh, 36 held-out people, recorded results (2.8 MB)
+instrument-sans.woff2    typeface (SIL Open Font License, licence beside it)
 ```
 
-The apps `fetch()` `data/web_data.json`, so they must be opened over **http(s)**,
-not `file://`. Any host below handles that automatically.
+The data is a script rather than JSON, so the pages also work opened straight from
+disk (`file://`). No local server is needed.
 
-## Deploy (pick one — all free)
+Refresh this folder after `python scripts/export_demo.py`:
 
-**Netlify Drop (easiest, no account, ~30 s):** go to https://app.netlify.com/drop
-and drag this whole folder onto the page. You get a live URL instantly.
-
-**Vercel (named in the brief):**
 ```bash
-npm i -g vercel
-cd facecon-deploy      # this folder
-vercel                 # log in, accept defaults → preview URL
-vercel --prod          # production URL to use in the demo
+cp app/index.html app/holo.html deploy/ && cp app/data/demo.js deploy/data/
 ```
-No `vercel.json` is needed — Vercel serves a static folder with zero config.
 
-**GitHub Pages / Cloudflare Pages** also work — push the folder to a repo and point
-the host at the root.
+## Hosting (all free, all serve a static folder as-is)
 
-See `FaceCon_Hosting_Guide.md` for full step-by-step instructions and how to put the
-link into the presentation.
+- **Netlify Drop:** drag this folder onto https://app.netlify.com/drop.
+- **Vercel:** `npx vercel` from this folder, then `npx vercel --prod`.
+- **GitHub Pages or Cloudflare Pages:** point the host at this folder.
+
+Every face shown is simulated, and the page says so. Do not host it anywhere that
+would present it as a prediction about a real person.

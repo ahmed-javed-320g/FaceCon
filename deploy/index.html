@@ -1,77 +1,687 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FaceCon — Genotype → 3D Face</title>
+<title>FaceCon: genotype to face, measured honestly</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@75..100,400..700&display=swap" media="print" onload="this.media='all'">
 <style>
-  :root{
-    --bg:#0a1119; --bg2:#0c1a26; --panel:#0e1a26; --line:#1d3246;
-    --ink:#e8eef7; --muted:#9fb3c9; --accent:#36e3ff; --accent2:#7cf6c0; --warn:#ffcf6b;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;min-height:100%;background:
-     radial-gradient(1200px 600px at 50% -10%, #11283a 0%, var(--bg) 60%);
-     color:var(--ink);font-family:'IBM Plex Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-  .wrap{max-width:1100px;margin:0 auto;padding:clamp(28px,6vw,80px) 20px 48px;display:flex;flex-direction:column;gap:clamp(24px,4vw,44px)}
-  .kicker{font-size:13px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin:0;font-weight:600}
-  h1{font-family:'Space Grotesk','Space Grotesk',system-ui,sans-serif;font-weight:700;
-     font-size:clamp(34px,7vw,68px);line-height:1.04;margin:0}
-  h1 span{color:var(--accent)}
-  .lede{font-size:clamp(16px,2.4vw,22px);color:var(--muted);line-height:1.5;max-width:720px;margin:0}
-  .badge{display:inline-block;font-size:11px;color:#0a0f17;background:var(--warn);font-weight:700;
-     padding:4px 10px;border-radius:6px;letter-spacing:1px;width:fit-content}
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
-  a.card{display:flex;flex-direction:column;gap:14px;text-decoration:none;color:var(--ink);
-     background:linear-gradient(180deg,#0e1c2a,#0a1420);border:1px solid var(--line);
-     border-radius:18px;padding:30px;transition:.18s;position:relative;overflow:hidden}
-  a.card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 18px 50px -24px var(--accent)}
-  a.card .ic{font-size:40px;line-height:1}
-  a.card h2{font-family:'Space Grotesk',system-ui,sans-serif;font-size:27px;margin:0;font-weight:600}
-  a.card p{margin:0;color:var(--muted);font-size:16px;line-height:1.45}
-  a.card .go{margin-top:auto;color:var(--accent);font-weight:600;font-size:15px}
-  .glow{position:absolute;inset:auto -40px -60px auto;width:180px;height:180px;border-radius:50%;
-     background:radial-gradient(circle,rgba(54,227,255,.18),transparent 70%);pointer-events:none}
-  .meta{display:flex;flex-wrap:wrap;gap:10px 22px;color:#5f7489;font-size:14px;border-top:1px solid var(--line);padding-top:22px}
-  .meta b{color:var(--muted);font-weight:600}
-  @media (max-width:520px){a.card{padding:24px}}
+@font-face{font-family:"Instrument Sans Local";font-style:normal;font-weight:400 700;font-stretch:75% 100%;font-display:swap;src:url(instrument-sans.woff2) format("woff2-variations"),url(instrument-sans.woff2) format("woff2")}
+:root{
+  --paper:#EEF1F3; --panel:#FFFFFF; --ink:#14212B; --muted:#5B6B77; --faint:#8A97A1; --line:#D3DAE0;
+  --stage:#1C2A33; --stage-2:#26363F; --stage-ink:#E6ECEF; --stage-muted:#9FB0BA;
+  --ridge:#2a78d6; --mlp:#eb6834; --demo:#6b6a63; --mean:#a9a79f; --good:#1baf7a; --warn:#b07800;
+  --r-s:6px; --r-m:10px;
+  --font:"Instrument Sans Local","Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--font);font-feature-settings:"tnum" 1;-webkit-font-smoothing:antialiased}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ridge);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---- top bar ---- */
+header.bar{display:flex;align-items:center;gap:28px;padding:0 24px;height:60px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:baseline;gap:10px;white-space:nowrap}
+.brand b{font-size:21px;font-weight:650;font-stretch:80%;letter-spacing:-.01em}
+.brand span{color:var(--muted);font-size:13px}
+nav.tabs{display:flex;gap:4px;height:100%}
+nav.tabs button{background:none;border:0;padding:0 14px;height:100%;cursor:pointer;color:var(--muted);font-weight:550;border-bottom:2px solid transparent}
+nav.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink)}
+nav.tabs button:hover{color:var(--ink)}
+.truth{margin-left:auto;position:relative}
+.truth>button{white-space:nowrap;display:flex;align-items:center;gap:8px;background:#FFF6E6;border:1px solid #EBCB8B;color:#6B4A00;border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.truth>button i{width:8px;height:8px;border-radius:50%;background:var(--warn);display:block}
+.pop{position:absolute;right:0;top:calc(100% + 8px);width:340px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);padding:16px 18px;box-shadow:0 12px 32px rgba(20,33,43,.14);font-size:14px;display:none}
+.pop.open{display:block}
+.pop p{margin:0 0 8px}.pop p:last-child{margin:0}
+
+main{min-height:calc(100vh - 60px)}
+section.view{display:none}
+section.view.on{display:block}
+
+/* ---- explore ---- */
+.explore{display:grid;grid-template-columns:262px minmax(0,1fr) 320px;height:calc(100vh - 60px)}
+.people{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.people .head{padding:16px 16px 10px}
+.people h2,.side h2{font-size:15px;font-weight:650;margin:0 0 10px}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:2px 10px;font-size:13px;cursor:pointer;color:var(--muted)}
+.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.plist{list-style:none;margin:0;padding:4px 8px 12px;overflow:auto;flex:1}
+.plist li button{width:100%;display:grid;grid-template-columns:1fr auto;gap:2px 8px;text-align:left;background:none;border:0;border-radius:var(--r-s);padding:8px 10px;cursor:pointer}
+.plist li button:hover{background:var(--paper)}
+.plist li button[aria-current=true]{background:#E3ECF7}
+.plist .pid{font-weight:600;font-size:14px}
+.plist .pmeta{grid-column:1/-1;color:var(--muted);font-size:12.5px}
+.plist .pbest{font-size:12px;color:var(--muted);align-self:center}
+
+.stagewrap{display:flex;flex-direction:column;min-width:0;min-height:0;padding:16px 20px;gap:12px}
+.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);padding:3px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:7px;cursor:pointer;color:var(--muted);font-weight:550;font-size:14px;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+.seg button .sw{width:9px;height:9px;border-radius:2px;display:inline-block}
+.toolbar .hint{margin-left:auto;color:var(--faint);font-size:13px}
+.stage{flex:1;min-height:340px;display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--stage);border-radius:var(--r-m);overflow:hidden;position:relative}
+.cell{position:relative;background:radial-gradient(120% 90% at 50% 35%,var(--stage-2) 0%,var(--stage) 70%);min-height:0}
+.cell canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}
+.cell canvas:active{cursor:grabbing}
+.cell .tag{position:absolute;left:16px;top:14px;color:var(--stage-ink);font-size:14px;font-weight:600;pointer-events:none}
+.cell .tag small{display:block;color:var(--stage-muted);font-weight:400;font-size:12.5px}
+.cell .mm{position:absolute;right:16px;top:14px;color:var(--stage-ink);font-size:22px;font-weight:600;font-stretch:80%;text-align:right;pointer-events:none}
+.cell .mm small{display:block;color:var(--stage-muted);font-size:12px;font-weight:400;font-stretch:100%}
+.legend{position:absolute;left:16px;bottom:14px;color:var(--stage-muted);font-size:12px;display:none;align-items:center;gap:8px;pointer-events:none}
+.legend.on{display:flex}
+.legend .ramp{width:140px;height:8px;border-radius:2px;background:linear-gradient(90deg,#CDD2D6,#F2C9A3,#E07A3F,#9C3412)}
+.under{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.under .note{color:var(--muted);font-size:13px}
+.toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:550}
+.toggle input{width:16px;height:16px;accent-color:var(--ink)}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:var(--r-s);padding:5px 12px;cursor:pointer;font-size:14px}
+.btn:hover{border-color:var(--muted)}
+
+.side{background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:18px 20px 24px}
+.side .block{padding:0 0 18px;margin:0 0 18px;border-bottom:1px solid var(--line)}
+.side .block:last-child{border:0;margin:0}
+.who{font-size:22px;font-weight:650;font-stretch:85%;margin:0}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;margin:10px 0 0;font-size:14px}
+.facts dt{color:var(--muted)}.facts dd{margin:0}
+.bars{display:grid;gap:9px}
+.bar{display:grid;grid-template-columns:1fr auto;gap:3px 10px;align-items:center;font-size:13.5px;cursor:pointer;background:none;border:0;padding:0;text-align:left}
+.bar .track{grid-column:1/-1;height:8px;background:#EDF0F2;border-radius:2px;overflow:hidden}
+.bar .fill{height:100%;border-radius:2px}
+.bar[aria-pressed=true] .lab{font-weight:650}
+.bar .val{font-weight:600}
+.lead{font-size:14px;margin:12px 0 0;color:var(--ink)}
+.app-trait{margin:0 0 12px}
+.app-trait h3{font-size:13.5px;font-weight:600;margin:0 0 6px;display:flex;justify-content:space-between}
+.app-trait h3 span{color:var(--muted);font-weight:400}
+.stack{display:flex;height:22px;border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+.stack div{height:100%}
+.keys{font-size:13px;color:var(--muted);line-height:1.8}
+kbd{font:600 12px var(--font);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--paper);color:var(--ink)}
+.small{font-size:12.5px;color:var(--muted)}
+
+/* ---- results ---- */
+.page{max-width:1080px;margin:0 auto;padding:36px 28px 72px}
+.intro{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:28px}
+.intro h1{font-size:40px;line-height:1.05;font-weight:650;font-stretch:78%;margin:0;max-width:640px;letter-spacing:-.01em}
+.intro p{margin:10px 0 0;color:var(--muted);max-width:620px}
+.finding{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:36px;padding:30px 0;border-top:1px solid var(--line)}
+.finding h2{font-size:26px;line-height:1.15;font-weight:620;font-stretch:82%;margin:0 0 12px}
+.finding p{margin:0 0 10px;max-width:60ch}
+.finding .src{font-size:12.5px;color:var(--faint);margin-top:12px}
+.figure{align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);padding:18px 20px}
+.figure .cap{font-size:13px;color:var(--muted);margin:10px 0 0}
+svg text{font-family:var(--font)}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th{text-align:left;font-weight:600;color:var(--muted);font-size:13px;padding:6px 8px;border-bottom:1px solid var(--line)}
+table.t td{padding:7px 8px;border-bottom:1px solid #EEF1F3}
+table.t td.n{text-align:right}
+.pass{color:#0f7a54;font-weight:600}
+.caveat{background:#FFF6E6;border:1px solid #EBCB8B;border-radius:var(--r-m);padding:18px 22px;margin-top:30px}
+.caveat h2{font-size:18px;margin:0 0 8px;font-weight:650}
+.caveat p{margin:0 0 8px}.caveat p:last-child{margin:0}
+
+/* ---- pipeline ---- */
+.flow{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.flow>li{display:grid;grid-template-columns:56px minmax(0,1fr) 230px;gap:18px;padding:20px 0;border-top:1px solid var(--line);align-items:start}
+.flow .no{font-size:30px;font-weight:600;font-stretch:75%;color:var(--faint);line-height:1}
+.flow h3{margin:0 0 4px;font-size:18px;font-weight:620}
+.flow p{margin:0;color:var(--ink);max-width:62ch}
+.flow .code{font-size:12.5px;color:var(--muted);margin-top:6px}
+.status{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.st{font-size:12.5px;font-weight:600;border-radius:999px;padding:2px 10px;border:1px solid}
+.st.ok{color:#0f5f8f;border-color:#B9D3EA;background:#EEF5FC}
+.st.real{color:#0f6a49;border-color:#B5DCCB;background:#EEF8F3}
+.st.wait{color:#6B4A00;border-color:#EBCB8B;background:#FFF6E6}
+.st.part{color:#5B6B77;border-color:var(--line);background:var(--paper)}
+.branch{margin:6px 0 0 74px;padding:14px 18px;border-left:3px solid var(--line);background:var(--panel);border-radius:0 var(--r-s) var(--r-s) 0}
+.datasrc{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:8px 0 28px}
+.datasrc div{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);padding:14px 16px}
+.datasrc h3{margin:0 0 4px;font-size:15px}
+.datasrc p{margin:6px 0 0;font-size:14px;color:var(--muted)}
+pre.cmd{background:var(--stage);color:var(--stage-ink);border-radius:var(--r-m);padding:16px 18px;overflow:auto;font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+details summary{cursor:pointer;font-weight:600;margin:24px 0 10px}
+footer{color:var(--muted);font-size:13px;padding:24px 28px;border-top:1px solid var(--line);max-width:1080px;margin:0 auto}
+
+/* ---- responsive ---- */
+@media (max-width:1180px){.explore{grid-template-columns:230px minmax(0,1fr)}.side{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}.explore{height:auto}.stage{min-height:420px}}
+@media (max-width:760px){
+  header.bar{gap:4px 12px;padding:6px 14px 0;height:auto;flex-wrap:wrap}.brand span{display:none}nav.tabs{height:44px}nav.tabs button{padding:0 10px}.truth{margin-left:0;order:3;width:100%;padding-bottom:8px}main{min-height:0}.explore{height:auto}
+  .explore{grid-template-columns:minmax(0,1fr)}.stagewrap{padding:12px}#modelSeg{max-width:100%;overflow-x:auto}.people{border-right:0;border-bottom:1px solid var(--line)}.plist{display:flex;overflow-x:auto;padding:4px 8px 10px}.plist li button{width:150px}
+  .stage{grid-template-columns:1fr;grid-template-rows:320px 320px}.toolbar .hint{display:none}
+  .finding{grid-template-columns:1fr;gap:16px}.intro h1{font-size:31px}.flow>li{grid-template-columns:40px 1fr}.flow .status{grid-column:2}.datasrc{grid-template-columns:1fr}.branch{margin-left:0}
+  .truth .pop{left:0;right:0;width:auto}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div style="display:flex;flex-direction:column;gap:18px">
-    <p class="kicker">Final Year Project · F26-082</p>
-    <h1>Face<span>Con</span> — a face,<br>predicted from DNA</h1>
-    <p class="lede">An open, reproducible pipeline that predicts <b style="color:#cdddee">3D facial shape</b>
-      and visible <b style="color:#cdddee">appearance</b> — eye, hair and skin colour — from a person's genotype,
-      with a confounder-aware, honestly-reported evaluation.</p>
-    <span class="badge">RUNS ON SYNTHETIC DATA</span>
+<header class="bar">
+  <div class="brand"><b>FaceCon</b><span>Genotype to 3D face, measured against a demographic baseline</span></div>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" aria-selected="true" aria-controls="v-explore" id="t-explore">Explore</button>
+    <button role="tab" aria-selected="false" aria-controls="v-results" id="t-results">Results</button>
+    <button role="tab" aria-selected="false" aria-controls="v-pipeline" id="t-pipeline">Pipeline</button>
+  </nav>
+  <div class="truth">
+    <button id="truthBtn" aria-expanded="false" aria-controls="truthPop"><i></i>Simulated faces</button>
+    <div class="pop" id="truthPop" role="dialog" aria-label="About the data">
+      <p><b>Every face on this site was generated by our simulator.</b> Real 3D scans and genotypes from the 3DFN study have not yet been released to us.</p>
+      <p>The Results tab also shows a run on real human genotypes from the 1000 Genomes Project. Those genotypes are real, the faces are still simulated.</p>
+      <p>So these numbers show that the pipeline works and is honest about what it finds. They say nothing about how well real faces can be predicted, and nothing about any real person.</p>
+    </div>
   </div>
+</header>
 
-  <div class="cards">
-    <a class="card" href="prototype.html">
-      <div class="glow"></div>
-      <div class="ic">🧬</div>
-      <h2>Interactive prototype</h2>
-      <p>Pick a held-out test subject. See the predicted 3D face beside the ground truth,
-         the appearance panel, and live evaluation metrics with confounder ablations.</p>
-      <span class="go">Open prototype →</span>
-    </a>
-    <a class="card" href="holo.html">
-      <div class="glow"></div>
-      <div class="ic">⬡</div>
-      <h2>Hologram view</h2>
-      <p>A glowing wireframe builds the facial shape; then the predicted skin, eye and
-         hair colour materialize onto it as the wireframe fades away.</p>
-      <span class="go">Open hologram →</span>
-    </a>
-  </div>
+<main>
+<!-- ===================== EXPLORE ===================== -->
+<section class="view on" id="v-explore" role="tabpanel" aria-labelledby="t-explore">
+  <div class="explore">
+    <aside class="people" aria-label="People">
+      <div class="head">
+        <h2 id="peopleH">Held-out people</h2>
+        <div class="filters" role="group" aria-label="Filter by sex">
+          <button class="chip" data-f="sex" data-v="all" aria-pressed="true">Everyone</button>
+          <button class="chip" data-f="sex" data-v="female" aria-pressed="false">Women</button>
+          <button class="chip" data-f="sex" data-v="male" aria-pressed="false">Men</button>
+        </div>
+        <div class="filters" role="group" aria-label="Filter by ancestry group" style="margin-top:6px">
+          <button class="chip" data-f="group" data-v="all" aria-pressed="true">All groups</button>
+          <button class="chip" data-f="group" data-v="A" aria-pressed="false">A</button>
+          <button class="chip" data-f="group" data-v="B" aria-pressed="false">B</button>
+          <button class="chip" data-f="group" data-v="C" aria-pressed="false">C</button>
+        </div>
+        <p class="small" style="margin:10px 0 0">The figure on the right of each person is how many millimetres closer ridge gets than demographics alone.</p>
+      </div>
+      <ul class="plist" id="plist" aria-labelledby="peopleH"></ul>
+    </aside>
 
-  <div class="meta">
-    <span><b>Team</b> &nbsp;Ahmed Javed · Afnan Asif · Saad Riaz Taqi</span>
-    <span><b>Supervisor</b> &nbsp;Ms. Rushda Muneer</span>
-    <span><b>FAST-NUCES Lahore</b></span>
+    <div class="stagewrap">
+      <div class="toolbar">
+        <div class="seg" id="modelSeg" role="group" aria-label="Prediction model"></div>
+        <span class="hint">Drag to turn the heads. <kbd>?</kbd> for keys</span>
+      </div>
+      <div class="stage" id="stage">
+        <div class="cell">
+          <canvas id="cvPred" aria-label="Predicted face"></canvas>
+          <div class="tag" id="predTag">Predicted<small></small></div>
+          <div class="mm" id="predMM"></div>
+          <div class="legend on" id="legend"><span>0 mm</span><span class="ramp"></span><span>10 mm or more</span></div>
+        </div>
+        <div class="cell">
+          <canvas id="cvTrue" aria-label="True face"></canvas>
+          <div class="tag">True face<small>what the simulator generated</small></div>
+        </div>
+      </div>
+      <div class="under">
+        <label class="toggle"><input type="checkbox" id="errToggle" checked> Colour the prediction by its error</label>
+        <button class="btn" id="resetView">Face forward</button>
+        <button class="btn" id="spinBtn" aria-pressed="false">Turn slowly</button>
+        <a class="btn" href="holo.html" style="text-decoration:none;color:inherit">Open the hologram reveal</a>
+        <span class="note" id="cohortNote"></span>
+      </div>
+    </div>
+
+    <aside class="side" aria-label="Selected person">
+      <div class="block">
+        <p class="who" id="who"></p>
+        <dl class="facts" id="facts"></dl>
+      </div>
+      <div class="block">
+        <h2>How close each model gets</h2>
+        <div class="bars" id="errBars" role="group" aria-label="Average error of each model for this person"></div>
+        <p class="lead" id="errLead"></p>
+        <p class="small">Average distance between predicted and true surface, over the whole head. Lower is better.</p>
+      </div>
+      <div class="block">
+        <h2>Predicted colouring</h2>
+        <div id="appearance"></div>
+        <p class="small">From 41 pigmentation markers with the HIrisPlex-S model. In this cohort the marker genotypes are simulated, and our coefficients reproduce the public calculator but have not yet been checked against the published parameters.</p>
+      </div>
+      <div class="block keys" id="keys">
+        <h2 style="color:var(--ink)">Keys</h2>
+        <kbd>↑</kbd> <kbd>↓</kbd> next or previous person<br>
+        <kbd>←</kbd> <kbd>→</kbd> simpler or richer model<br>
+        <kbd>E</kbd> error colouring on or off<br>
+        <kbd>F</kbd> face forward
+      </div>
+    </aside>
   </div>
-</div>
+</section>
+
+<!-- ===================== RESULTS ===================== -->
+<section class="view" id="v-results" role="tabpanel" aria-labelledby="t-results">
+  <div class="page">
+    <div class="intro">
+      <div>
+        <h1>What the genetic data adds, and what it doesn't</h1>
+        <p>Every experiment compares against a baseline that knows only sex, age, height, weight and ancestry. A model only counts as using genetics if it beats that baseline and stops beating it when the genotypes are shuffled.</p>
+      </div>
+      <div class="seg" id="dsSeg" role="group" aria-label="Which genotypes">
+        <button data-ds="kg" aria-pressed="true">Real genotypes (1000 Genomes)</button>
+        <button data-ds="simulated" aria-pressed="false">Simulated genotypes</button>
+      </div>
+    </div>
+    <div id="findings"></div>
+    <div class="caveat">
+      <h2>Read these results with two limits in mind</h2>
+      <p>The faces are simulated, and the link from genotype to face is one we planted. It is additive, so a linear model is the correct model for it and is expected to win. These results show that our neural networks learn an additive signal less efficiently than ridge regression at this sample size. They cannot show how the networks would do if real facial genetics has non-additive structure.</p>
+      <p>The planted genetic share of 20 per cent is a design choice, not an estimate. The real share could be much smaller.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PIPELINE ===================== -->
+<section class="view" id="v-pipeline" role="tabpanel" aria-labelledby="t-pipeline">
+  <div class="page">
+    <div class="intro">
+      <div>
+        <h1>From a genotype file to a scored 3D face</h1>
+        <p>Seven stages, each already running on simulated or public data. When the 3DFN files are released they enter at stage one, and the stages after it run unchanged.</p>
+      </div>
+    </div>
+    <div class="datasrc">
+      <div><h3>3DFN scans and genotypes</h3><span class="st wait">Access pending</span><p>3D face scans of 2,454 people (FaceBase) and the genotypes behind a published study of 3,118 (dbGaP phs000949). Needs ethics approval and a data access committee decision.</p></div>
+      <div><h3>1000 Genomes genotypes</h3><span class="st real">In use</span><p>2,573 unrelated people from five continental groups, 100,009 SNPs. Public. Used with simulated faces.</p></div>
+      <div><h3>Simulated cohort</h3><span class="st ok">In use</span><p>3,118 people matched to the 3DFN study design, 5,000 SNPs, a known genetic share of 20 per cent.</p></div>
+    </div>
+    <ol class="flow" id="flow"></ol>
+    <div class="branch">
+      <h3 style="margin:0 0 4px;font-size:16px">Alongside stage 6: eye, hair and skin colour</h3>
+      <p style="margin:0">The same genotype file feeds the published HIrisPlex-S model through 41 pigmentation markers. We reuse the method rather than train our own, so no prediction is ever used as a training label.</p>
+      <div class="status" style="flex-direction:row;flex-wrap:wrap;margin-top:8px"><span class="st real">Runs on 1000 Genomes: 39 of 41 markers</span><span class="st part">Coefficients not yet checked against the paper</span></div>
+    </div>
+    <details>
+      <summary>Reproduce every number on this site</summary>
+<pre class="cmd"># simulated cohort: controls (5 cohorts) and models (3 runs each)
+python -m gpu.controls --config config/real_match.yaml
+python -m gpu.run_all
+
+# real genotypes: build the panel (see data_prep/README_1KG.md), then
+python scripts/build_1kg.py --dir D:\FaceCon\1000G --out outputs/kg_geno
+python scripts/generate_matched.py config/kg.yaml
+python -m gpu.controls --config config/kg.yaml
+python -m gpu.controls --config config/kg.yaml --hide-causal
+python -m gpu.run_all --data-dir outputs/kg
+
+# this site's data
+python scripts/export_demo.py
+
+# the 22 automated tests
+python -m pytest -q</pre>
+    </details>
+  </div>
+</section>
+</main>
+<footer>FaceCon, final year project F26-082, FAST NUCES Lahore. Ahmed Javed, Afnan Asif and Saad Riaz Taqi, supervised by Ms. Rushda Muneer. Face mesh from the ICT FaceKit. Type set in Instrument Sans (SIL Open Font License).</footer>
+
+<script src="data/demo.js"></script>
+<script>
+"use strict";
+if (!window.FACECON_DEMO) { document.body.innerHTML = '<p style="max-width:560px;margin:80px auto;font:16px/1.5 system-ui,sans-serif;color:#14212B;padding:0 20px"><b>The demo data file was not found.</b> This page needs <code>data/demo.js</code> in a folder called <code>data</code> next to it. Copy the whole app folder rather than the page alone, or rebuild the file with <code>python scripts/export_demo.py</code>.</p>'; throw new Error("data/demo.js missing"); }
+const D = window.FACECON_DEMO;
+const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const COL = {mean_face:"#a9a79f", demographics:"#6b6a63", ridge_demo_snp:"#2a78d6", mlp:"#eb6834"};
+const fmt = (x, d = 3) => (x >= 0 ? "+" : "\u2212") + Math.abs(x).toFixed(d);
+const num = (x, d = 3) => (x < 0 ? "\u2212" : "") + Math.abs(x).toFixed(d);
+
+/* ---------- tabs ---------- */
+function showTab(id) {
+  $$("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.id === "t-" + id));
+  $$("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + id));
+  if (id === "explore") viewers.forEach(v => v.resize());
+  if (location.hash.slice(1) !== id) history.replaceState(null, "", "#" + id);
+}
+$$("nav.tabs button").forEach(b => b.onclick = () => showTab(b.id.slice(2)));
+$("nav.tabs").addEventListener("keydown", e => {
+  const tabs = $$("nav.tabs button"), i = tabs.indexOf(document.activeElement);
+  if (i < 0 || !["ArrowLeft", "ArrowRight"].includes(e.key)) return;
+  e.stopPropagation(); e.preventDefault();
+  const n = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length]; n.focus(); n.click();
+});
+const tb = $("#truthBtn"), tp = $("#truthPop");
+tb.onclick = e => { e.stopPropagation(); const o = !tp.classList.contains("open"); tp.classList.toggle("open", o); tb.setAttribute("aria-expanded", o); };
+document.addEventListener("click", e => { if (!tp.contains(e.target)) { tp.classList.remove("open"); tb.setAttribute("aria-expanded", false); } });
+
+/* ---------- mesh decoding ---------- */
+function buf(o) { const s = atob(o.b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u.buffer; }
+const MEAN = new Float32Array(buf(D.mesh.mean));
+const NV = MEAN.length / 3;
+const F32 = new Uint32Array(buf(D.mesh.faces));
+const FACES = new Uint16Array(F32);                          // < 65536 vertices: WebGL1-safe indices
+const BI = new Int16Array(buf(D.mesh.basis)), BS = D.mesh.basis.scale;
+const K = D.mesh.basis.shape[0];
+const BASIS = new Float32Array(BI.length); for (let i = 0; i < BI.length; i++) BASIS[i] = BI[i] * BS;
+
+function decode(beta, out) {
+  out = out || new Float32Array(NV * 3); out.set(MEAN);
+  const n = NV * 3;
+  for (let k = 0; k < K; k++) { const b = beta[k]; if (!b) continue; const o = k * n; for (let i = 0; i < n; i++) out[i] += b * BASIS[o + i]; }
+  return out;
+}
+function normals(P, out) {
+  out = out || new Float32Array(NV * 3); out.fill(0);
+  for (let t = 0; t < FACES.length; t += 3) {
+    const a = FACES[t] * 3, b = FACES[t + 1] * 3, c = FACES[t + 2] * 3;
+    const ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2];
+    const vx = P[c] - P[a], vy = P[c + 1] - P[a + 1], vz = P[c + 2] - P[a + 2];
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    for (const i of [a, b, c]) { out[i] += nx; out[i + 1] += ny; out[i + 2] += nz; }
+  }
+  for (let i = 0; i < out.length; i += 3) { const l = Math.hypot(out[i], out[i + 1], out[i + 2]) || 1; out[i] /= l; out[i + 1] /= l; out[i + 2] /= l; }
+  return out;
+}
+// framing: centre on the face, not the neck
+let cx = 0, cy = 0, cz = 0, ext = 0;
+(() => { let lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
+  for (let i = 0; i < NV; i++) for (let j = 0; j < 3; j++) { lo[j] = Math.min(lo[j], MEAN[i * 3 + j]); hi[j] = Math.max(hi[j], MEAN[i * 3 + j]); }
+  cx = (lo[0] + hi[0]) / 2; cy = lo[1] + (hi[1] - lo[1]) * 0.56; cz = (lo[2] + hi[2]) / 2; ext = Math.max(hi[0] - lo[0], hi[1] - lo[1]) * 0.62; })();
+
+/* ---------- a small WebGL viewer ---------- */
+const CAM = {yaw: 0.35, pitch: 0.05, dist: 1.1, spin: false};
+const viewers = [];
+const VS = `attribute vec3 p;attribute vec3 n;attribute vec3 c;uniform mat4 M;uniform mat4 P;varying vec3 vn;varying vec3 vc;varying vec3 vp;
+void main(){vec4 w=M*vec4(p,1.0);vp=w.xyz;vn=mat3(M)*n;vc=c;gl_Position=P*w;}`;
+const FS = `precision mediump float;varying vec3 vn;varying vec3 vc;varying vec3 vp;
+void main(){vec3 N=normalize(vn);vec3 V=normalize(-vp);
+vec3 L1=normalize(vec3(-0.45,0.55,0.75));vec3 L2=normalize(vec3(0.7,0.1,0.4));
+float h=0.5+0.5*N.y;
+float rim=pow(1.0-max(dot(N,V),0.0),3.0)*0.35;
+float s=pow(max(dot(N,normalize(L1+V)),0.0),40.0)*0.12;
+vec3 key=vec3(1.0,0.97,0.92)*max(dot(N,L1),0.0)*0.62;vec3 fill=vec3(0.80,0.88,1.0)*max(dot(N,L2),0.0)*0.20;
+vec3 col=vc*(vec3(0.16+0.10*h)+key+fill)+vec3(0.55,0.68,0.78)*rim+vec3(s);
+gl_FragColor=vec4(pow(col,vec3(0.95)),1.0);}`;
+function mat4persp(f, a, n, fa) { const t = 1 / Math.tan(f / 2); return [t / a, 0, 0, 0, 0, t, 0, 0, 0, 0, (fa + n) / (n - fa), -1, 0, 0, 2 * fa * n / (n - fa), 0]; }
+function modelMat() {
+  const cyw = Math.cos(CAM.yaw), syw = Math.sin(CAM.yaw), cp = Math.cos(CAM.pitch), sp = Math.sin(CAM.pitch);
+  // R = Rx(pitch)*Ry(yaw); translate so the face centre sits in front of the camera
+  const r = [cyw, sp * syw, -cp * syw, 0, 0, cp, sp, 0, syw, -sp * cyw, cp * cyw, 0];
+  const tx = -cx, ty = -cy, tz = -cz;
+  const d = ext / Math.tan(15 * Math.PI / 180) * CAM.dist;
+  return [r[0], r[1], r[2], 0, r[4], r[5], r[6], 0, r[8], r[9], r[10], 0,
+    r[0] * tx + r[4] * ty + r[8] * tz, r[1] * tx + r[5] * ty + r[9] * tz, r[2] * tx + r[6] * ty + r[10] * tz - d, 1];
+}
+class Viewer {
+  constructor(canvas) {
+    this.cv = canvas; const gl = this.gl = canvas.getContext("webgl", {antialias: true, alpha: true, premultipliedAlpha: false});
+    if (!gl) { canvas.parentElement.insertAdjacentHTML("beforeend", '<p style="position:absolute;inset:auto 16px 16px;color:#E6ECEF">This browser has WebGL turned off, so the 3D view cannot be drawn.</p>'); return; }
+    const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); return o; };
+    const pr = this.pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
+    this.b = {}; for (const a of ["p", "n", "c"]) { this.b[a] = gl.createBuffer(); const loc = gl.getAttribLocation(pr, a); gl.bindBuffer(gl.ARRAY_BUFFER, this.b[a]); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0); }
+    this.ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, FACES, gl.STATIC_DRAW);
+    this.uM = gl.getUniformLocation(pr, "M"); this.uP = gl.getUniformLocation(pr, "P");
+    gl.enable(gl.DEPTH_TEST); gl.clearColor(0, 0, 0, 0);
+    this.pos = new Float32Array(NV * 3); this.nrm = new Float32Array(NV * 3); this.col = new Float32Array(NV * 3);
+    this.resize(); viewers.push(this);
+    // pointer orbit, shared camera
+    let drag = null;
+    canvas.addEventListener("pointerdown", e => { drag = {x: e.clientX, y: e.clientY}; canvas.setPointerCapture(e.pointerId); stopSpin(); });
+    canvas.addEventListener("pointermove", e => { if (!drag) return; CAM.yaw += (e.clientX - drag.x) * 0.008; CAM.pitch = Math.max(-1, Math.min(1, CAM.pitch + (e.clientY - drag.y) * 0.006)); drag = {x: e.clientX, y: e.clientY}; drawAll(); });
+    canvas.addEventListener("pointerup", () => drag = null);
+    canvas.addEventListener("wheel", e => { e.preventDefault(); CAM.dist = Math.max(0.55, Math.min(1.8, CAM.dist * (1 + e.deltaY * 0.001))); drawAll(); }, {passive: false});
+  }
+  resize() {
+    if (!this.gl) return; const r = this.cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+    this.cv.width = Math.max(1, r.width * dpr | 0); this.cv.height = Math.max(1, r.height * dpr | 0); this.draw();
+  }
+  set(pos, col) {
+    if (!this.gl) return; const gl = this.gl;
+    normals(pos, this.nrm);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.b.p); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.DYNAMIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.b.n); gl.bufferData(gl.ARRAY_BUFFER, this.nrm, gl.DYNAMIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.b.c); gl.bufferData(gl.ARRAY_BUFFER, col, gl.DYNAMIC_DRAW);
+    this.ready = true; this.draw();
+  }
+  draw() {
+    if (!this.gl || !this.ready) return; const gl = this.gl;
+    gl.viewport(0, 0, this.cv.width, this.cv.height); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.uniformMatrix4fv(this.uM, false, modelMat());
+    gl.uniformMatrix4fv(this.uP, false, mat4persp(30 * Math.PI / 180, this.cv.width / this.cv.height, 10, 5000));
+    gl.drawElements(gl.TRIANGLES, FACES.length, gl.UNSIGNED_SHORT, 0);
+  }
+}
+function drawAll() { viewers.forEach(v => v.draw()); }
+const VP = new Viewer($("#cvPred")), VT = new Viewer($("#cvTrue"));
+addEventListener("resize", () => viewers.forEach(v => v.resize()));
+
+/* ---------- colours ---------- */
+const CLAY = [0.76, 0.775, 0.79];
+const RAMP = [[0, [0.804, 0.824, 0.839]], [0.3, [0.949, 0.788, 0.639]], [0.65, [0.878, 0.478, 0.247]], [1, [0.612, 0.204, 0.071]]];
+function ramp(t) { t = Math.max(0, Math.min(1, t)); for (let i = 1; i < RAMP.length; i++) if (t <= RAMP[i][0]) { const [a, ca] = RAMP[i - 1], [b, cb] = RAMP[i], u = (t - a) / (b - a); return ca.map((x, j) => x + (cb[j] - x) * u); } return RAMP[RAMP.length - 1][1]; }
+const clayCol = (() => { const c = new Float32Array(NV * 3); for (let i = 0; i < NV; i++) c.set(CLAY, i * 3); return c; })();
+
+/* ---------- state ---------- */
+const MODELS = D.models;                 // simplest to richest
+const S = {person: 0, model: MODELS.length - 2, err: true, filter: {sex: "all", group: "all"}, shown: null, anim: 0};
+const subj = () => D.subjects[S.person];
+const truePos = new Float32Array(NV * 3), predPos = new Float32Array(NV * 3), errCol = new Float32Array(NV * 3);
+
+function paintPrediction(beta) {
+  decode(beta, predPos);
+  let col = clayCol;
+  if (S.err) { for (let i = 0; i < NV; i++) { const j = i * 3; const d = Math.hypot(predPos[j] - truePos[j], predPos[j + 1] - truePos[j + 1], predPos[j + 2] - truePos[j + 2]); errCol.set(ramp(d / 10), j); } col = errCol; }
+  VP.set(predPos, col);
+}
+function showModel(animate) {
+  const s = subj(), m = MODELS[S.model], target = s.pred[m.key];
+  const from = S.shown ? S.shown.slice() : target.slice();
+  cancelAnimationFrame(S.anim);
+  if (!animate || RM || !S.shown) { S.shown = target.slice(); paintPrediction(S.shown); }
+  else {
+    const t0 = performance.now(), dur = 520;
+    const step = now => { const u = Math.min(1, (now - t0) / dur), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+      S.shown = from.map((x, k) => x + (target[k] - x) * e); paintPrediction(S.shown); if (u < 1) S.anim = requestAnimationFrame(step); };
+    S.anim = requestAnimationFrame(step);
+  }
+  $$("#modelSeg button").forEach((b, i) => b.setAttribute("aria-pressed", i === S.model));
+  $$("#errBars .bar").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === m.key));
+  $("#predTag").innerHTML = "Predicted<small>" + m.name + "</small>";
+  $("#predMM").innerHTML = s.mesh_mm[m.key].toFixed(2) + " mm<small>average error</small>";
+}
+function showPerson(i, keepView) {
+  S.person = i; const s = subj();
+  decode(s.beta_true, truePos); VT.set(truePos, clayCol);
+  S.shown = null; showModel(false);
+  $$("#plist li button").forEach(b => b.setAttribute("aria-current", +b.dataset.i === i));
+  const cur = $(`#plist li button[data-i="${i}"]`); if (cur) cur.scrollIntoView({block: "nearest"});
+  $("#who").textContent = s.id.replace("SUBJ-", "Person ");
+  const hz = z => (Math.abs(z) < 0.25 ? "about average" : (z > 0 ? "above" : "below") + " average") + ` (${fmt(z, 1)} SD)`;
+  $("#facts").innerHTML = `<dt>Sex</dt><dd>${s.sex === "male" ? "Male" : "Female"}</dd><dt>Age</dt><dd>${s.age.toFixed(0)} years</dd>
+    <dt>Height</dt><dd>${hz(s.height_z)}</dd><dt>Weight</dt><dd>${hz(s.weight_z)}</dd><dt>Ancestry</dt><dd>Simulated group ${s.group}</dd>`;
+  // error bars for this person
+  const mx = Math.max(...MODELS.map(m => s.mesh_mm[m.key])) * 1.05;
+  $("#errBars").innerHTML = MODELS.map((m, j) => `<button class="bar" data-k="${m.key}" data-j="${j}" aria-pressed="${j === S.model}">
+      <span class="lab">${m.name}</span><span class="val">${s.mesh_mm[m.key].toFixed(2)} mm</span>
+      <span class="track"><span class="fill" style="display:block;width:${100 * s.mesh_mm[m.key] / mx}%;background:${COL[m.key]}"></span></span></button>`).join("");
+  $$("#errBars .bar").forEach(b => b.onclick = () => { S.model = +b.dataset.j; showModel(true); });
+  const best = MODELS.reduce((a, m) => s.mesh_mm[m.key] < s.mesh_mm[a.key] ? m : a, MODELS[0]);
+  const gain = s.mesh_mm.demographics - s.mesh_mm[best.key];
+  $("#errLead").textContent = best.key === "demographics" || best.key === "mean_face"
+    ? `For this person the genetic models do not beat the demographic baseline. That happens: on average they do, not for everyone.`
+    : `${best.name} gets closest, ${gain.toFixed(2)} mm nearer than demographics alone. The difference is what the genotype added for this person.`;
+  // appearance
+  const L = D.appearance_labels, SW = {
+    blue: "#6E93B8", intermediate: "#8C8A5A", brown: "#6B4423", blond: "#D8B86A", red: "#B0562E", black: "#2A2523",
+    light: "#C9B48A", dark: "#4A3A2E", very_pale: "#F3DDCB", pale: "#E8C4A6", dark_to_black: "#4E3424"};
+  const SKIN = {intermediate: "#C8956A", dark: "#8A5A3B"};
+  const names = {eye: "Eyes", hair: "Hair", shade: "Hair shade", skin: "Skin"};
+  $("#appearance").innerHTML = ["eye", "hair", "skin"].map(t => {
+    const p = s.appearance[t], top = p.indexOf(Math.max(...p));
+    return `<div class="app-trait"><h3>${names[t]} <span>${L[t][top].replace(/_/g, " ")}, ${(100 * p[top]).toFixed(0)}%</span></h3>
+      <div class="stack" role="img" aria-label="${L[t].map((l, j) => l.replace(/_/g, " ") + " " + (100 * p[j]).toFixed(0) + "%").join(", ")}">
+      ${p.map((x, j) => `<div title="${L[t][j].replace(/_/g, " ")} ${(100 * x).toFixed(1)}%" style="width:${100 * x}%;background:${(t === "skin" && SKIN[L[t][j]]) || SW[L[t][j]] || "#999"}"></div>`).join("")}</div></div>`;
+  }).join("");
+}
+
+/* ---------- controls ---------- */
+$("#modelSeg").innerHTML = MODELS.map((m, i) => `<button aria-pressed="${i === S.model}" data-i="${i}" title="Uses ${m.uses}"><span class="sw" style="background:${COL[m.key]}"></span>${m.name}</button>`).join("");
+$$("#modelSeg button").forEach(b => b.onclick = () => { S.model = +b.dataset.i; showModel(true); });
+function renderList() {
+  const f = S.filter, idx = D.subjects.map((s, i) => i).filter(i => (f.sex === "all" || D.subjects[i].sex === f.sex) && (f.group === "all" || D.subjects[i].group === f.group));
+  $("#plist").innerHTML = idx.map(i => { const s = D.subjects[i], g = s.mesh_mm.demographics - s.mesh_mm.ridge_demo_snp;
+    return `<li><button data-i="${i}" aria-current="${i === S.person}"><span class="pid">${s.id.replace("SUBJ-", "Person ")}</span>
+      <span class="pbest" title="How much closer ridge gets than demographics alone">${fmt(g, 1)} mm</span>
+      <span class="pmeta">${s.sex === "male" ? "Male" : "Female"}, ${s.age.toFixed(0)}, group ${s.group}</span></button></li>`; }).join("");
+  $$("#plist li button").forEach(b => b.onclick = () => showPerson(+b.dataset.i));
+  $("#peopleH").textContent = `Held-out people (${idx.length})`;
+  return idx;
+}
+$$(".chip").forEach(c => c.onclick = () => {
+  S.filter[c.dataset.f] = c.dataset.v;
+  $$(`.chip[data-f="${c.dataset.f}"]`).forEach(x => x.setAttribute("aria-pressed", x === c));
+  const idx = renderList(); if (idx.length && !idx.includes(S.person)) showPerson(idx[0]);
+});
+$("#errToggle").onchange = e => { S.err = e.target.checked; $("#legend").classList.toggle("on", S.err); paintPrediction(S.shown); };
+function stopSpin() { CAM.spin = false; $("#spinBtn").setAttribute("aria-pressed", false); }
+$("#resetView").onclick = () => { CAM.yaw = 0; CAM.pitch = 0.05; CAM.dist = 1.1; drawAll(); };
+$("#spinBtn").onclick = () => { CAM.spin = !CAM.spin; $("#spinBtn").setAttribute("aria-pressed", CAM.spin); if (CAM.spin) spin(); };
+function spin() { if (!CAM.spin) return; CAM.yaw += 0.006; drawAll(); requestAnimationFrame(spin); }
+document.addEventListener("keydown", e => {
+  if (!$("#v-explore").classList.contains("on") || e.target.closest("input,select,textarea,nav") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const idx = [...$$("#plist li button")].map(b => +b.dataset.i), p = idx.indexOf(S.person);
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); const n = idx[Math.max(0, Math.min(idx.length - 1, p + (e.key === "ArrowDown" ? 1 : -1)))]; if (n !== undefined) showPerson(n); }
+  else if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); S.model = Math.max(0, Math.min(MODELS.length - 1, S.model + (e.key === "ArrowRight" ? 1 : -1))); showModel(true); }
+  else if (e.key.toLowerCase() === "e") { const t = $("#errToggle"); t.checked = !t.checked; t.onchange({target: t}); }
+  else if (e.key.toLowerCase() === "f") $("#resetView").click();
+  else if (e.key === "?") $("#keys").scrollIntoView({behavior: RM ? "auto" : "smooth"});
+});
+const cm = D.cohort_metrics;
+$("#cohortNote").textContent = `Across all ${D.results.simulated.cohort.test} held-out people: demographics ${cm.demographics.mesh_mm.toFixed(2)} mm, ridge ${cm.ridge_demo_snp.mesh_mm.toFixed(2)} mm, neural net ${cm.mlp.mesh_mm.toFixed(2)} mm.`;
+
+/* ---------- charts (inline SVG) ---------- */
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+function hbars(rows, o = {}) {
+  // rows: {label, value, color, note?}; one axis, values labelled directly
+  const W = 520, lw = o.lw || 200, rh = 34, top = 6, H = top + rows.length * rh + 30;
+  const lo = Math.min(0, o.min ?? Math.min(...rows.map(r => r.value))), hi = o.max ?? Math.max(...rows.map(r => r.value)) * 1.12;
+  const x = v => lw + (W - lw - 54) * (v - lo) / (hi - lo);
+  let g = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(o.aria || "")}">`;
+  const ticks = o.ticks || [];
+  ticks.forEach(t => g += `<line x1="${x(t)}" x2="${x(t)}" y1="${top}" y2="${H - 26}" stroke="#E4E8EB"/><text x="${x(t)}" y="${H - 10}" font-size="11.5" fill="#8A97A1" text-anchor="middle">${num(t, o.td ?? 2)}</text>`);
+  if (o.ref !== undefined) g += `<line x1="${x(o.ref)}" x2="${x(o.ref)}" y1="${top - 2}" y2="${H - 26}" stroke="#14212B" stroke-dasharray="4 3"/>`;
+  rows.forEach((r, i) => { const y = top + i * rh, x0 = x(Math.min(0, r.value)), x1 = x(Math.max(0, r.value));
+    g += `<text x="${lw - 10}" y="${y + rh / 2 + 4}" font-size="13" fill="#14212B" text-anchor="end">${esc(r.label)}</text>`;
+    g += `<rect x="${x0}" y="${y + 8}" width="${Math.max(1.5, x1 - x0)}" height="${rh - 16}" rx="3" fill="${r.color}"><title>${esc(r.label)}: ${num(r.value)}</title></rect>`;
+    g += `<text x="${Math.max(x1, x(0)) + 6}" y="${y + rh / 2 + 4}" font-size="12.5" fill="#14212B" font-weight="600">${o.signed ? fmt(r.value) : num(r.value)}</text>`; });
+  g += `<line x1="${x(0)}" x2="${x(0)}" y1="${top - 2}" y2="${H - 26}" stroke="#8A97A1"/>`;
+  return g + "</svg>";
+}
+function lines(series, xs, o = {}) {
+  const W = 520, H = 250, l = 46, r = 118, t = 12, b = 34;
+  const lo = o.min, hi = o.max, X = i => l + (W - l - r) * i / (xs.length - 1), Y = v => t + (H - t - b) * (1 - (v - lo) / (hi - lo));
+  let g = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(o.aria || "")}">`;
+  (o.ticks || []).forEach(v => g += `<line x1="${l}" x2="${W - r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#E4E8EB"/><text x="${l - 8}" y="${Y(v) + 4}" font-size="11.5" fill="#8A97A1" text-anchor="end">${v.toFixed(2)}</text>`);
+  xs.forEach((v, i) => g += `<text x="${X(i)}" y="${H - 12}" font-size="12" fill="#5B6B77" text-anchor="middle">${v.toLocaleString("en")}</text>`);
+  // label placement without collisions: nudge end labels apart
+  const ends = series.map(s => ({s, y: Y(s.values[s.values.length - 1])})).sort((a, c) => a.y - c.y);
+  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 15) ends[i].y = ends[i - 1].y + 15;
+  series.forEach(s => { g += `<polyline fill="none" stroke="${s.color}" stroke-width="2" points="${s.values.map((v, i) => X(i) + "," + Y(v)).join(" ")}"/>`;
+    s.values.forEach((v, i) => g += `<circle cx="${X(i)}" cy="${Y(v)}" r="4" fill="${s.color}" stroke="#fff" stroke-width="2"><title>${esc(s.name)}, ${xs[i]} people: ${v.toFixed(3)}</title></circle>`); });
+  ends.forEach(e => g += `<text x="${W - r + 10}" y="${e.y + 4}" font-size="12.5" fill="#14212B">${esc(e.s.name)}</text>`);
+  return g + "</svg>";
+}
+function finding(h, body, fig, cap, src) {
+  return `<article class="finding"><div><h2>${h}</h2>${body}${src ? `<p class="src">Source: ${src}</p>` : ""}</div>
+    <div class="figure">${fig}${cap ? `<p class="cap">${cap}</p>` : ""}</div></article>`;
+}
+const MC = {ridge: "#2a78d6", mlp: "#eb6834", transformer: "#e87ba4", contrastive: "#1baf7a", diffusion: "#eda100", demo: "#6b6a63", grey: "#B5BEC5", oracle: "#14212B"};
+
+function renderResults(ds) {
+  const R = D.results, s = R.simulated, k = R.kg, isKg = ds === "kg", X = isKg ? k : s;
+  let html = "";
+  // 1. what SNPs add
+  const dl = isKg ? k.delta : s.delta, hid = isKg ? k.hidden_causal.screen : s.delta.hidden_causal;
+  html += finding("Genetic data adds a clear, measurable amount, but only in the right form",
+    `<p>Adding the 256 SNPs most linked to face shape improves prediction by <b>${num(dl.screen)}</b> in R², ${dl.screen / dl.oracle > 0.97 ? "matching" : "close to"} the ${num(dl.oracle)} that the true causal SNPs could give.</p>
+     <p>Compressing all SNPs into 256 principal components instead adds ${num(dl.pca256, 3)}. That representation keeps ancestry, which the baseline already has, and throws the facial signal away. Our first experiments used it, and wrongly concluded that SNPs add nothing.</p>
+     ${isKg ? `<p>With real genotypes the screen recovers ${Math.round(100 * dl.screen / dl.oracle)} per cent of the oracle rather than all of it, because real SNPs are correlated and the causal ones are harder to single out.</p>` : `<p>On simulated SNPs the screen recovers essentially all of it. Real genotypes make this harder, as the other view shows.</p>`}`,
+    hbars([{label: "True causal SNPs (oracle)", value: dl.oracle, color: MC.oracle}, {label: "256 screened SNPs", value: dl.screen, color: MC.ridge},
+      {label: "Screened, causal SNPs hidden", value: hid, color: MC.diffusion}, {label: "256 principal components", value: dl.pca256, color: MC.grey},
+      {label: "Genotypes shuffled", value: dl.permuted, color: MC.grey}], {ticks: [0, 0.05, 0.1, 0.15], min: -0.01, max: (isKg ? 0.14 : 0.2), signed: true, aria: "Gain in R squared from SNPs"}),
+    "Gain in test R² over sex, age, height, weight and ten ancestry components. Ridge regression, mean of five generated cohorts.",
+    isKg ? k.source : "gpu/controls.json, five generated cohorts");
+  // 2. linkage (kg) or its absence
+  html += finding(isKg ? "Linked neighbours carry about a fifth of the signal" : "Unlinked SNPs have no neighbours to carry anything",
+    isKg ? `<p>In a real study the causal variant is usually not on the genotyping chip. It is found only because a nearby SNP is correlated with it.</p>
+      <p>We deleted all 300 causal SNPs and let the screen use only their neighbours. It still recovered <b>${num(hid)}</b>, about ${Math.round(100 * hid / dl.oracle)} per cent of what the causal SNPs give. All five confidence intervals sit above zero, from ${num(k.hidden_causal.screen_ci[0][0])} to ${num(Math.max(...k.hidden_causal.screen_ci.map(c => c[1])))}.</p>
+      <p>This is one reason published studies find such small effects for each SNP: the chip reads neighbours, not causes.</p>`
+    : `<p>The same experiment on simulated genotypes gives ${num(hid)}, as it must. The simulator draws every SNP independently, so hiding the causal ones leaves nothing correlated behind.</p>
+      <p>That is exactly why we repeated everything on real genotypes. Switch to the 1000 Genomes view to see what correlation between SNPs actually carries.</p>`,
+    hbars([{label: "Causal SNPs available", value: dl.oracle, color: MC.oracle}, {label: "Only their neighbours", value: hid, color: MC.diffusion}],
+      {ticks: [0, 0.05, 0.1, 0.15, 0.2].filter(t => t <= (isKg ? 0.15 : 0.2)), min: -0.01, max: isKg ? 0.14 : 0.2, signed: true, aria: "Signal with and without the causal SNPs"}),
+    "Gain in test R² over covariates and ancestry components. Mean of five generated cohorts.", isKg ? k.source : "gpu/controls.py --hide-causal on config/real_match.yaml");
+  // 3. models vs linear
+  const M = isKg ? k.models.screen : s.models.screen, demo = isKg ? k.models.screen.demographics : s.models.screen.demographics;
+  const ridge = isKg ? k.models.screen.ridge_demo_snp : s.ladder["+SNP-screen"][0];
+  const v = key => Array.isArray(M[key]) ? M[key][0] : M[key];
+  const rows = [{label: isKg ? "Ridge on demographics + SNPs" : "Ridge (controls script)", value: ridge, color: MC.ridge},
+    {label: "Neural net (MLP)", value: v("mlp"), color: MC.mlp}, {label: "Contrastive", value: v("contrastive"), color: MC.contrastive},
+    {label: "Transformer", value: v("transformer"), color: MC.transformer}, {label: "Diffusion", value: v("diffusion"), color: MC.diffusion},
+    {label: "Demographics only", value: demo, color: MC.demo}];
+  html += finding("A simple linear model beats every neural network",
+    `<p>The best network adds <b>${num(v("mlp") - demo)}</b> over the demographic baseline. Ridge regression ${isKg ? "given exactly the same inputs on the same split" : ""} adds ${num(ridge - demo)}, so the network finds ${Math.round(100 * (v("mlp") - demo) / (ridge - demo))} per cent of what the linear model finds.</p>
+     <p>${isKg ? `The Transformer scores ${num(v("transformer"))} with real SNPs and ${num(k.models.permuted_screen_one_run.transformer)} with shuffled ones: it reads the demographics and ignores the genotype.` : `The Transformer stays at the baseline, and the diffusion model stays far below it.`} ${isKg ? "Diffusion stays below the mean face." : ""}</p>
+     ${isKg ? "" : `<p>On this view the ridge figure comes from a separate script with ancestry components, so the comparison is approximate. The 1000 Genomes view fixes that with a same-split reference.</p>`}`,
+    hbars(rows, {ref: demo, ticks: [0, 0.1, 0.2, 0.3, 0.4, 0.5], min: Math.min(-0.05, v("diffusion") - 0.02), max: 0.55, lw: 210, aria: "Test R squared by model"}),
+    "Test R² with 256 screened SNPs. Neural nets: mean of three training runs. Dashed line: demographic baseline.", isKg ? k.source : "gpu/report_back.json, three training runs on an RTX A4000");
+  // 4. controls
+  const P = isKg ? k.models.permuted_screen_one_run : s.permuted;
+  html += finding("When there is nothing to find, it finds nothing",
+    `<p>A pipeline that always reports a gain is useless. So every run includes controls that must come out at zero.</p>
+     <p>Shuffling which genotype belongs to which face removes any real link. No model then beats the demographic baseline, so no result here comes from leaking test answers into training.</p>
+     ${isKg ? `<p>Planted associations between SNPs and facial measurements were also recovered: ${k.gwas_recovery.injected_detected} of ${k.gwas_recovery.injected_total}, all in the right direction, with ${k.gwas_recovery.bonferroni_false_hits ? k.gwas_recovery.bonferroni_false_hits : "no"} false detections among the other ${k.gwas_recovery.non_injected} pairs.</p>` : `<p>All 14 planted associations with facial measurements were recovered in the right direction, with no false detections among 246 pairs.</p>`}`,
+    `<table class="t"><thead><tr><th>Check</th><th style="text-align:right">Result</th><th style="text-align:right">Must be</th></tr></thead><tbody>
+      <tr><td>SNP gain, genotypes shuffled</td><td class="n">${fmt(dl.permuted)}</td><td class="n">about 0</td></tr>
+      <tr><td>SNP gain, no genetic effect planted</td><td class="n">${fmt(dl.null_share)}</td><td class="n">about 0</td></tr>
+      ${isKg ? `<tr><td>Ridge on demographics + shuffled SNPs</td><td class="n">${num(P.ridge_demo_snp ?? demo)}</td><td class="n">${num(demo)}</td></tr>` : ""}
+      <tr><td>Best network, shuffled SNPs</td><td class="n">${num(Math.max(P.mlp, P.transformer, P.contrastive))}</td><td class="n">at most ${num(demo + 0.01)}</td></tr>
+      <tr><td>Train, validation and test overlap</td><td class="n">none</td><td class="n">none</td></tr></tbody></table>
+     <p class="cap"><span class="pass">All acceptance checks pass.</span> Shuffled-SNP rows are one training run each.</p>`, "", isKg ? k.source : s.source);
+  // 5. scaling (simulated) / appearance (kg)
+  if (!isKg) {
+    const sc = s.scaling, xs = sc.map(r => r.n);
+    html += finding("More people help the networks, but not enough to change the ranking",
+      `<p>On a separate simulated cohort of 10,000, the MLP gains ${num(sc[2].mlp - sc[0].mlp)} and the contrastive model ${num(sc[2].contrastive - sc[0].contrastive)} from three times the training data. The Transformer only starts to move at 7,000. Diffusion does not improve, and we have not found out why.</p>
+       <p>The real 3DFN cohort has 3,118 people, so only the first point describes data we could actually have.</p>`,
+      lines([{name: "MLP", color: MC.mlp, values: sc.map(r => r.mlp)}, {name: "Contrastive", color: MC.contrastive, values: sc.map(r => r.contrastive)},
+        {name: "Transformer", color: MC.transformer, values: sc.map(r => r.transformer)}, {name: "Demographics", color: MC.demo, values: sc.map(r => r.demographics)}],
+        xs, {min: 0.28, max: 0.46, ticks: [0.30, 0.35, 0.40, 0.45], aria: "Test R squared against training size"}),
+      "Test R² against number of training people, screened SNPs, mean of three runs.", "gpu/report_back.json, experiment B");
+  } else {
+    const A = k.appearance_by_superpop, nm = {AFR: "African", EAS: "East Asian", SAS: "South Asian", AMR: "American", EUR: "European"}, lab = x => x.replace(/_/g, " ");
+    html += finding("Colour predictions on real genotypes vary the way the published model says they should",
+      `<p>On the real pigmentation markers of the same 2,573 people, predicted blue eyes and lighter skin are far commoner among Europeans than in the other groups.</p>
+       <p>This is a sanity check, not an accuracy measure. The 1000 Genomes Project records no eye, hair or skin colour, so there is nothing to compare against. Two rare red-hair markers are missing from the panel, so red hair is under-predicted.</p>`,
+      `<table class="t"><thead><tr><th>Group</th><th>Eyes</th><th>Hair</th><th>Skin</th></tr></thead><tbody>
+       ${["AFR", "EAS", "SAS", "AMR", "EUR"].map(g => `<tr><td>${nm[g]}</td>${["eye", "hair", "skin"].map(t => `<td>${lab(A[g][t][0])} ${A[g][t][1].toFixed(1)}%</td>`).join("")}</tr>`).join("")}
+       </tbody></table><p class="cap">Most common predicted category in each group, as a share of its people.</p>`, "", k.source);
+  }
+  $("#findings").innerHTML = html;
+}
+$$("#dsSeg button").forEach(b => b.onclick = () => { $$("#dsSeg button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderResults(b.dataset.ds); });
+
+/* ---------- pipeline ---------- */
+const FLOW = [
+  ["Read genotypes", "Load PLINK genotype files and match each published marker's allele to the panel: exact match, strand flip, or a length rule for insertions and deletions. Anything ambiguous is refused and reported.", "src/io/plink_bed.py, scripts/build_1kg.py", [["real", "Tested on 1000 Genomes"], ["wait", "Waiting for 3DFN files"]]],
+  ["Quality control", "Remove relatives, rare SNPs and badly genotyped SNPs, so related people cannot inflate the accuracy.", "data_prep/README_1KG.md", [["real", "Tested on 1000 Genomes"], ["wait", "Waiting for 3DFN files"]]],
+  ["Split by person", "Every person goes into exactly one of training, validation or test. All averages, scalings and SNP choices are fitted on training people only.", "gpu/data.py", [["ok", "Tested on simulated data"], ["real", "Tested on 1000 Genomes"]]],
+  ["Choose SNP features", "Keep the 256 SNPs most linked to face shape after removing demographic effects. The older principal-component features are kept only as a comparison.", "gpu/data.py, features=\"screen\"", [["ok", "Tested on simulated data"], ["real", "Tested on 1000 Genomes"]]],
+  ["Predict face shape", "Six models predict 50 shape numbers: demographics only, ridge regression, and four neural networks (MLP, Transformer, contrastive, diffusion). Each network is judged on its best validation checkpoint.", "gpu/models.py, gpu/train.py", [["ok", "Tested on simulated data"], ["real", "Tested on 1000 Genomes"]]],
+  ["Build the 3D face", "Turn the 50 numbers into a full head mesh in millimetres. A stand-in face model (ICT FaceKit) is used until scans can be fitted to FLAME.", "gpu/data.py decode_mm, gpu/flame_fit.py", [["ok", "Tested on simulated data"], ["part", "Stand-in until FLAME fitting"]]],
+  ["Score it, with controls", "Report R² and millimetre error against the demographic baseline, alongside an oracle, shuffled genotypes and a zero-effect cohort. Acceptance checks stop the run if a control fails.", "gpu/controls.py, gpu/run_all.py", [["ok", "Tested on simulated data"], ["real", "Tested on 1000 Genomes"]]],
+];
+$("#flow").innerHTML = FLOW.map((f, i) => `<li><span class="no">${i + 1}</span><div><h3>${f[0]}</h3><p>${f[1]}</p><p class="code">${f[2]}</p></div>
+  <div class="status">${f[3].map(s => `<span class="st ${s[0]}">${s[1]}</span>`).join("")}</div></li>`).join("");
+
+/* ---------- start ---------- */
+renderList(); renderResults("kg"); showPerson(0);
+function route() { const h = location.hash.slice(1); showTab(["results", "pipeline"].includes(h) ? h : "explore"); }
+addEventListener("hashchange", route); if (location.hash) route();
+</script>
 </body>
 </html>

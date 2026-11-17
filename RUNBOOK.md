@@ -1,184 +1,160 @@
-# FaceCon — Demo-Day Runbook
+# FaceCon: Demo-Day Runbook
 
-**Project:** FaceCon (F26-082) · Genotype → 3D Face Shape & Appearance
-**Team:** Ahmed Javed · Afnan Asif · Saad Riaz Taqi · Supervisor: Ms. Rushda Muneer
-**Scope of this run:** mid-term prototype on **synthetic** data (real 3DFN access pending).
+**Project:** FaceCon (F26-082), genotype to 3D face shape and appearance
+**Team:** Ahmed Javed, Afnan Asif, Saad Riaz Taqi. Supervisor: Ms. Rushda Muneer
+**Scope:** every face is simulated. Real 3DFN access is pending. The Results tab also
+shows a run on real 1000 Genomes genotypes with simulated faces.
 
-This runbook is written so that **any team member can take the project from a clean
-checkout to a working live demo**, and so that **the demo survives a dead network,
-a broken laptop, or a failed rebuild**. Read the "Golden path" once; keep the
-"If it breaks" table open during the talk.
+Written so any team member can go from a clean checkout to a working demo, and so the
+demo survives a dead network, a broken laptop, or a failed rebuild.
 
 ---
 
 ## 0. The one thing to remember
 
-> **The live demo does NOT need to rebuild anything.** The deck, the prototype, and
-> the hologram are already published as links and also run from local files.
-> Rebuilding (`generate → eval → export`) is only for regenerating data from scratch;
-> it takes ~4 minutes and is **not** part of the talk.
+> **The live demo needs no rebuild and no server.** Open `app/index.html` straight
+> from disk (double-click it). Rebuilding the demo data takes about a minute and is
+> never part of the talk.
 
-Have **three tabs open and loaded before you walk in**:
+Have these open before you walk in:
 
 | Tab | What | Link / source |
 |-----|------|----------------|
-| 1 | Slide deck | `https://claude.ai/artifact/RHErykFTG4dz5UncuaAUeJ` |
-| 2 | Interactive prototype | `https://claude.ai/artifact/QboAkr5GL1fjN88GJHaxqN` |
-| 3 | Hologram reveal | `https://claude.ai/artifact/X5hPH8A2RZMjsfvh2k3S99` |
+| 1 | Demonstrator (Explore, Results, Pipeline) | https://claude.ai/artifact/17atvFs6SFyYHJr9tB1BPg |
+| 2 | Hologram reveal | the **Open the hologram reveal** button on tab 1, or `app/holo.html` |
+| 3 | Slide deck | `https://claude.ai/artifact/RHErykFTG4dz5UncuaAUeJ` — **stale, see §6** |
 
-Plus the **offline copies** (see §4) on at least two laptops and one USB stick.
+Plus the offline copy (§4) on at least two laptops and one USB stick. The artifact link
+is private until its owner shares it from its page on claude.ai.
 
 ---
 
-## 1. Prerequisites (do this the day before)
+## 1. Prerequisites (the day before)
+
+Nothing to install to **run** the demo: it is three files and a font, no library, no
+network. To **rebuild** its data you need the Python environment:
 
 ```bash
-# Python 3.10+; from the project root:
-pip install -r requirements.txt            # numpy, scipy, scikit-learn, trimesh, pyyaml, matplotlib, fast-simplification, pytest
-python -c "import numpy, scipy, sklearn, trimesh, yaml; print('deps OK')"
+pip install -r requirements.txt -r gpu/requirements.txt    # the second file adds torch, which the export needs
+python -m pytest -q                 # 22 tests, all must pass
 ```
 
-Confirm the data assets are present (they are committed):
+Committed and required:
+
+```
+app/index.html, app/holo.html       the two pages
+app/data/demo.js                    2.8 MB: mesh, 36 held-out people, recorded results
+app/instrument-sans.woff2           the typeface (SIL OFL, licence beside it)
+outputs/real_match/dataset.npz      the simulated cohort the demo is drawn from
+```
+
+---
+
+## 2. Rebuilding the demo data (only if the pipeline changed)
 
 ```bash
-ls assets/ict/ict_face_model.npz           # realistic ICT-FaceKit face model (MIT)
-ls app/data/web_data.json                  # ~3.9 MB web bundle the demo reads
-ls outputs/synthetic/                       # dataset.npz, eval_results.json, etc.
+python scripts/export_demo.py       # about 1 minute on CPU, writes app/data/demo.js
+cp app/index.html app/holo.html deploy/ && cp app/data/demo.js deploy/data/
 ```
 
-If all three exist, **you can demo without ever running the pipeline.**
+It trains the demo's MLP with a fixed seed, so a rebuild reproduces these exactly
+(test set of 469 people, simulated cohort). If they differ, something changed:
+
+| Model | Test R² | Mesh error |
+|-------|--------:|-----------:|
+| Mean face | −0.002 | 3.45 mm |
+| Demographics only | 0.317 | 3.00 mm |
+| Ridge, demographics + screened SNPs | 0.467 | 2.64 mm |
+| MLP, demographics + screened SNPs | 0.397 | 2.81 mm |
+
+The Results tab does not use these. It shows the recorded multi-run figures from
+`gpu/controls.json`, `gpu/report_back.json` and `gpu/results_kg.json`, which are the
+numbers in the report.
 
 ---
 
-## 2. Golden path — full rebuild (only if you must regenerate data)
+## 3. Running the demo
 
-Run from the project root. Timings are from a clean dry run (CPU, 5000×5000).
+**Primary:** tab 1, or `app/index.html` opened from disk. Both work offline.
 
-```bash
-# Stage 1 — generate synthetic dataset           (~11 s)
-python scripts/run_generate.py config/default.yaml
+Explore flow to rehearse (about 90 seconds):
+1. Pick a person on the left. Person 00076 is a good opener: ridge gets 1.3 mm closer
+   than demographics.
+2. The left head is the prediction, coloured by its error; the right is the true face.
+   Drag either to turn both.
+3. Press **←** twice to step down to **Mean face**, then **→** back up through Ridge to the neural net. The
+   prediction morphs and the orange shrinks as the model gets more information. This
+   is the moment to point at.
+4. Point at **How close each model gets** on the right, then the colour predictions.
 
-# Stage 2 — full evaluation + ablations           (~2 min)
-python scripts/run_eval.py config/default.yaml
+Then **Results** (start on Real genotypes): the four findings, top to bottom, and the
+limits box at the end. Then **Pipeline** if asked how it works.
 
-# Stage 3 — export the browser bundle              (~2 min)
-python scripts/export_web.py config/default.yaml   # writes app/data/web_data.json
-```
+Keys: **↑ ↓** person, **← →** model, **E** error colouring, **F** face forward.
 
-**Total ≈ 4 minutes.** The pipeline is deterministic: with the committed seed
-(`20261016`) the regenerated `app/data/web_data.json` is **byte-for-byte identical**
-to the committed one (verified: md5 match). So a rebuild can never silently change
-the numbers on the slides.
-
-Expected eval numbers (sanity check — must match the deck):
-
-| Model | Shape R² | Mesh err |
-|-------|---------:|---------:|
-| Mean face (floor) | −0.00 | 3.5 mm |
-| Demographics only | 0.32 | 2.9 mm |
-| Ridge (SNPs) | 0.21 | 3.2 mm |
-| MLP (SNPs) | 0.17 | 3.2 mm |
-| MLP (SNPs + demog.) | 0.29 | 2.9 mm |
-
-Appearance accuracy (SNP / SNP+demog): eye 0.85/0.88 · skin 0.68/0.71 ·
-hair-colour 0.80/0.84 · freckling 0.67/0.70 · hair-type 0.84/0.89 ·
-baldness 0.46/0.92. Confounder checks: informed panel 0.31 vs random 0.12;
-signal-recovery **PASS** vs shuffled control.
+Hologram: cycles people automatically (wireframe builds the shape, colour resolves,
+hold, dissolve). **Click** or **→** for the next person, **Space** pauses. Pause on a
+hold frame for photos.
 
 ---
 
-## 3. Running the live prototype & hologram
+## 4. Offline fallback kit
 
-**Primary (online):** open Tabs 2 and 3 above. Done.
+1. **The app folder on disk** — `app/` or `deploy/` (identical). Opens from
+   `file://`; makes no network calls except an optional font request that fails
+   silently offline.
+2. **The same folder on a USB stick.**
+3. **Deck PDF**, exported before the day, on the stick and emailed to all three.
+4. **A 60 to 90 second screen recording** of the Explore flow and one hologram cycle,
+   for a venue machine with WebGL disabled.
+5. **Screenshots** of Explore and Results on a backup slide.
 
-**Local (no internet, recommended as the real demo surface):** serve the `app/`
-folder over HTTP — the pages `fetch()` `web_data.json`, so `file://` will *not* work.
-
-```bash
-cd app
-python -m http.server 8000
-# then open in a browser:
-#   http://localhost:8000/index.html   (prototype)
-#   http://localhost:8000/holo.html    (hologram)
-```
-
-Prototype flow to rehearse:
-1. **Test subjects** tab → click a subject (e.g. `SUBJ-00017`, blue eyes; or `SUBJ-00009`).
-2. **Prediction** tab → click **▶ Reveal prediction** → predicted face morphs in beside the held-out ground truth; eye/hair/skin render on the mesh.
-3. **Evaluation & results** tab → live metrics, appearance-accuracy table, confounder ablations.
-
-Hologram flow: it auto-cycles subjects (wireframe builds shape → colour materializes as the cyan fades → clean held face → dissolve). **Click** = next subject, **Space** = pause. Pause on a clean "hold" frame for photos.
+Pre-flight on the actual demo laptop:
+- [ ] `app/index.html` opened from disk shows two heads within two seconds
+- [ ] Switching model morphs the left head; the right one stays put
+- [ ] Results tab: both genotype views render their charts
+- [ ] `holo.html` reaches a coloured hold frame with eyes and hair coloured
+- [ ] Browser zoom 100 per cent, hardware acceleration on, notifications off
 
 ---
 
-## 4. Offline fallback kit (prepare and carry these)
+## 5. If it breaks
 
-Because a projector + conference Wi-Fi is the classic point of failure, carry a
-**chain of fallbacks**, each independent of the previous:
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Grey panel saying WebGL is turned off | venue browser or GPU blocks WebGL | enable hardware acceleration and reload, or play the recording |
+| Message saying the data file was not found | `data/demo.js` missing beside `index.html` | copy the whole `app/` folder, not just the HTML |
+| Different typeface than rehearsed | `instrument-sans.woff2` missing | harmless; copy the whole folder next time |
+| Hologram never colours in | tab was in the background | click once to restart the cycle |
+| Numbers differ from the report | someone rebuilt from a changed config | do not rebuild live; use the committed `demo.js` |
 
-1. **Local HTTP server** (§3) — the main offline surface. No internet needed.
-2. **Full project folder on a USB stick** — includes `app/` with `web_data.json`,
-   `three.min.js` vendored locally (no CDN), and all slides.
-3. **PDF export of the deck** — File → export the deck to PDF from the deck link
-   *before* demo day; put the PDF on the USB stick and email it to all three members.
-4. **Screen-recording of the prototype + hologram** — record a 60–90 s MP4 of a
-   full reveal and a hologram cycle in advance. If WebGL refuses to run on the venue
-   machine, play the video. (Record it with the local server running.)
-5. **Still screenshots** — a front-on reveal and a hologram "hold" frame, dropped
-   into a backup slide at the end of the deck.
-
-> The prototype vendors `three.min.js` locally and reads only `web_data.json` — it
-> makes **no external network calls at runtime**, so §1–§2 of the fallback chain work
-> on a fully air-gapped laptop.
-
-**Pre-flight checklist (run on the actual demo laptop):**
-- [ ] `python -m http.server` serves `index.html` and `holo.html` with no console errors
-- [ ] Reveal animation completes and faces show colour (not grey)
-- [ ] Hologram shows eye/hair/skin colour and the eyes render cleanly
-- [ ] Deck PDF opens; backup screenshots present on the last slide
-- [ ] Backup MP4 plays
-- [ ] Laptop set to **do-not-disturb**, notifications off, screen-sleep disabled
-- [ ] Browser zoom at 100%, hardware acceleration ON (WebGL)
+**Rule during Q&A:** never start a rebuild on stage.
 
 ---
 
-## 5. If it breaks — triage during the talk
+## 6. What's real, what's simulated, what's stale (say it if asked)
 
-| Symptom | Cause | Fix (fast) |
-|---------|-------|------------|
-| Prototype page blank / "load error" | page can't fetch `web_data.json` (opened as `file://`) | serve via `python -m http.server` and use `http://localhost:8000/` |
-| Faces/holo are black or don't render | WebGL disabled/blocked on venue GPU | play the backup MP4; or enable hardware acceleration and reload |
-| Reveal stays grey | animation frame throttled (tab was backgrounded) | click **Reveal** again; it finalizes to full colour |
-| Hologram too dim to read | paused mid-transition | press **Space** to resume, or **click** to advance to the next clean hold |
-| Deck link won't load (no Wi-Fi) | network down | open the **deck PDF** from the USB stick |
-| Rebuild fails / wrong numbers | someone edited config/seed | **do not rebuild live** — the committed `web_data.json` already matches the slides; just demo |
-| `ModuleNotFoundError` on rebuild | deps missing | `pip install -r requirements.txt` (but you don't need a rebuild to demo) |
-
-**Rule during Q&A:** never start a rebuild on stage. Everything needed is pre-built.
-
----
-
-## 6. What's real vs. synthetic (say it if asked)
-
-- **Real & reproducible:** the whole pipeline, QC, subject-level splits, the model
-  ladder, the evaluation harness, confounder ablations, the ICT-FaceKit face model
-  (MIT-licensed), and the appearance module calibrated to forensic DNA literature
-  (HIrisPlex-S).
-- **Synthetic:** the genotype→face *data*, by design, on the supervisor's advice,
-  while controlled-access 3DFN data is pending. **Only the data loader changes** when
-  real data lands — the swap point is `data.mode` in `config/default.yaml`.
+- **Real:** the pipeline and its tests; the controls; the 1000 Genomes genotypes in the
+  Results tab's real-genotype view; the HIrisPlex-S method (our coefficients reproduce
+  the public calculator and are not yet checked against the paper).
+- **Simulated:** every face, and the genotypes in the Explore tab. The genotype-to-face
+  link was planted by us and is additive, which is why ridge is expected to win.
+- **Stale:** the slide deck still carries pre-correction claims (that SNPs add nothing,
+  N=5,000). Do not present those slides until the deck is updated. The demonstrator and
+  the report are current.
 
 ---
 
 ## 7. Key paths
 
 ```
-config/default.yaml          seed, dataset size, variance shares, model list
-scripts/run_generate.py      synthetic dataset
-scripts/run_eval.py          metrics + ablations -> outputs/synthetic/eval_results.json
-scripts/export_web.py        -> app/data/web_data.json (what the demo reads)
-app/index.html               interactive prototype
-app/holo.html                hologram reveal
-deck/project/                slide deck source (Slides artifact)
-outputs/synthetic/DATA_CARD.md   dataset documentation
+app/index.html                demonstrator: Explore, Results, Pipeline
+app/holo.html                 hologram reveal
+app/data/demo.js              written by scripts/export_demo.py
+deploy/                       identical copy for static hosting (see deploy/README.md)
+scripts/export_demo.py        corrected-pipeline export (replaces export_web.py)
+gpu/results_kg.json           1000 Genomes results, transcribed; replace with the GPU JSONs
+gpu/controls.json, gpu/report_back.json    simulated-cohort results
+data_prep/README_1KG.md       building the real-genotype panel
+EVALUATION.md                 what is verified and what is not
 ```

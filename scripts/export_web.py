@@ -1,4 +1,8 @@
-"""Export a compact, web-ready bundle for the Three.js prototype.
+"""SUPERSEDED (2026-11-18) by scripts/export_demo.py, which exports from the corrected
+pipeline. This script used the legacy models, the trained colour placeholder and the
+pre-fix mesh scale; nothing reads its output any more. Kept for the record.
+
+Export a compact, web-ready bundle for the Three.js prototype.
 
 Produces app/data/web_data.json containing:
   * a decimated face mesh (mean + triangles) light enough for the browser,

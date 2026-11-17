@@ -66,7 +66,7 @@ def _predict(net, name, snp, demo):
 
 
 def train_torch(name, data, epochs, lr, batch, use_demo, device,
-                log_every=10, patience=0, quiet=False):
+                log_every=10, patience=0, quiet=False, return_pred=False):
     """Train one model with best-on-validation model selection.
 
     The TEST metrics are always computed on the checkpoint with the best
@@ -134,6 +134,8 @@ def train_torch(name, data, epochs, lr, batch, use_demo, device,
     m["train_sec"] = round(time.time() - t0, 1)
     m["best_epoch"] = best_ep
     m["best_val_r2"] = round(best_r2, 4)
+    if return_pred:                       # test-set predictions, for the demonstrator export
+        m["pred"] = pred
     _print(f"[{name}] TEST on best-val checkpoint (ep{best_ep}): "
           f"paramR2={m['param_r2']}  mesh_mm={m['mesh_mm']}", flush=True)
     return m
