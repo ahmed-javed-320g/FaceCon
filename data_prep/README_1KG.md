@@ -141,11 +141,27 @@ This writes `outputs\kg_geno\genotypes_1kg.npz` and
 See the commands in the message that accompanies this file, or:
 
 ```powershell
-python scripts\generate_matched.py --config config\kg.yaml
+python scripts\generate_matched.py config\kg.yaml
 python -m gpu.controls --config config\kg.yaml --out outputs\controls_kg.json
 python -m gpu.controls --config config\kg.yaml --hide-causal --out outputs\controls_kg_hidden.json
 python -m gpu.run_all --data-dir outputs\kg
 ```
+
+`generate_matched.py` takes the config as a **positional** argument, not
+`--config`. `gpu.controls` builds its own data from the config, so it can run
+before the dataset exists; `gpu.run_all` reads `outputs\kg\dataset.npz` and
+needs `generate_matched.py` to have run first.
+
+### Two things the first real run turned up
+
+- **Variant count comes out slightly over 100,000** (100,009 on the first run).
+  Pass 2 has no `--snps-only`/`--max-alleles`, so a handful of rsIDs whose
+  duplicate partners were filtered out in pass 1 bring those partners back.
+  Harmless — the panel is indexed by column, not by rsID. For an exactly round
+  number, add `--snps-only just-acgt --max-alleles 2 --rm-dup exclude-all` to the
+  `kg_main` command.
+- **Samples with unrecorded sex** are assigned female. The 1000G psam has one
+  such sample in 3,202. Recorded in `build_report.json`.
 
 RAM: the controls ladder holds the residualised genotype matrix in double
 precision, about 2 GB at 2,573 × 100,000, and peaks around 6–8 GB overall. 16 GB
