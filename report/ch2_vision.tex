@@ -1,0 +1,77 @@
+\chapter{Project Vision}
+This chapter describes what FaceCon does, the problem it solves, and the goals, scope, and stakeholders that bound it. FaceCon is a research and development project that predicts components of three-dimensional facial shape from genotype, and that integrates an established forensic DNA phenotyping method (HIrisPlex-S) to provide eye colour, hair colour, and skin colour from the same genotype, on documented and controlled-access data, with a shape evaluation designed to separate genuine genetic signal from demographic and ancestry-related signal.
+
+\section{Problem Domain Overview}
+The problem domain of FaceCon lies at the intersection of statistical genetics, three-dimensional geometry processing, and machine learning. Human facial morphology is a highly polygenic and moderately heritable trait: many genetic loci each contribute a small effect, and their combined influence is entangled with age, gender, and population ancestry. Predicting a face from a genome is therefore a layered inference problem. One must first decide which genetic variants to use, then decide how to represent a face so that it can be learned and generated, and finally build a model that connects the two while accounting for confounders. FaceCon takes genotype data (an SNP dosage matrix), optional demographic covariates, and 3D facial scans standardized through the FLAME model, and it learns to predict FLAME shape parameters that decode into a 3D facial mesh. The system then evaluates those predictions quantitatively against carefully chosen baselines.
+
+\section{Problem Statement}
+Existing state-of-the-art genotype to 3D face systems, most notably Difface, achieve their results on private data using undisclosed SNP panels, undocumented mesh formats, and unreleased weights, and their reported individual-level accuracy has been challenged as potentially attributable to demographic confounders rather than genuine genetic signal. There is, at present, no open, reproducible, and demographically controlled baseline that predicts 3D facial shape from genotype on publicly documented data.
+
+\section{Problem Elaboration}
+The problem decomposes into four coupled sub-problems that FaceCon must address.
+
+First, the reproducibility gap. Existing state-of-the-art systems such as Difface cannot be fully reproduced from the publicly available artifacts, because important elements of the data, preprocessing pipeline, SNP configuration, and model resources are not openly available. FaceCon therefore requires a pipeline constructed from clearly documented components and reproducible processing steps.
+
+Second, the representation mismatch. Difface uses a fixed SNP configuration and a dense 3D facial representation that do not directly correspond to the genotype and facial data available in 3DFN/FaceBase. FaceCon must therefore define its own genetic input representation and standardized geometric output. This project uses a documented SNP-selection procedure and FLAME shape parameters as a common representation of 3D facial structure.
+
+Third, demographic and population confounding must be addressed. Variables such as age, gender, and ancestry are associated with systematic variation in facial morphology and may account for part of the apparent predictive performance of genotype models. FaceCon therefore evaluates demographic-only, genotype-only, and combined models in order to estimate the incremental predictive contribution of genetic information beyond demographic and population-level structure.
+
+Fourth, data access and sample size impose practical constraints. Paired genotype and 3D facial data are sensitive, relatively scarce, and typically available through controlled-access resources. The modelling strategy must therefore account for the number and distribution of usable paired subjects in the final dataset. Model complexity will be matched to the available data and evaluated against simpler statistical and neural baselines, while the statistical limitations of the resulting experiments will be explicitly reported.
+
+\section{Goals and Objectives}
+The goal of FaceCon is to deliver an open, documented, and demographically controlled pipeline for genotype to 3D face prediction. The specific objectives are to:
+
+\begin{itemize}
+\item Build a reproducible genotype to FLAME pipeline on paired 3DFN subjects.
+\item Document genotype quality control and construct a transparent, GWAS-informed SNP panel.
+\item Document scan to FLAME fitting so that training targets are comparable across subjects.
+\item Implement and compare progressively more complex models, including mean-face and demographic baselines, statistical SNP models, MLPs, and transformer models.
+\item Evaluate predictions rigorously with parameter, mesh, landmark, region, and retrieval metrics, plus ablations.
+\item Separate genetic contribution from demographic and ancestry-related signal, and report it honestly.
+\item Provide eye colour, hair colour, and skin colour alongside the reconstructed face by integrating an established forensic DNA phenotyping method (HIrisPlex-S) that uses the same genotype, rather than training a new appearance model.
+\item Provide clear limitations and an ethical discussion, and a working visualization or system demonstration.
+\end{itemize}
+
+Success does not require photorealistic skin texture or a fully photorealistic rendering, operational forensic identification, beating Difface on its private dataset, or a diffusion model or large Transformer by default. A scientifically valid outcome may be that simple models match or beat complex ones, or that SNPs add little predictive value beyond demographics under the evaluated conditions.
+
+\section{Project Scope}
+The scope of this project is to design, build, and evaluate a reproducible system that predicts 3D facial shape parameters from genotype on the 3DFN resource. The project will:
+
+\begin{itemize}
+\item Use 3DFN subjects who have both dbGaP genotypes and FaceBase 3D scans.
+\item Clean genotypes through documented QC and reduce them to a documented SNP panel.
+\item Register FaceBase scans to FLAME so each subject is one common mesh, with FLAME shape parameters as the training target.
+\item Train a progression of models from mean-face and demographic baselines through statistical and neural SNP models.
+\item Decode predicted FLAME parameters to 3D meshes and evaluate them quantitatively against baselines, with ablations and region analysis.
+\item Deliver preprocessing and prediction software with reproducible configurations, evaluation figures, and a working demonstration.
+\end{itemize}
+
+The project scope includes eye colour, hair colour, and skin colour, obtained by integrating the established HIrisPlex-S forensic DNA phenotyping method, which uses the same genotype as the shape pipeline; these colours are rendered or reported alongside the predicted face. FaceCon does not train its own appearance model and does not predict other appearance traits such as freckling, hair type, or male-pattern baldness. The project scope does not include photorealistic skin texture or a fully photorealistic rendering, DNA-methylation-based age estimation, operational forensic identification, claims that DNA uniquely reconstructs a person's exact face, the use of any data outside approved controlled-access agreements, or a requirement to employ large generative models. The preferred wording for all claims is that the system predicts components of 3D facial morphology from genotype, and integrates established forensic phenotyping to report eye, hair, and skin colour, under the evaluated dataset and conditions.
+
+\section{Sustainable Development Goal (SDG)}
+FaceCon aligns most directly with SDG 9: Industry, Innovation and Infrastructure, because it contributes open, reproducible research infrastructure and methodology to an emerging area of applied artificial intelligence. By releasing documented code and models rather than closed artifacts, the project strengthens the shared scientific infrastructure on which future genotype to face research can build. The project also relates to SDG 3: Good Health and Well-being, through the relevance of genotype to craniofacial shape modeling to the study of developmental and craniofacial conditions. The two relevant goals are shown in Figure~\ref{fig:1}.
+
+\begin{figure} [!h]
+    \centering
+\includegraphics[width=0.5\textwidth]{Figures/sdg_relevant}
+    \caption[Sustainable Development Goals targeted by FaceCon]{SDG 3, Good Health and Well-being (green tile, left), and SDG 9, Industry, Innovation and Infrastructure (orange tile, right), targeted by FaceCon.}
+    \label{fig:1}
+\end{figure}
+
+\section{Constraints}
+The project operates under several constraints. Data constraints: the primary data are controlled-access (FaceBase and dbGaP), limited in sample size, and drawn largely from specific ancestry groups, which bounds statistical power and generalization. The exact usable paired sample count is unknown until access and QC are complete. Ethical and legal constraints: genotype and facial data are sensitive, so all use must remain within approved data-use agreements, with no attempt at re-identification. Computational constraints: routine development, preprocessing, baseline models, and smaller neural experiments should remain feasible on available student hardware, while more demanding training can use university GPU resources. Time constraints: the project must remain achievable within the final-year project timeline. Scientific constraints: model complexity and evaluation must remain appropriate to the size and quality of the available dataset, and conclusions must reflect the level of predictive accuracy supported by the results.
+
+\section{Business Opportunity}
+Although FaceCon is a research and development project rather than a commercial product, it addresses a genuine opportunity. Forensic laboratories, anthropological research groups, and medical-genetics teams increasingly seek tools that relate genetic samples to physical appearance, and there is clear demand for methods that are transparent and auditable rather than opaque. An open, reproducible baseline lowers the barrier to entry for these organizations, provides a reference implementation against which future or commercial tools can be validated, and creates a foundation for further, better-resourced work. The opportunity is therefore one of enabling infrastructure and trust rather than of a directly monetized service.
+
+\section{Stakeholders Description / User Characteristics}
+This section identifies the users and stakeholders of the system and their roles.
+
+\subsection{Stakeholders Summary}
+The stakeholders of FaceCon are the project team and supervisor, who develop and supervise the system, and the academic evaluators, who assess it. Beyond the university, they include the broader research community in facial genetics and 3D vision, who may reuse and extend the open pipeline, and, more distantly, the forensic, anthropological, and medical-genetics practitioners who represent the eventual application domains. The direct users of the system are the researcher-developer, who runs the pipeline, and the evaluator, who inspects results. A demonstration user may additionally submit a test-subject genotype and view the predicted face.
+
+\subsection{Key High-Level Goals and Problems of Stakeholders}
+The project team and supervisor aim to deliver a technically sound, reproducible system within the available time and data, and their central problem is balancing ambitious modeling against honest, confounder aware evaluation on limited data. The academic evaluators aim to assess novelty, rigor, and completeness, and are concerned that claims are supported by the evaluation. The research community wants an open baseline it can verify and extend, a need unmet by current closed systems. Practitioners want transparent tools and, above all, an honest statement of the demographically controlled reliability of any prediction.
+
+\section{Conclusion}
+This chapter has set the vision for FaceCon: a documented, reproducible, and honestly-evaluated genotype to 3D face pipeline, scoped to predict components of facial shape and to integrate established forensic phenotyping for eye, hair, and skin colour rather than to identify individuals, aligned with SDG~9 and SDG~3, and shaped by the constraints of sensitive, limited data. The next chapter reviews the literature that motivates and enables this vision.

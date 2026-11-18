@@ -1,0 +1,128 @@
+\documentclass{FastFyp}
+
+% ---- Additional packages for diagrams and tables (content only) ----
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows.meta,positioning,fit,calc,backgrounds}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{rotating}
+\usepackage{booktabs}
+\usepackage{array}
+% ---- sequence-diagram styles (Figures 6.3 and 6.4, redrawn as vector graphics) ----
+\definecolor{seqc}{RGB}{120,90,200}
+\definecolor{seqf}{RGB}{236,236,255}
+\tikzset{
+  seqline/.style={draw=seqc,line width=0.9pt},
+  seqbox/.style={draw=seqc,fill=seqf,thick,rounded corners=1.5pt,minimum width=2.35cm,minimum height=0.9cm,align=center,font=\small},
+  seqcall/.style={->,line width=0.7pt},
+  seqret/.style={->,dashed,line width=0.7pt},
+  seqlab/.style={anchor=south,inner sep=1.5pt,fill=white,align=center,font=\small},
+  seqnum/.style={circle,fill=black!80,text=white,font=\scriptsize\bfseries,inner sep=1.3pt,minimum size=0.42cm}
+}
+
+\emergencystretch=3em
+\begin{document}
+\newcommand{\supervisor}{Ms. Rushda Muneer}
+\newcommand{\university}{National University of Computer and Emerging Sciences, Lahore}
+\newcommand{\fyptitle}{FaceCon: Genotype-to-3D-Face Prediction System}
+\newcommand{\degree}{BS}
+\newcommand{\Studentone}{Ahmed Javed \hspace{1cm} 23L-0644 \hspace{1cm} BS(CS)}
+\newcommand{\Studenttwo}{Afnan Asif \hspace{1.2cm} 23L-0709 \hspace{1cm} BS(CS)}
+\newcommand{\Studentthree}{Saad Riaz Taqi \hspace{0.7cm} 23L-0669 \hspace{1cm} BS(CS)}
+\date{\today}
+\renewcommand{\contentsname}{Table of Contents}
+
+\makeatletter
+    \begin{titlepage}
+        \includegraphics[width=0.2\linewidth]{Figures/nulogo.png}\hfill
+        \includegraphics[width=0.2\linewidth]{Figures/fast.png}\\
+        \begin{center}
+            {\large\bfseries \university}\\[7ex]
+            \includegraphics[width=0.4\linewidth]{Figures/fastlogo.png}\\[8ex]
+            {\huge \bfseries  \fyptitle }\\[10ex]
+            {\Studentone}\\{\Studenttwo}\\{\Studentthree}\\[4ex]
+            {Supervisor: \supervisor} \\ [10ex]
+            {Final Year Project}\\
+            {\large \@date}
+        \end{center}
+    \end{titlepage}
+\makeatother
+\frontmatter
+
+\newpage \thispagestyle{empty} \mbox{} \newpage
+
+\pagestyle{empty}
+\section*{\begin{center}{Anti-Plagiarism Declaration} \end{center}}
+This is to declare that the above publication was produced under the:
+\begin{flushleft}
+\bf Title: \fyptitle
+\end{flushleft}
+
+is the sole contribution of the author(s), and no part hereof has been reproduced as it is the basis (cut and paste) that can be considered Plagiarism. All referenced parts have been used to argue the idea and cited properly. I/We will be responsible and liable for any consequence if a violation of this declaration is determined.
+\\[4ex]
+Date: November 14, 2026
+
+\begin{flushright}
+Name: Ahmed Javed
+\\[3ex]
+Signature: \raisebox{-0.35\height}{\includegraphics[height=0.8cm]{Figures/signatures/sig_ahmed.png}}
+\\[6ex]
+Name: Afnan Asif
+\\[3ex]
+Signature: \raisebox{-0.35\height}{\includegraphics[height=0.8cm]{Figures/signatures/sig_afnan.png}}
+\\[6ex]
+Name: Saad Riaz Taqi
+\\[3ex]
+Signature: \raisebox{-0.35\height}{\includegraphics[height=0.8cm]{Figures/signatures/sig_saad.png}}
+
+\end{flushright}
+
+\vspace{5 cm}
+
+\hrule
+
+\section*{Author's Declaration}
+This states Authors' declaration that the work presented in the report is their own, and has not been submitted/presented previously to any other institution or organization.
+\pagebreak
+
+\section*{Abstract}
+Reconstructing a three-dimensional human face from DNA is an open problem spanning statistical genetics, geometry processing, and machine learning. The recent Difface system mapped single-nucleotide polymorphisms (SNPs) to a 3D facial mesh, but was trained on private data with an unpublished SNP panel, and independent commentary questions whether its accuracy reflects individual genetics or mainly age, gender, and ancestry. FaceCon builds a reproducible genotype-to-3D-face pipeline on documented data, using a documented SNP panel and the shared FLAME representation, and integrates an established forensic DNA phenotyping method, HIrisPlex-S, to provide eye colour, hair colour, and skin colour from the same genotype. It predicts FLAME shape parameters through a baselines-first progression of models measured against demographic baselines, so that any individual-level genetic contribution to facial shape is reported honestly, while eye, hair, and skin colour are obtained by integrating the established HIrisPlex-S method rather than a newly trained appearance model. Controlled access to the real cohort was still pending at the time of writing, so the complete pipeline was implemented and validated on a simulated cohort that follows the public description of the 3D Facial Norms study and carries published facial association signals. On this simulated data the pipeline recovers planted genetic signal, reports none under negative controls, and shows that a simple regularised linear model outperforms the deep models tested. These results establish that the pipeline is correct and ready for real data, and they make no claim about the prediction of real faces.
+\pagebreak
+
+\section*{Executive Summary}
+\input{front_execsummary}
+\pagebreak
+
+\pagestyle{fancy}
+\tableofcontents
+
+\pagebreak
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Figures}
+\pagebreak
+\listoftables
+\addcontentsline{toc}{chapter}{List of Tables}
+
+\mainmatter
+
+\input{ch1_introduction}
+\input{ch2_vision}
+\input{ch3_litreview}
+\input{ch4_srs}
+\input{ch5_methodology}
+\input{ch6_design}
+\input{ch7_implementation}
+\input{ch8_results}
+\input{ch9_conclusion}
+
+{
+\bibliographystyle{ieeetr}
+\bibliography{fypbib}
+}
+
+\appendix
+\input{appendix}
+
+\end{document}

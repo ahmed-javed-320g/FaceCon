@@ -1,0 +1,94 @@
+\chapter{Proposed Approach and Methodology}
+This chapter describes the proposed approach and methodology for FaceCon as a procedural and algorithmic framework rather than as code. It follows the data end-to-end: acquiring and cleaning genotypes, constructing a documented SNP panel, registering scans to FLAME, pairing the modalities, and then training a disciplined progression of models and evaluating them against baselines. The guiding principle is that every step is documented and reproducible, and that the evaluation is designed to separate genuine genetic signal from demographic confounding. Figure~\ref{fig:pipeline} shows the end-to-end pipeline.
+
+\begin{figure}[!h]
+\centering
+\begin{tikzpicture}[node distance=0.5cm and 0.9cm,every node/.style={font=\footnotesize}]
+\tikzstyle{st}=[draw,rounded corners,fill=blue!5,minimum width=2.7cm,minimum height=0.8cm,align=center]
+\node[st](a){Genotype / SNP\\data (dbGaP)};
+\node[st,right=of a](b){Genotype\\QC};
+\node[st,right=of b](c){SNP feature\\representation};
+\node[st,below=of c](d){Predictive model\\(+ demographics)};
+\node[st,below=of a,xshift=0cm](s){FaceBase\\scans};
+\node[st,right=of s](f){FLAME\\fitting};
+\node[st,below=of d](e){FLAME shape\\parameters};
+\node[st,below=of e,xshift=-3.0cm](g){FLAME\\decoder};
+\node[st,below=of e,xshift=0cm](h){Evaluation \&\\baselines};
+\node[st,below=of g](m){Reconstructed\\3D mesh};
+\draw[-{Latex}](a)--(b);\draw[-{Latex}](b)--(c);\draw[-{Latex}](c)--(d);
+\draw[-{Latex}](s)--(f);\draw[-{Latex}](f)|-(e);
+\draw[-{Latex}](d)--(e);\draw[-{Latex}](e)--(g);\draw[-{Latex}](e)--(h);
+\draw[-{Latex}](g)--(m);\draw[-{Latex}](m)-|(h);
+\end{tikzpicture}
+\caption{FaceCon end-to-end methodology.}
+\label{fig:pipeline}
+\end{figure}
+
+\section{Dataset}
+FaceCon uses 3DFN subjects who have both genotype data from dbGaP (accession phs000949)~\cite{ref:dbgap} and 3D facial scans and related phenotype resources from FaceBase~\cite{ref:facebase}. After controlled access is granted, we will inspect file formats, missingness, demographics, scan quality, and subject-identifier overlap before fixing the final model capacity, because the usable paired sample count is not known in advance and directly determines how complex a model is justified.
+
+Controlled access to these data was still pending when the prototype was built. As an interim measure, the pipeline was therefore developed and validated on a simulated cohort whose size, covariates, and measurement set follow the public description of the 3DFN genome-wide association study~\cite{ref:shaffer,ref:weinberg}, and which carries published association signals. The simulated cohort is described in Chapter~7 and the results obtained on it in Chapter~\ref{ch:results}. It replaces neither the dataset described above nor any step of this methodology, and every statement in this chapter about real data describes work still to be done once access is granted.
+
+\section{Genotype Preprocessing and SNP Selection}
+Genotypes are processed with a standard genome analysis toolkit~\cite{ref:plink}. The preprocessing pipeline comprises subject- and SNP-level missingness filtering, minor-allele-frequency filtering, Hardy--Weinberg filtering where appropriate, imputation or documented missing-value handling, optional linkage-disequilibrium pruning, SNP standardization, and optional ancestry or principal-component covariates. Every threshold and decision is recorded so the input to modeling can be reconstructed.
+
+SNP selection is fully documented, recording for each SNP its identifier, chromosome, position, locus, facial-trait association, source paper, and reason for inclusion. FaceCon does not blindly copy Difface's 7,842-SNP panel. To answer RQ4, the methodology compares three panel constructions: (1) facial-GWAS-informed SNPs~\cite{ref:white,ref:xiong,ref:claes}; (2) matched random or common SNPs as a control; and (3) larger QC-filtered panels if sample size allows. Each subject's genotype is encoded as an allele-dosage vector with entries in $\{0,1,2\}$ (homozygous reference, heterozygous, homozygous alternate), giving the conceptual tensor $X_{\mathrm{snp}} \in \mathbb{R}^{\,n_{\mathrm{subjects}} \times n_{\mathrm{snps}}}$, with demographic covariates in $X_{\mathrm{demo}}$.
+
+\section{Face Preprocessing with FLAME}
+FaceBase scans are standardized through FLAME~\cite{ref:flame} so that every subject shares one mesh topology. The procedure normalizes and aligns each scan, initializes landmarks, fits or registers FLAME to the scan, and exports the FLAME identity/shape coefficients as the standardized training target $Y_{\mathrm{face}}$. Concretely, fitting minimizes a weighted landmark and surface objective over the FLAME shape $\beta$, pose $\theta$, and expression $\psi$:
+\begin{equation}\label{eq:fit}
+\min_{\beta,\theta,\psi}\; \lambda_{\mathrm{lmk}}\!\sum_{k}\lVert \pi(v_k(\beta,\theta,\psi)) - u_k\rVert_2^2 \;+\; \lambda_{\mathrm{surf}}\!\sum_{p\in S}\min_{q\in M}\lVert p-q\rVert_2^2 \;+\; \lambda_{\mathrm{reg}}\lVert\beta\rVert_2^2 .
+\end{equation}
+
+Equation~\ref{eq:fit} is the registration, or fitting, objective. It is used in the face preprocessing stage, where it converts each raw FaceBase scan into a face expressed in the common FLAME representation. It is needed because the raw scans do not share a common topology and therefore cannot be compared across subjects or used as a learning target directly. Minimising the objective finds the FLAME parameters whose resulting mesh best matches the scan, after which the identity component of those parameters becomes the training target.
+
+The symbols in Equation~\ref{eq:fit} are defined as follows. The optimisation variables are the FLAME shape, or identity, parameters $\beta$, the pose parameters $\theta$, and the expression parameters $\psi$, which together determine a FLAME mesh. The function $v_k(\beta,\theta,\psi)$ returns the position of the $k$th FLAME landmark vertex for the current parameters, and $\pi(\cdot)$ projects that three-dimensional position so that it can be compared with the detected landmark $u_k$ on the scan. The term $S$ is the set of points on the scan surface, $M=M(\beta,\theta,\psi)$ is the FLAME mesh surface for the current parameters, and $q$ is the point on $M$ that is closest to a scan point $p$. The notation $\lVert\cdot\rVert_2$ denotes the Euclidean distance. The weights $\lambda_{\mathrm{lmk}}$, $\lambda_{\mathrm{surf}}$, and $\lambda_{\mathrm{reg}}$ balance the three terms of the objective.
+
+The objective has three parts. The first term is the landmark term, which pulls the FLAME landmarks towards the detected landmarks on the scan and provides a stable, coarse alignment. The second term is the surface term, which measures how far the FLAME mesh surface lies from the scan surface and refines the fit over the whole face. The third term is a regularisation term on $\beta$, which keeps the shape within the plausible range learned by the FLAME model and prevents the fit from overfitting to scan noise. Only the identity parameters $\beta$ are retained as the prediction target $Y_{\mathrm{face}}$, because pose and expression are nuisance factors for genotype prediction, and the FLAME decoder reconstructs the mesh vertices from $\beta$ when a geometric evaluation is required.
+
+\section{Modelling Strategy}
+The modelling strategy follows a baselines first progression, where simpler and more interpretable models are evaluated before increasingly complex architectures. This allows the contribution of additional model complexity to be measured directly. FaceCon takes architectural inspiration from Difface's two-stage alignment and generation framework~\cite{ref:difface}, while adapting the implementation to the 3DFN dataset and FLAME representation. The planned progression is:
+\begin{enumerate}
+\item Mean-face baseline. Predicts the training-set mean shape for every subject, ignoring all inputs. It is the floor that any informative model must beat, and it quantifies how much apparent accuracy comes simply from predicting an average face.
+\item Demographic regression. A linear regression that predicts FLAME shape from demographic covariates alone (age, sex, and ancestry principal components). It measures how much of the face is explained by demographics before any genetic information is used, and is a mandatory baseline for separating genetic signal from population structure.
+\item Ridge regression on the SNP panel. A regularised linear model mapping SNP dosages to FLAME parameters, where the L2 penalty controls overfitting when the number of SNPs is large relative to the sample size. It provides an interpretable, sample-efficient first genetic model.
+\item Multilayer perceptron (MLP) on the SNP panel. A feed-forward neural network that learns non-linear relationships between the SNP inputs and the FLAME shape coefficients, testing whether non-linear structure improves on ridge regression.
+\item Multilayer perceptron (MLP) on SNPs combined with demographic covariates. The same network with demographic covariates concatenated to the SNP input, so that the genetic contribution can be measured on top of, rather than confounded with, demographics.
+\item Extended MLP architectures. Deeper or wider networks with additional regularisation such as dropout and weight decay, explored only if the base MLP shows learnable signal, to probe whether added capacity yields real improvement.
+\item Transformer-based SNP encoder~\cite{ref:transformer}. Uses self-attention, with suitable SNP embeddings and genomic positional information, to model interactions across SNPs and produce a learned genetic representation that is then decoded to FLAME parameters.
+\item Contrastive SNP--face representation learning~\cite{ref:clip}. Aligns genetic and facial embeddings in a shared space, pulling matched genotype--face pairs together and pushing mismatched pairs apart, so that a face-predictive representation can be learned from paired data.
+\item Generative or diffusion model~\cite{ref:ddpm,ref:ldm}. Maps a genetic representation to a facial representation using a generative or diffusion prior before FLAME decoding, capturing the distribution of plausible faces; used only where the final dataset and preceding experiments support its added complexity.
+\end{enumerate}
+The first complete neural pipeline maps an SNP vector through an MLP to FLAME shape coefficients, which are then decoded into a 3D facial mesh. The advanced modelling stage extends this approach using transformer SNP representations and contrastive learning between genetic and facial features. A further generative stage may map SNP representations to facial representations before FLAME decoding, including the use of a diffusion prior if supported by the available data. All architectures will be evaluated using the same data splits and evaluation framework. This allows FaceCon to determine whether increasingly complex models provide meaningful improvements over simpler statistical and neural baselines.
+
+\section{Appearance Integration via HIrisPlex-S}
+In addition to three-dimensional shape, FaceCon provides a set of externally visible colour attributes, namely eye colour, hair colour, and skin colour. FaceCon does not train a new model for these colours. Instead, it integrates HIrisPlex-S~\cite{ref:hirisplex,ref:hirisplexs}, the established forensic DNA phenotyping method that is the de facto standard for predicting eye, hair, and skin colour from a small, validated marker panel. The appearance component is therefore an integration, not a trained classifier: the same dbGaP genotype that drives shape prediction is reused as the input.
+
+The integration has a simple, fixed flow. From the subject's genotype, FaceCon extracts the HIrisPlex-S marker SNPs; these markers are passed to the established HIrisPlex-S predictor as published; and the predictor returns eye colour, hair colour, and skin colour, which are then passed to the visualization layer. Because HIrisPlex-S is an existing, externally validated forensic method, FaceCon uses it directly and does not retrain, re-fit, or re-calibrate it, and it does not construct a pigmentation panel of its own. This keeps the two branches cleanly separated: the shape branch runs dbGaP genotype through facial SNP selection and the FaceCon shape models to FLAME parameters and a predicted 3D mesh, while the appearance branch runs the same dbGaP genotype through HIrisPlex-S marker extraction and the HIrisPlex-S predictor to eye, hair, and skin colour.
+
+The predicted colours are reported using HIrisPlex-S as published, with its own documented and externally validated performance rather than any accuracy derived on the project's own data. Skin colour and eye colour are rendered on the reconstructed face, and hair colour is reported, and rendered only where suitable hair geometry exists. FaceCon does not claim that the 3DFN resource provides ground-truth eye, hair, or skin colour labels, and therefore does not train or evaluate an appearance classifier against such labels; the appearance output is the integrated forensic prediction, shown alongside the reconstructed shape.
+
+In the current prototype the HIrisPlex-S model is evaluated by a local module, described together with its limitations in Chapter~7.
+
+\section{Research Questions}
+The methodology is organized to answer the research questions of Chapter~1. RQ1 is answered by the construction of the reproducible pipeline itself. RQ2 and RQ3, which concern the accuracy of SNP prediction relative to and in addition to demographics, are answered by the baseline comparisons. RQ4 is answered by the GWAS-informed versus matched-random SNP-panel ablation, and RQ5 by the progression from simple statistical models to more complex neural architectures. RQ6 is answered by the region-level analysis of which facial areas carry the strongest predictable signal. RQ7 is answered by stratified evaluation across demographic and ancestry subgroups, carried out where the final dataset contains enough samples for a statistically meaningful comparison. Finally, RQ8 is answered by the integration of the established HIrisPlex-S forensic method with the shape pipeline, so that eye, hair, and skin colour are obtained from the same genotype and shown alongside the reconstructed face.
+
+\section{Evaluation}
+Evaluation is built before any final model claims and spans the following complementary measures.
+\begin{enumerate}
+\item FLAME parameter error is measured as MSE, RMSE, MAE, and the per-component correlation between predicted and true coefficients.
+\item Mesh error is the per-vertex Euclidean distance, reported as mean and median vertex error.
+\item Landmark error is the distance between predicted and true positions at anatomical landmarks.
+\item Region analysis breaks the error down by nose, jaw, mouth, eyes, cheeks, forehead, and whole face.
+\item Retrieval-style ranking reports the Top-1, Top-5, and mean rank of the true face among candidates, as a scientific metric only and not as forensic identification.
+\item Baseline comparisons set every model against the mean-face, demographics-only, SNP-only, and SNP+demographics predictors.
+\item Ablations cover GWAS versus random SNPs, panel size, removal of demographics, and architecture comparison.
+\item Appearance colour is obtained from the integrated HIrisPlex-S predictor and reported using its published, externally validated performance. It is not re-evaluated on 3DFN, which does not provide eye, hair, or skin colour labels.
+\end{enumerate}
+Small gains are interpreted honestly: for example, if demographics alone achieve a mean vertex error of 4.2~mm and SNP+demographics achieve 4.18~mm, the methodology reports that SNPs added little individual-level signal under that setup rather than presenting the model as a success.
+
+\section{Experimental Integrity}
+Several rules protect the validity of the results. Splits are strictly subject-level, so no subject (or close relative) appears in more than one split. No test data leaks into SNP discovery, principal-component estimation, or normalization: external GWAS SNP lists are cited and fixed in advance, and any within-dataset SNP selection is performed only inside training folds. Reporting always separates genetic, demographic, and ancestry contributions. Finally, the discussion addresses privacy, misuse risk, ancestry bias, and the genuine uncertainty of individual-level accuracy, consistent with the project's commitment not to claim that DNA uniquely reconstructs a person's exact face.
+
+\section{Conclusion}
+This chapter has presented the methodology as a documented, reproducible pipeline from dbGaP genotypes and FaceBase scans to an evaluated genotype to face model, together with the integration of an established forensic phenotyping method (HIrisPlex-S) that provides eye, hair, and skin colour from the same genotype and is shown alongside the reconstructed face, with a baselines first model progression for shape and a confounder aware evaluation tied directly to the research questions. The next chapter presents the high-level and low-level design that realizes this methodology.

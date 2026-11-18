@@ -1,0 +1,54 @@
+\chapter{Introduction}
+Facial shape is, in part, written in our DNA. Twin studies, heritability analyses, and a growing number of genome-wide association studies (GWAS) have shown that a measurable fraction of the variation in human facial morphology is genetic. Predicting aspects of three-dimensional facial shape from DNA is therefore both a legitimate scientific question and a capability relevant to forensics, anthropology, and medical genetics~\cite{ref:wang,ref:richmond}. Classical work links genotype to face through GWAS and statistical models on facial landmarks or shape scores~\cite{ref:xiong,ref:claes}, while more recent artificial-intelligence systems treat the task as multimodal generation: map genetic variants and facial geometry into a shared representation, then predict a face from genotype~\cite{ref:difface}.
+
+Reconstructing a full 3D face from DNA alone, however, remains an open problem. Difface demonstrated that deep learning can map single-nucleotide polymorphisms (SNPs) to 3D facial meshes~\cite{ref:difface}, but it was trained on private Han Chinese data with an unpublished SNP list, and independent commentary argues that its reported performance may reflect age, gender, and ancestry more than true individual genetic signal, and that evaluation standards in this area are weak~\cite{ref:comment}. Because its data and methods are not fully open, other teams cannot easily verify or reuse the work. FaceCon addresses this gap by building a reproducible SNP to 3D face pipeline on the controlled but documented 3D Facial Norms (3DFN) resource: genotypes from dbGaP and 3D facial scans from FaceBase~\cite{ref:facebase,ref:dbgap}. Rather than copying Difface's fixed 7,842-SNP design and undisclosed mesh template, FaceCon uses its own documented SNP panel and a shared FLAME face representation~\cite{ref:flame}, fitting FaceBase scans to FLAME so that every subject shares one mesh topology, predicting FLAME shape (identity) parameters from genotype, and decoding them to a 3D mesh. Alongside shape, FaceCon integrates an established forensic DNA phenotyping method, HIrisPlex-S~\cite{ref:hirisplex,ref:hirisplexs}, which takes the same dbGaP genotype, extracts its validated marker SNPs, and predicts eye colour, hair colour, and skin colour; these colours are passed to a visualization layer and shown alongside the reconstructed face. FaceCon trains the facial-shape models, whereas the appearance colours come from this external, already-validated predictor rather than a model trained within the project.
+
+\section{Purpose of this Document}
+The purpose of this document is to present the problem definition, vision, literature foundation, requirements, methodology, design, prototype implementation, and first experimental results of our Final Year Project (FYP), FaceCon, a research and development system that predicts components of three-dimensional facial shape from genotype, and that integrates an established forensic DNA phenotyping method to provide eye colour, hair colour, and skin colour from the same genotype. The project aims to deliver a reproducible genotype to FLAME pipeline, built on documented, controlled-access data, that measures how much individual facial information DNA carries beyond demographic and population-structure information, and that renders the predicted shape, together with the integrated colour predictions, on a common face model.
+
+Rather than a single question of whether a face can be generated from DNA, the project is organized around a sharper research framing and a set of research questions:
+
+\begin{quote}
+Central question: How much individual 3D facial information can be predicted from genotype beyond information already available from demographics and population structure?
+\end{quote}
+
+\begin{itemize}
+\item (RQ1) Can a reproducible SNP to 3D face pipeline be built on 3DFN/FaceBase with FLAME as the common face representation?
+\item (RQ2) How accurately can SNPs predict 3D facial shape versus mean-face and demographic-only baselines?
+\item (RQ3) Does adding SNPs to demographics improve 3D facial prediction?
+\item (RQ4) Do facial-GWAS-informed SNPs outperform matched random or common SNPs?
+\item (RQ5) How do simple statistical and neural models compare with more complex deep models?
+\item (RQ6) Which facial regions or FLAME components show the strongest predictable signal?
+\item (RQ7) How well does the proposed pipeline generalize across demographic or ancestry subgroups, provided that the final dataset contains sufficient samples for statistically meaningful subgroup evaluation?
+\item (RQ8) How can established forensic DNA phenotyping methods be integrated with genotype-based 3D facial shape prediction to provide eye colour, hair colour, and skin colour information alongside the reconstructed face?
+\end{itemize}
+
+This document covers the methodology and design through which these questions will be answered, the prototype that implements them, and the first experimental results. Controlled access to the 3DFN data was still pending when this document was written, so every experiment reported here was run on a simulated cohort whose design follows the public description of that study. These experiments establish that the pipeline is correct and ready for the real data. They do not measure how well genotype predicts real faces, which remains the work of the second phase of the project.
+
+\section{Intended Audience}
+The intended audience for this report is diverse, and the writing is pitched so that each group can take what it needs. The academic evaluation panel and the project supervisor are the primary audience: they will assess the scientific soundness, novelty, feasibility, and honesty of the work, and will focus on the requirements, methodology, and design chapters as well as the rigor of the evaluation plan. Researchers in facial genetics and 3D computer vision form a second audience who may wish to reproduce or extend the pipeline, and for whom the data choices, SNP-selection procedure, and FLAME representation are described in reproducible detail. Finally, forensic and anthropological practitioners represent an indirect audience who may eventually consume genotype to face methods, and for whom the document is deliberately explicit about what the system can and cannot claim.
+
+\section{Definitions, Acronyms, and Abbreviations}
+The following definitions, acronyms, and abbreviations are used throughout this document:
+
+SNP: Single-Nucleotide Polymorphism\\
+GWAS: Genome-Wide Association Study\\
+3D: Three-Dimensional\\
+FLAME: Faces Learned with an Articulated Model and Expressions (a parametric 3D head model)\\
+3DFN: 3D Facial Norms (the paired dbGaP genotype and FaceBase scan setting)\\
+dbGaP: Database of Genotypes and Phenotypes\\
+QC: Quality Control\\
+MAF: Minor Allele Frequency\\
+HWE: Hardy--Weinberg Equilibrium\\
+LD: Linkage Disequilibrium\\
+PC: Principal Component\\
+MLP: Multi-Layer Perceptron\\
+CLIP: Contrastive Language--Image Pre-training (a contrastive alignment method)\\
+MSE/RMSE/MAE: Mean Squared Error / Root Mean Squared Error / Mean Absolute Error\\
+OBJ: a 3D geometry file format\\
+SDG: Sustainable Development Goal\\
+FYP: Final Year Project\\
+MVP: Minimum Viable Product
+
+\section{Conclusion}
+This chapter introduced FaceCon as a reproducible, honestly-evaluated genotype to 3D face and appearance system, stated the purpose of the document and the research questions, identified the intended audiences, and defined the key terminology. The remainder of the report is organized as follows. Chapter~2 sets out the project vision: the problem domain, the problem statement and its sub-problems, the goals, scope, targeted Sustainable Development Goals, constraints, opportunity, and stakeholders. Chapter~3 reviews the literature on facial genetics and the methods the system depends on. Chapter~4 specifies the software requirements, use cases, interface, and risks. Chapter~5 presents the proposed methodology as a documented, reproducible pipeline. Chapter~6 presents the high-level and low-level design that realizes that methodology. Chapter~7 describes the implemented prototype and its test cases. Chapter~\ref{ch:results} reports and discusses the experimental results obtained on simulated data. Chapter~\ref{ch:conclusion} concludes the report and sets out the plan of work for FYP-II.

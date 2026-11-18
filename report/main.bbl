@@ -1,0 +1,192 @@
+\begin{thebibliography}{10}
+
+\bibitem{ref:wang}
+C.~Wang {\em et~al.}, ``Forensic {DNA} phenotyping: A 19-{SNP} prediction
+  system,'' {\em Forensic Sciences Research}, 2026.
+\newblock As cited in the project proposal; DOI not independently verified.
+
+\bibitem{ref:richmond}
+S.~Richmond, L.~J. Howe, S.~J. Lewis, E.~Stergiakouli, and A.~Zhurov, ``Facial
+  genetics: A brief overview,'' {\em Frontiers in Genetics}, vol.~9, p.~462,
+  2018.
+\newblock doi:10.3389/fgene.2018.00462.
+
+\bibitem{ref:xiong}
+Z.~Xiong, Y.~Li, X.~Liu, H.~Lu, P.~G. Hysi, L.~M. Pardo, {\em et~al.},
+  ``Combined genome-wide association study of facial traits in {Europeans}
+  increases explained variance and improves prediction,'' {\em Nature
+  Communications}, vol.~16, p.~6562, 2025.
+\newblock doi:10.1038/s41467-025-61761-7.
+
+\bibitem{ref:claes}
+P.~Claes, J.~Roosenboom, J.~D. White, {\em et~al.}, ``Genome-wide mapping of
+  global-to-local genetic effects on human facial shape,'' {\em Nature
+  Genetics}, vol.~50, pp.~414--423, 2018.
+\newblock doi:10.1038/s41588-018-0057-4.
+
+\bibitem{ref:difface}
+M.~Jiao, J.~Li, B.~Zhong, S.~Du, S.~Li, M.~Zhang, Q.~Zhang, Z.~Liang, F.~Liu,
+  C.~Zuo, S.~Wang, and L.~Chen, ``De novo reconstruction of {3D} human facial
+  images from {DNA} sequence,'' {\em Advanced Science}, vol.~12, no.~29,
+  p.~2414507, 2025.
+\newblock doi:10.1002/advs.202414507.
+
+\bibitem{ref:comment}
+J.~K. Wagner, N.~Claessens, C.~M. Maloney, and P.~Claes, ``Comment on ``de novo
+  reconstruction of {3D} human facial images from {DNA} sequence'','' {\em
+  Advanced Science}, 2025.
+\newblock Available: \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC12931204}.
+
+\bibitem{ref:facebase}
+M.~L. Marazita, S.~M. Weinberg, and Z.~Raffensperger, ``{3D} facial norms
+  database.'' FaceBase Consortium.
+\newblock Available:
+  \url{https://www.facebase.org/resources/human/facial_norms/}.
+
+\bibitem{ref:dbgap}
+{National Center for Biotechnology Information}, ``Genetic analysis of normal
+  human facial variation.'' dbGaP accession no. phs000949.v1.p1.
+\newblock Available:
+  \url{https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000949.v1.p1}.
+
+\bibitem{ref:flame}
+T.~Li, T.~Bolkart, M.~J. Black, H.~Li, and J.~Romero, ``Learning a model of
+  facial shape and expression from {4D} scans ({FLAME}),'' {\em ACM
+  Transactions on Graphics}, vol.~36, no.~6, pp.~194:1--194:17, 2017.
+\newblock Available: \url{https://flame.is.tue.mpg.de/}.
+
+\bibitem{ref:hirisplex}
+S.~Walsh, F.~Liu, A.~Wollstein, L.~Kovacevic, A.~Freire-Aradas, {\em et~al.},
+  ``The {HIrisPlex} system for simultaneous prediction of hair and eye colour
+  from {DNA},'' {\em Forensic Science International: Genetics}, vol.~7, no.~1,
+  pp.~98--115, 2013.
+\newblock doi:10.1016/j.fsigen.2012.07.005.
+
+\bibitem{ref:hirisplexs}
+L.~Chaitanya, K.~Breslin, S.~Zuniga, L.~Wirken, E.~Pospiech, {\em et~al.},
+  ``The {HIrisPlex-S} system for eye, hair and skin colour prediction from
+  {DNA},'' {\em Forensic Science International: Genetics}, vol.~35,
+  pp.~123--135, 2018.
+\newblock doi:10.1016/j.fsigen.2018.04.004.
+
+\bibitem{ref:white}
+J.~D. White, K.~Indencleef, S.~Naqvi, {\em et~al.}, ``Insights into the genetic
+  architecture of the human face,'' {\em Nature Genetics}, vol.~53, pp.~45--53,
+  2021.
+\newblock doi:10.1038/s41588-020-00741-7.
+
+\bibitem{ref:naqvi}
+S.~Naqvi, Y.~Sleyp, H.~Hoskens, {\em et~al.}, ``Shared heritability of human
+  face and brain shape,'' {\em Nature Genetics}, vol.~53, pp.~830--839, 2021.
+\newblock doi:10.1038/s41588-021-00827-w.
+
+\bibitem{ref:adhikari}
+K.~Adhikari, T.~Fontanil, S.~Cal, J.~Mendoza-Revilla, M.~Fuentes-Guajardo, {\em
+  et~al.}, ``A genome-wide association scan in admixed {Latin} {Americans}
+  identifies loci influencing facial and scalp hair features,'' {\em Nature
+  Communications}, vol.~7, p.~10815, 2016.
+\newblock doi:10.1038/ncomms10815.
+
+\bibitem{ref:sero}
+D.~Sero, A.~Zaidi, J.~Li, {\em et~al.}, ``Facial recognition from {DNA} using
+  face-to-{DNA} classifiers,'' {\em Nature Communications}, vol.~10, p.~2557,
+  2019.
+\newblock doi:10.1038/s41467-019-10617-y.
+
+\bibitem{ref:alharbi}
+W.~S. Alharbi and M.~Rashid, ``A review of deep learning applications in human
+  genomics using next-generation sequencing data,'' {\em Human Genomics},
+  vol.~16, p.~26, 2022.
+\newblock doi:10.1186/s40246-022-00396-x.
+
+\bibitem{ref:egger}
+B.~Egger, W.~A.~P. Smith, A.~Tewari, S.~Wuhrer, M.~Zollh\"ofer, {\em et~al.},
+  ``{3D} morphable face models---past, present, and future,'' {\em ACM
+  Transactions on Graphics}, vol.~39, no.~5, pp.~157:1--157:38, 2020.
+\newblock doi:10.1145/3395208.
+
+\bibitem{ref:deca}
+Y.~Feng, H.~Feng, M.~J. Black, and T.~Bolkart, ``Learning an animatable
+  detailed {3D} face model from in-the-wild images ({DECA}),'' {\em ACM
+  Transactions on Graphics}, vol.~40, no.~4, pp.~88:1--88:13, 2021.
+\newblock doi:10.1145/3450626.3459936.
+
+\bibitem{ref:spiralnet}
+S.~Gong, L.~Chen, M.~Bronstein, and S.~Zafeiriou, ``{SpiralNet++}: A fast and
+  highly efficient mesh convolution operator,'' in {\em Proc. IEEE/CVF
+  International Conference on Computer Vision Workshops (ICCVW)},
+  pp.~4141--4148, 2019.
+\newblock doi:10.1109/ICCVW.2019.00509.
+
+\bibitem{ref:ddpm}
+J.~Ho, A.~Jain, and P.~Abbeel, ``Denoising diffusion probabilistic models,'' in
+  {\em Advances in Neural Information Processing Systems (NeurIPS)}, vol.~33,
+  pp.~6840--6851, 2020.
+
+\bibitem{ref:ldm}
+R.~Rombach, A.~Blattmann, D.~Lorenz, P.~Esser, and B.~Ommer, ``High-resolution
+  image synthesis with latent diffusion models,'' in {\em Proc. IEEE/CVF
+  Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pp.~10684--10695, 2022.
+\newblock doi:10.1109/CVPR52688.2022.01042.
+
+\bibitem{ref:clip}
+A.~Radford, J.~W. Kim, C.~Hallacy, A.~Ramesh, {\em et~al.}, ``Learning
+  transferable visual models from natural language supervision,'' in {\em Proc.
+  38th International Conference on Machine Learning (ICML), PMLR 139},
+  pp.~8748--8763, 2021.
+
+\bibitem{ref:transformer}
+A.~Vaswani, N.~Shazeer, N.~Parmar, {\em et~al.}, ``Attention is all you need,''
+  in {\em Advances in Neural Information Processing Systems (NeurIPS)},
+  vol.~30, 2017.
+
+\bibitem{ref:plink}
+C.~C. Chang, C.~C. Chow, L.~C. A.~M. Tellier, S.~Vattikuti, S.~M. Purcell, and
+  J.~J. Lee, ``Second-generation {PLINK}: Rising to the challenge of larger and
+  richer datasets,'' {\em GigaScience}, vol.~4, p.~7, 2015.
+\newblock doi:10.1186/s13742-015-0047-8.
+
+\bibitem{ref:shaffer}
+J.~R. Shaffer, E.~Orlova, M.~K. Lee, E.~J. Leslie, Z.~D. Raffensperger, C.~L.
+  Heike, M.~L. Cunningham, J.~T. Hecht, C.~H. Kau, N.~L. Nidey, {\em et~al.},
+  ``Genome-wide association study reveals multiple loci influencing normal
+  human facial morphology,'' {\em PLoS Genetics}, vol.~12, no.~8, p.~e1006149,
+  2016.
+
+\bibitem{ref:weinberg}
+S.~M. Weinberg, Z.~D. Raffensperger, M.~J. Kesterke, C.~L. Heike, M.~L.
+  Cunningham, J.~T. Hecht, C.~H. Kau, J.~C. Murray, G.~L. Wehby, L.~M. Moreno,
+  and M.~L. Marazita, ``The {3D} facial norms database: Part 1. a web-based
+  craniofacial anthropometric and image repository for the clinical and
+  research community,'' {\em The Cleft Palate-Craniofacial Journal}, vol.~53,
+  no.~6, pp.~e185--e197, 2016.
+
+\bibitem{ref:sklearn}
+F.~Pedregosa, G.~Varoquaux, A.~Gramfort, V.~Michel, B.~Thirion, O.~Grisel,
+  M.~Blondel, P.~Prettenhofer, R.~Weiss, V.~Dubourg, {\em et~al.},
+  ``Scikit-learn: Machine learning in {Python},'' {\em Journal of Machine
+  Learning Research}, vol.~12, pp.~2825--2830, 2011.
+
+\bibitem{ref:pytorch}
+A.~Paszke, S.~Gross, F.~Massa, A.~Lerer, J.~Bradbury, G.~Chanan, T.~Killeen,
+  Z.~Lin, N.~Gimelshein, L.~Antiga, {\em et~al.}, ``{PyTorch}: An imperative
+  style, high-performance deep learning library,'' in {\em Advances in Neural
+  Information Processing Systems}, vol.~32, pp.~8024--8035, 2019.
+
+\bibitem{ref:threejs}
+{three.js authors}, ``three.js: {JavaScript} {3D} library, release r147.''
+  \url{https://threejs.org}, released 30 November 2022, MIT License, 2022.
+
+\bibitem{ref:kgenomes}
+{The 1000 Genomes Project Consortium}, ``A global reference for human genetic
+  variation,'' {\em Nature}, vol.~526, pp.~68--74, 2015.
+
+\bibitem{ref:ictfacekit}
+R.~Li, K.~Bladin, Y.~Zhao, C.~Chinara, O.~Ingraham, P.~Xiang, X.~Ren,
+  P.~Prasad, B.~Kishore, J.~Xing, and H.~Li, ``Learning formation of
+  physically-based face attributes,'' in {\em Proceedings of the IEEE/CVF
+  Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pp.~3410--3419, 2020.
+
+\end{thebibliography}

@@ -74,22 +74,22 @@ Panel: NYGC 30x high-coverage GRCh38 callset. 2,573 unrelated people (deg-2 rela
 | 1 | Rerun RQ5 with `--features screen`, 5 seeds | Does architecture matter once signal is visible? | Permuted genotypes | CIs reported; control ≈ 0 | 2 days |
 | 2 | ~~1000 Genomes genotypes (open): real LD, MAF, ancestry~~ **DONE (§4b)** | Does it survive realistic structure? | Share 0, permuted | A1–A4 pass | done |
 | 3 | ~~Sparse effects; PCs instead of labels everywhere~~ **DONE (§4b)** — sparse (5/50 dims), PCs throughout | How does power fall with realism? | Share 0 | Power curve with CIs | done |
-| 4 | Published HIrisPlex-S parameters, checked on Harvard PGP public genotypes + self-reported eye colour | Does it match real labels? | Shuffled labels | Beats shuffled; aggregates only | 1 week |
-| 5 | FLAME-fitting test on synthetic scans with known parameters | Does fitting recover truth? | Random mesh | Error below stated mm | 1.5 weeks |
+| 4 | ~~Published HIrisPlex-S parameters~~ recovered from the official tool and validated; PGP eye-colour check **scripted and exercised end to end**, not yet run on real PGP data | Does it match real labels? | 1000 shuffled labels | Beats shuffled; aggregates only | GPU round |
+| 5 | ~~FLAME-fitting test on synthetic scans~~ **DONE** — 0.498 mm noise-free (bound 1.0), 0.609 mm noisy | Does fitting recover truth? | Random mesh | Random-mesh residual 2.280 mm vs 0.264 mm, 8.6x (bound 5x) | done |
 | 6 | Pre-registered real-data plan; fix deck, report | — | — | Signed before access | report done; deck open |
-| 7 | **Non-additive effects** (interactions, dominance) | Does the linear/neural ranking survive? | Share 0 | Ranking reported either way | 1 week |
+| 7 | ~~**Non-additive effects**~~ **DONE for the linear ladder** — DOM, EPI, MIX arms; additive oracle 0.173 -> 0.058, true-coded oracle flat at ~0.145 | Does the linear/neural ranking survive? | Share 0 (-0.001) and permuted (-0.001) in every arm | Neural models on these arms are the remaining piece; run in the GPU round | linear done |
 
 ## 6. Evaluator pitch
 
 **Show:** `python -m gpu.controls` live (signal found when planted, zero when shuffled or absent); the 14/14 locus-recovery test; the pre-registered plan.
 **Say:** "A validated, data-ready pipeline: it detects signal, rejects noise, and we found and fixed our own artefact."
-**Do not claim:** that genetics does or does not predict faces; any real accuracy; HIrisPlex-S validation; real-data power.
+**Do not claim:** that genetics does or does not predict faces; any real accuracy; HIrisPlex-S accuracy on real people; real-data power; that the regional or subgroup results say anything about real faces.
 
 ## 7. Hard questions
 
 1. *No real data: what did you show?* Pipeline correctness, with positive and negative controls. Nothing about people.
 2. *Your earlier slide said SNPs add nothing.* A feature-compression artefact; an oracle baseline exposed it and we corrected it.
 3. *Isn't the synthetic data rigged to succeed?* It was (unlinked SNPs, dense effects). We rebuilt it on real 1000G genotypes with sparse effects (§4b); the conclusions held with smaller margins, and hiding the causal SNPs showed LD carries only ~22% of the attainable signal.
-6. *Why does ridge beat your deep models — isn't that a weak result?* It is a real result and it is reported, but the planted signal is additive, so ridge is the correctly specified model. The honest claim is that these nets are inefficient on additive signal at this N, not that deep learning cannot help. Testing non-additive effects is item 7 in §5.
+6. *Why does ridge beat your deep models — isn't that a weak result?* It is a real result and it is reported, but the planted signal is additive, so ridge is the correctly specified model. The honest claim is that these nets are inefficient on additive signal at this N, not that deep learning cannot help. We then planted non-additive signal (item 7): an additively restricted model recovers 0.058 of a mixed signal where the true coding recovers 0.148, so representation is the binding constraint there too. The neural comparison on those arms has not been run yet, so whether the ranking flips is still open and is stated as open.
 4. *Will real data arrive?* Uncertain; FaceBase requires IRB approval. The project is scoped to pass without it.
-5. *Is the appearance model the published one?* Unverified. It reproduces the web tool; checking against published parameters is planned.
+5. *Is the appearance model the published one?* It reproduces the official Erasmus MC tool, from coefficients recovered by probing it and validated against it, and FaceCon fits nothing. Whether it predicts real people is untested here; the Harvard PGP check is written and not yet run. The old simulated-appearance ladder was deleted: its labels came from the same panel its model used as features, so its accuracy measured the generator.
