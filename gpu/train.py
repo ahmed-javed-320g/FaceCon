@@ -155,6 +155,9 @@ def main():
     ap.add_argument("--patience", type=int, default=0,
                     help="early stop after N evals (each = log-every epochs) with no "
                          "val gain; 0 = run full schedule but still report best-val model")
+    ap.add_argument("--seed", type=int, default=None,
+                    help="FaceConData seed (PCA random_state, permutation, train subset); default keeps 20261016")
+    ap.add_argument("--split-seed", type=int, default=None, help="re-draw the data split from this seed")
     ap.add_argument("--no-demo", action="store_true")
     ap.add_argument("--root", default=".")
     ap.add_argument("--out", default="gpu/results.json")
@@ -163,7 +166,9 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"device={device}  snp_pca={a.snp_pca}  use_demo={not a.no_demo}  "
           f"log_every={a.log_every}", flush=True)
-    data = FaceConData(root=a.root, snp_pca=a.snp_pca, device=device, features=a.features)
+    extra = {**({"seed": a.seed} if a.seed is not None else {}),
+             **({"split_seed": a.split_seed} if a.split_seed is not None else {})}
+    data = FaceConData(root=a.root, snp_pca=a.snp_pca, device=device, features=a.features, **extra)
     print(f"features={a.features}", flush=True)
     print(f"N={data.N} M={data.M} P={data.P} D={data.D} K={data.K} "
           f"splits={len(data.tr)}/{len(data.va)}/{len(data.te)}", flush=True)

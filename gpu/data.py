@@ -27,7 +27,7 @@ def _find(path_candidates):
 class FaceConData:
     def __init__(self, root=".", snp_pca=256, device="cpu", seed=20261016,
                  identity_scale=None, features="pca", data_dir="outputs/real_match",
-                 train_n=None, permute_snps=False):
+                 train_n=None, permute_snps=False, split_seed=None):
         self.device = device
         if identity_scale is None:                      # read it from the config
             import yaml
@@ -44,6 +44,19 @@ class FaceConData:
         self.demo = d["demographics"].astype(np.float32)       # (N, D)
         self.beta = d["face_params"].astype(np.float32)        # (N, K) target
         self.tr = d["split_train"]; self.va = d["split_val"]; self.te = d["split_test"]
+        if split_seed is not None:
+            # Re-draw train/val/test exactly as scripts/generate_matched._make_splits does,
+            # from the named "splits" stream. split_seed == the cohort's own seed reproduces
+            # the stored split bit-for-bit (tests/test_seeds.py); other values resample it.
+            import yaml
+            from src.common import rng_for
+            cfgp = os.path.join(root, "config/real_match.yaml")
+            sp = yaml.safe_load(open(cfgp))["split"] if os.path.isfile(cfgp) else {"train": .7, "val": .15}
+            n = len(self.beta)
+            idx = rng_for(int(split_seed), "splits").permutation(n)
+            ntr, nva = int(sp["train"] * n), int(sp["val"] * n)
+            self.tr, self.va, self.te = (np.sort(idx[:ntr]), np.sort(idx[ntr:ntr + nva]),
+                                         np.sort(idx[ntr + nva:]))
         if permute_snps:        # NEGATIVE CONTROL: break the genotype<->face pairing
             self.geno = self.geno[np.random.default_rng(seed + 1).permutation(len(self.geno))]
         if train_n and train_n < len(self.tr):   # learning curve: nested train subsets,

@@ -249,9 +249,17 @@ def _make_splits(cfg, n):
             "test": np.sort(idx[n_tr + n_va:])}
 
 
-def main(cfg_path):
+def main(cfg_path, seed=None, out_dir=None, force=False):
     cfg = load_config(cfg_path)
-    out = cfg["data"]["out_dir"]
+    if seed is not None:                 # a replicate cohort: same design, independent draws
+        cfg["seed"] = int(seed)
+    out = out_dir or cfg["data"]["out_dir"]
+    tracked = os.path.normpath(os.path.join(ROOT, "outputs", "real_match"))
+    if (os.path.normpath(os.path.abspath(out)) == tracked
+            and os.path.isfile(os.path.join(tracked, "dataset.npz")) and not force):
+        raise SystemExit("refusing to overwrite outputs/real_match: it is the tracked dataset behind "
+                         "gpu/report_back.json and tests/test_audit.py. Write elsewhere (--out-dir), "
+                         "or pass --force if you really mean to regenerate it.")
     os.makedirs(out, exist_ok=True)
     fm = load_face_model(cfg)
     k = fm.n_dims
@@ -396,4 +404,11 @@ def main(cfg_path):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "config/real_match.yaml")
+    import argparse
+    ap = argparse.ArgumentParser(description="Generate a matched cohort (simulated faces).")
+    ap.add_argument("config", nargs="?", default="config/real_match.yaml")
+    ap.add_argument("--seed", type=int, default=None, help="override the config seed (replicate cohort)")
+    ap.add_argument("--out-dir", default=None, help="override data.out_dir")
+    ap.add_argument("--force", action="store_true", help="allow overwriting outputs/real_match")
+    a = ap.parse_args()
+    main(a.config, seed=a.seed, out_dir=a.out_dir, force=a.force)
