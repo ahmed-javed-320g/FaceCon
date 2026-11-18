@@ -170,6 +170,13 @@ def main():
             raise SystemExit("no panel SNP lies near any lead; the comparison cannot run")
         return d, near
 
+    rng = np.random.default_rng(a.seed)
+    out = {"n_leads_found": len(leads), "ld_window_bp": a.ld_window,
+           "n_random_panels": a.n_random_panels, "arms": {}}
+    arms = {"published_effects": (a.data_dir, a.config)}
+    if a.control_dir:
+        arms["control"] = (a.control_dir, a.control_config or a.config)
+
     for name, (ddir, cfgp) in arms.items():
         d, near = panels_for(ddir, cfgp)
         G = d["genotypes"].astype(np.float64)
