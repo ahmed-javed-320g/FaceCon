@@ -46,42 +46,51 @@ SURVEY_CSV = HOST + "/google_surveys/1/download"                # trait survey e
 UA = {"User-Agent": "FaceCon-FYP/1.0 (academic; contact via repository)"}
 
 
+PGP_HOSTS = ("my.pgp-hms.org", "my.personalgenomes.org")
+CERT_NAME = "my.personalgenomes.org"   # the only name their certificate covers
+
+
+class _PinnedHTTPSConnection(http.client.HTTPSConnection):
+    """An HTTPS connection whose certificate is checked against CERT_NAME.
+
+    http.client.HTTPSConnection takes no server_hostname argument -- an earlier version
+    of this file passed one and raised TypeError on every request. The name used for
+    both SNI and verification is chosen inside connect(), so that is what is overridden.
+    HTTPConnection.connect() is called rather than the HTTPS one so the socket is opened
+    (and any proxy CONNECT tunnel established) without the default wrapping, then the
+    socket is wrapped once with the pinned name.
+    """
+
+    def connect(self):
+        http.client.HTTPConnection.connect(self)               # TCP, plus proxy tunnel
+        self.sock = self._context.wrap_socket(self.sock, server_hostname=CERT_NAME)
+
+
 class _PinnedHTTPSHandler(urllib.request.HTTPSHandler):
-    """Reach my.pgp-hms.org while verifying its certificate against my.personalgenomes.org.
+    """Verify the PGP hosts against CERT_NAME; verify every other host normally.
 
     The site is in a deadlock of its own making: my.personalgenomes.org 301s to
     my.pgp-hms.org, and my.pgp-hms.org serves a Let's Encrypt certificate whose only
-    subject is my.personalgenomes.org. One of the two names must therefore be used
-    against a certificate that does not name it, or the data cannot be fetched at all.
+    subject is my.personalgenomes.org. One of the two names must be used against a
+    certificate that does not name it, or the data cannot be fetched at all.
 
-    What this does NOT do is disable verification. The certificate is still required to
-    be currently valid and to chain to a trusted CA; only the name checked against it is
-    pinned to my.personalgenomes.org, which is the name the operator actually certified
-    and which their own redirect declares canonical. The residual assumption is that
-    these two hostnames are one service -- which that redirect is evidence for -- and an
-    impostor would still need a CA-issued certificate for personalgenomes.org, that is,
-    control of that domain.
-
-    The scope is deliberately narrow: this handler is used only for the PGP hosts, the
-    data is public CC0 genotype and survey data, nothing is uploaded, and no credential
-    is ever sent. A blanket ssl._create_unverified_context would have covered the whole
-    process and accepted any certificate from anyone, which is why it is not used here.
+    This does NOT disable verification. The certificate must still be currently valid
+    and chain to a trusted CA; only the name it is checked against is pinned, to the
+    name the operator actually certified and their own redirect declares canonical. The
+    residual assumption is that the two hostnames are one service, which that redirect
+    is evidence for, and an impostor would still need a CA-issued certificate for
+    personalgenomes.org, meaning control of that domain. A blanket unverified context
+    would have covered this whole process and accepted any certificate from anyone.
     """
 
     def __init__(self):
-        ctx = ssl.create_default_context()                     # verification stays ON
-        super().__init__(context=ctx)
+        super().__init__(context=ssl.create_default_context())  # verification stays ON
 
     def https_open(self, req):
-        if req.host.split(":")[0] in ("my.pgp-hms.org", "my.personalgenomes.org"):
-            req.host = req.host.replace("my.personalgenomes.org", "my.pgp-hms.org")
-
-            def build(host, **kw):
-                kw.pop("server_hostname", None)
-                return http.client.HTTPSConnection(
-                    host, context=self._context, server_hostname=CERT_NAME, **kw)
-            return self.do_open(build, req)
-        return self.do_open(http.client.HTTPSConnection, req, context=self._context)
+        # Under a proxy, req.host is the proxy and the real target is _tunnel_host.
+        target = (getattr(req, "_tunnel_host", None) or req.host).split(":")[0]
+        conn = _PinnedHTTPSConnection if target in PGP_HOSTS else http.client.HTTPSConnection
+        return self.do_open(conn, req, context=self._context)
 
 
 class _StayOnValidHost(urllib.request.HTTPRedirectHandler):
@@ -102,7 +111,6 @@ class _StayOnValidHost(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-CERT_NAME = "my.personalgenomes.org"   # the only name their certificate covers
 _OPENER = urllib.request.build_opener(_PinnedHTTPSHandler, _StayOnValidHost)
 
 
