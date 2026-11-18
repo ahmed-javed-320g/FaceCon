@@ -1,6 +1,6 @@
 """Download Harvard Personal Genome Project data for the eye-colour check (RQ5).
 
-The PGP (pgp.med.harvard.edu) publishes participant-contributed genotype files and
+The PGP (pgp.med.harvard.edu, data at my.personalgenomes.org) publishes participant-contributed genotype files and
 survey responses under CC0, with no application or data-use agreement. That makes it the
 only open source the project can use to test HIrisPlex-S against self-reported human
 phenotypes. It is NOT a substitute for 3DFN: it has no 3D face scans, so it says nothing
@@ -35,8 +35,12 @@ import sys
 import time
 import urllib.request
 
-PROFILE_INDEX = "https://my.pgp-hms.org/public_genetic_data?utf8=%E2%9C%93&data_type=23andMe"
-SURVEY_CSV = "https://my.pgp-hms.org/google_surveys/1/download"   # trait survey export
+HOST = "https://my.personalgenomes.org"   # my.pgp-hms.org still resolves here, but its
+                                         # certificate covers only this name, so the old
+                                         # hostname fails verification. Not a reason to
+                                         # disable verification: it is a domain migration.
+PROFILE_INDEX = HOST + "/public_genetic_data?utf8=%E2%9C%93&data_type=23andMe"
+SURVEY_CSV = HOST + "/google_surveys/1/download"                # trait survey export
 UA = {"User-Agent": "FaceCon-FYP/1.0 (academic; contact via repository)"}
 
 
@@ -82,7 +86,7 @@ def fetch_surveys(out_dir):
         raw = _get(SURVEY_CSV)
     except Exception as e:                                        # noqa: BLE001
         print(f"survey export unavailable ({type(e).__name__}: {e}).", file=sys.stderr)
-        print("Download the trait survey by hand from my.pgp-hms.org and save it as "
+        print("Download the trait survey by hand from my.personalgenomes.org and save it as "
               f"{os.path.join(out_dir, 'surveys.csv')}.", file=sys.stderr)
         return None
     path = os.path.join(out_dir, "surveys.csv")
@@ -104,7 +108,7 @@ def fetch_genotypes(rows, out_dir, limit):
         if got >= limit:
             break
         try:
-            data = _get(r["url"], retries=2)
+            data = _get(r["url"] if r["url"].startswith("http") else HOST + r["url"], retries=2)
         except Exception as e:                                    # noqa: BLE001
             print(f"  skip {r['participant']}: {type(e).__name__}", file=sys.stderr)
             continue
