@@ -1,25 +1,46 @@
 """RQ4: do the published Shaffer loci beat frequency-matched random panels?
 
 This runs on 1000 Genomes genotypes with effects planted at the published Shaffer et al.
-(2016) lead SNPs and their linkage neighbours. It tests the panel machinery -- that a
-panel carrying planted effects is recoverable above panels that do not -- and says
-nothing about whether those loci predict real faces. The faces are simulated and the
-effects are ours.
+(2016) lead SNPs. It tests the panel machinery -- that a panel carrying planted effects
+is recoverable above panels that do not -- and says nothing about whether those loci
+predict real faces. The effects are ours.
+
+THE TARGET IS THE ANTHROPOMETRIC MEASURES, NOT THE SHAPE VECTOR. The generator injects
+the published-locus effects onto the 20 measurements only, and says so explicitly:
+"the shape target beta, and so every shape model, is unaffected by them"
+(scripts/generate_matched.py, _inject_gwas_effects). Scoring these panels against
+face_params would therefore return a null whatever the panels contained, and that null
+would look exactly like a real negative result. An earlier version of this script made
+that mistake.
+
+The lead SNPs are also not columns of `genotypes`. They are extracted separately from
+the named-variant file into `gwas_markers`, while `genotypes` holds the 100k panel. So
+a published panel is assembled from both files, and two versions of it are scored:
+
+  leads + neighbours   the lead SNPs themselves plus every panel SNP within the window.
+                       The effects were planted ON the leads, so this arm is close to
+                       tautological: it confirms the planting and the scoring work, and
+                       little else. It is reported for completeness and should not be
+                       read as evidence that published loci are predictive.
+  neighbours only      panel SNPs near the leads, with the leads removed. This is the
+                       informative arm, and the realistic one: a genotyping chip rarely
+                       carries the lead SNP itself, so what a real study has is linkage.
+                       A gain here means linkage carried the signal.
 
 Protocol, frozen in PREREGISTRATION.md section 7:
 
-  measure    cov+PC gain of a ridge on the published-loci panel
+  measure    cov gain of a ridge on the published-loci panel
   reference  100 random panels matched on panel size and allele-frequency bin
   report     the published panel's percentile in that null
-  control    the same comparison on a cohort whose effects are planted at RANDOM
-             loci, where the published panel must sit near the median
+  control    a cohort where the published loci carry nothing, in which the published
+             panel must sit near the median
 
 The control is the part that could fail. Without it, a published panel beating random
 panels would be explained just as well by the panel being bigger, commoner, or better
-imputed than the random draws -- all of which the frequency matching is meant to remove
-but none of which it can be assumed to remove.
+imputed than the random draws.
 
-    python scripts/rq4_panels.py --data-dir outputs/kg --out gpu/rq4_panels.json
+    python scripts/rq4_panels.py --data-dir outputs/kg --control-dir outputs/kg_noeffects \
+        --config config/kg.yaml --out gpu/rq4_panels.json
 """
 from __future__ import annotations
 
@@ -132,72 +153,82 @@ def main():
     leads = [s for s in B["shaffer_snps"] if s.get("found")]
     print(f"{len(leads)} published lead SNPs located in the cohort")
 
-    def published_panel(data_dir, cfg_path):
+    def panels_for(data_dir, cfg_path):
         d, chrom, pos = load(data_dir, cfg_path)
-        sel, n_lead = set(), 0
+        near = set()
+        n_lead = 0
         for rec in leads:
             c = _norm_chrom(rec["chrom"])
-            hit = np.flatnonzero((chrom == c) & (pos == float(rec["pos"])))
-            if hit.size:
-                sel.update(hit.tolist()); n_lead += 1
-            near = np.flatnonzero((chrom == c) & (np.abs(pos - float(rec["pos"])) <= a.ld_window))
-            sel.update(near.tolist())
-        print(f"  {data_dir}: {n_lead} of {len(leads)} lead SNPs matched by position, "
-              f"{len(sel)} SNPs in the panel once linkage neighbours are added")
-        if n_lead == 0:
-            raise SystemExit(
-                "no lead SNP matched by chromosome and position. The panel would be empty, so the "
-                "comparison cannot run. Bundle chromosomes look like "
-                f"{sorted(set(chrom))[:8]}; the build report expects "
-                f"{sorted({_norm_chrom(r['chrom']) for r in leads})[:8]}.")
-        return d, np.array(sorted(sel), int)
-
-    rng = np.random.default_rng(a.seed)
-    out = {"n_leads_found": len(leads), "ld_window_bp": a.ld_window,
-           "n_random_panels": a.n_random_panels, "arms": {}}
-
-    arms = {"published_effects": (a.data_dir, a.config)}
-    if a.control_dir:
-        arms["random_effects_control"] = (a.control_dir, a.control_config or a.config)
+            hits = np.flatnonzero((chrom == c) & (np.abs(pos - float(rec["pos"])) <= a.ld_window))
+            if hits.size:
+                n_lead += 1
+                near.update(hits.tolist())
+        near = np.array(sorted(near), int)
+        print(f"  {data_dir}: {n_lead} of {len(leads)} leads have panel SNPs within "
+              f"{a.ld_window//1000} kb; {len(near)} neighbour SNPs")
+        if len(near) == 0:
+            raise SystemExit("no panel SNP lies near any lead; the comparison cannot run")
+        return d, near
 
     for name, (ddir, cfgp) in arms.items():
-        d, panel = published_panel(ddir, cfgp)
-        G = np.nan_to_num(d["genotypes"].astype(np.float64),
-                          nan=np.nanmean(d["genotypes"].astype(np.float64)))
-        y = d["face_params"].astype(np.float64)
-        tr, te = splits_of(d)
+        d, near = panels_for(ddir, cfgp)
+        G = d["genotypes"].astype(np.float64)
+        G = np.where(G < 0, np.nan, G)
+        G = np.where(np.isnan(G), np.nanmean(G, 0, keepdims=True), G)
+        L = d["gwas_markers"].astype(np.float64)                  # the leads themselves
+        L = np.where(L < 0, np.nan, L)
+        L = np.where(np.isnan(L), np.nanmean(L, 0, keepdims=True), L)
+        y = d["anthro_measures"].astype(np.float64)               # <-- where the effects live
+        y = (y - y.mean(0)) / (y.std(0) + 1e-9)
         X_cov = d["demographics"].astype(np.float64)
+        tr, te = splits_of(d)
         bins, maf = freq_bins(G)
 
         (pb,) = _ridge_fit_predict(X_cov[tr], y[tr], [X_cov[te]], a.alpha)
         base_r2 = r2(y[te], pb)
-        obs = panel_gain(G, X_cov, y, panel, tr, te, a.alpha, base_r2)
-        null = []
-        for i in range(a.n_random_panels):
-            rp = matched_panel(bins, panel, rng, forbid=panel)
-            null.append(panel_gain(G, X_cov, y, rp, tr, te, a.alpha, base_r2))
-            if (i + 1) % 25 == 0:
-                print(f"  {name}: {i+1}/{a.n_random_panels} random panels")
-        null = np.array(null)
-        pct = float((null < obs).mean() * 100)
-        out["arms"][name] = {
-            "panel_size": int(len(panel)), "gain": float(obs),
-            "random_panel_gain_mean": float(null.mean()), "random_panel_gain_sd": float(null.std(ddof=1)),
-            "random_panel_p05": float(np.percentile(null, 5)),
-            "random_panel_p95": float(np.percentile(null, 95)),
-            "percentile": pct,
-            "mean_maf_published": float(maf[panel].mean())}
-        print(f"{name}: panel {len(panel)} SNPs, gain {obs:+.4f}, random "
-              f"{null.mean():+.4f}+-{null.std(ddof=1):.4f}, percentile {pct:.1f}")
 
+        def gain(extra):
+            X = np.hstack([X_cov, extra])
+            (pf,) = _ridge_fit_predict(X[tr], y[tr], [X[te]], a.alpha)
+            return r2(y[te], pf) - base_r2
+
+        out["arms"][name] = {"baseline_r2": float(base_r2), "n_neighbours": int(len(near)),
+                             "n_leads": int(L.shape[1]), "versions": {}}
+        for ver, extra, size in (("leads + neighbours", np.hstack([L, G[:, near]]), len(near) + L.shape[1]),
+                                 ("neighbours only", G[:, near], len(near))):
+            obs = gain(extra)
+            null = []
+            for i in range(a.n_random_panels):
+                rp = matched_panel(bins, near, rng, forbid=near)
+                if size > len(rp):                                # pad to equal width
+                    pool = np.setdiff1d(np.arange(G.shape[1]), np.union1d(rp, near))
+                    rp = np.concatenate([rp, rng.choice(pool, size - len(rp), replace=False)])
+                null.append(gain(G[:, rp[:size]]))
+                if (i + 1) % 25 == 0:
+                    print(f"    {name} / {ver}: {i+1}/{a.n_random_panels}", flush=True)
+            null = np.array(null)
+            pct = float((null < obs).mean() * 100)
+            out["arms"][name]["versions"][ver] = {
+                "panel_size": int(size), "gain": float(obs),
+                "random_mean": float(null.mean()), "random_sd": float(null.std(ddof=1)),
+                "random_p05": float(np.percentile(null, 5)), "random_p95": float(np.percentile(null, 95)),
+                "percentile": pct}
+            print(f"  {name:26s} {ver:20s} gain {obs:+.4f}  random {null.mean():+.4f}"
+                  f"+-{null.std(ddof=1):.4f}  percentile {pct:.1f}")
+
+    out["target"] = ("anthro_measures: the published-locus effects are injected onto the "
+                     "measurements only, never onto face_params")
     acc = {}
     if "published_effects" in out["arms"]:
-        acc["published panel above the 95th percentile of matched-random panels"] = \
-            bool(out["arms"]["published_effects"]["percentile"] >= 95)
-    if "random_effects_control" in out["arms"]:
-        p = out["arms"]["random_effects_control"]["percentile"]
-        acc["control: published panel near the median (25-75) when effects are at random loci"] = \
-            bool(25 <= p <= 75)
+        v = out["arms"]["published_effects"]["versions"]
+        acc["leads + neighbours above the 95th percentile (near-tautological: confirms planting)"] = \
+            bool(v["leads + neighbours"]["percentile"] >= 95)
+        acc["neighbours only above the 95th percentile (the informative arm: linkage carries it)"] = \
+            bool(v["neighbours only"]["percentile"] >= 95)
+    if "control" in out["arms"]:
+        for ver, vv in out["arms"]["control"]["versions"].items():
+            acc[f"control, {ver}: near the median (25-75) when the loci carry nothing"] = \
+                bool(25 <= vv["percentile"] <= 75)
     else:
         acc["control NOT RUN: pass --control-dir, the result is uninterpretable without it"] = False
     out["acceptance"] = acc
