@@ -36,19 +36,29 @@ sys.path.insert(0, ROOT)
 from gpu.controls import _ridge_fit_predict, r2  # noqa: E402
 
 
-def load(data_dir):
+def load(data_dir, cfg_path):
+    """Dataset plus the rsid/chrom/pos arrays, which live in the genotype bundle.
+
+    dataset.npz stores the genotype matrix but not the variant identifiers; those stay
+    in the 1000 Genomes bundle named by the config's data.genotype_source, as snp_id,
+    chrom and pos. The two are column-aligned by construction, and that is checked here
+    rather than assumed, because a silent misalignment would put the published panel at
+    the wrong columns and quietly produce a null result.
+    """
+    from src.common import load_config
     d = np.load(os.path.join(data_dir, "dataset.npz"), allow_pickle=True)
-    rsids = None
-    for k in ("snp_ids", "rsids", "snp_rsids"):
-        if k in d.files:
-            rsids = np.array([str(x) for x in d[k]])
-            break
-    if rsids is None:
-        meta = d["meta"].item() if "meta" in d.files else {}
-        rsids = np.array([str(x) for x in meta.get("snp_ids", [])])
-    if len(rsids) != d["genotypes"].shape[1]:
-        raise SystemExit(f"no rsid list matching {d['genotypes'].shape[1]} SNPs in {data_dir}/dataset.npz")
-    return d, rsids
+    src = load_config(cfg_path)["data"].get("genotype_source")
+    if not src:
+        raise SystemExit(f"{cfg_path} has no data.genotype_source, so there are no rsids to match")
+    if not os.path.isabs(src):
+        src = os.path.join(ROOT, src)
+    B = np.load(src, allow_pickle=True)
+    rsids = np.array([str(x) for x in B["snp_id"]])
+    n = d["genotypes"].shape[1]
+    if len(rsids) != n:
+        raise SystemExit(f"{len(rsids)} rsids in the bundle against {n} SNP columns in "
+                         f"{data_dir}/dataset.npz: the two are not column-aligned")
+    return d, rsids, np.array([str(x) for x in B["chrom"]]), np.asarray(B["pos"], float)
 
 
 def freq_bins(G, n_bins=10):
@@ -92,6 +102,10 @@ def main():
     ap.add_argument("--data-dir", default="outputs/kg")
     ap.add_argument("--control-dir", default=None,
                     help="cohort with effects planted at RANDOM loci; required for the control")
+    ap.add_argument("--config", default="config/kg.yaml",
+                    help="config of --data-dir; its data.genotype_source supplies the rsids")
+    ap.add_argument("--control-config", default=None,
+                    help="config of --control-dir, if different from --config")
     ap.add_argument("--build-report", default="gpu/build_report_kg.json")
     ap.add_argument("--n-random-panels", type=int, default=100)
     ap.add_argument("--ld-window", type=int, default=250_000,
@@ -105,31 +119,29 @@ def main():
     leads = [s for s in B["shaffer_snps"] if s.get("found")]
     print(f"{len(leads)} published lead SNPs located in the cohort")
 
-    def published_panel(data_dir):
-        d, rsids = load(data_dir)
-        pos = d["snp_pos"] if "snp_pos" in d.files else None
-        chrom = d["snp_chrom"] if "snp_chrom" in d.files else None
+    def published_panel(data_dir, cfg_path):
+        d, rsids, chrom, pos = load(data_dir, cfg_path)
         idx = {r: i for i, r in enumerate(rsids)}
-        sel = set()
-        for s in leads:
-            if s["rsid"] in idx:
-                sel.add(idx[s["rsid"]])
-                if pos is not None and chrom is not None:         # linkage neighbours by position
-                    near = np.flatnonzero((chrom.astype(str) == str(s["chrom"]))
-                                          & (np.abs(pos.astype(float) - float(s["pos"])) <= a.ld_window))
-                    sel.update(near.tolist())
+        sel, n_lead = set(), 0
+        for rec in leads:
+            if rec["rsid"] in idx:
+                sel.add(idx[rec["rsid"]]); n_lead += 1
+                near = np.flatnonzero((chrom == str(rec["chrom"]))   # linkage neighbours by position
+                                      & (np.abs(pos - float(rec["pos"])) <= a.ld_window))
+                sel.update(near.tolist())
+        print(f"  {data_dir}: {n_lead} lead SNPs matched, {len(sel)} SNPs in the panel with neighbours")
         return d, np.array(sorted(sel), int)
 
     rng = np.random.default_rng(a.seed)
     out = {"n_leads_found": len(leads), "ld_window_bp": a.ld_window,
            "n_random_panels": a.n_random_panels, "arms": {}}
 
-    arms = {"published_effects": a.data_dir}
+    arms = {"published_effects": (a.data_dir, a.config)}
     if a.control_dir:
-        arms["random_effects_control"] = a.control_dir
+        arms["random_effects_control"] = (a.control_dir, a.control_config or a.config)
 
-    for name, ddir in arms.items():
-        d, panel = published_panel(ddir)
+    for name, (ddir, cfgp) in arms.items():
+        d, panel = published_panel(ddir, cfgp)
         G = np.nan_to_num(d["genotypes"].astype(np.float64),
                           nan=np.nanmean(d["genotypes"].astype(np.float64)))
         y = d["face_params"].astype(np.float64)
