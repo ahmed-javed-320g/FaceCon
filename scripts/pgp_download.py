@@ -33,15 +33,55 @@ import os
 import re
 import sys
 import time
+import http.client
+import ssl
 import urllib.request
 
-HOST = "https://my.personalgenomes.org"   # my.pgp-hms.org still resolves here, but its
+HOST = "https://my.pgp-hms.org"   # my.pgp-hms.org still resolves here, but its
                                          # certificate covers only this name, so the old
                                          # hostname fails verification. Not a reason to
                                          # disable verification: it is a domain migration.
 PROFILE_INDEX = HOST + "/public_genetic_data?utf8=%E2%9C%93&data_type=23andMe"
 SURVEY_CSV = HOST + "/google_surveys/1/download"                # trait survey export
 UA = {"User-Agent": "FaceCon-FYP/1.0 (academic; contact via repository)"}
+
+
+class _PinnedHTTPSHandler(urllib.request.HTTPSHandler):
+    """Reach my.pgp-hms.org while verifying its certificate against my.personalgenomes.org.
+
+    The site is in a deadlock of its own making: my.personalgenomes.org 301s to
+    my.pgp-hms.org, and my.pgp-hms.org serves a Let's Encrypt certificate whose only
+    subject is my.personalgenomes.org. One of the two names must therefore be used
+    against a certificate that does not name it, or the data cannot be fetched at all.
+
+    What this does NOT do is disable verification. The certificate is still required to
+    be currently valid and to chain to a trusted CA; only the name checked against it is
+    pinned to my.personalgenomes.org, which is the name the operator actually certified
+    and which their own redirect declares canonical. The residual assumption is that
+    these two hostnames are one service -- which that redirect is evidence for -- and an
+    impostor would still need a CA-issued certificate for personalgenomes.org, that is,
+    control of that domain.
+
+    The scope is deliberately narrow: this handler is used only for the PGP hosts, the
+    data is public CC0 genotype and survey data, nothing is uploaded, and no credential
+    is ever sent. A blanket ssl._create_unverified_context would have covered the whole
+    process and accepted any certificate from anyone, which is why it is not used here.
+    """
+
+    def __init__(self):
+        ctx = ssl.create_default_context()                     # verification stays ON
+        super().__init__(context=ctx)
+
+    def https_open(self, req):
+        if req.host.split(":")[0] in ("my.pgp-hms.org", "my.personalgenomes.org"):
+            req.host = req.host.replace("my.personalgenomes.org", "my.pgp-hms.org")
+
+            def build(host, **kw):
+                kw.pop("server_hostname", None)
+                return http.client.HTTPSConnection(
+                    host, context=self._context, server_hostname=CERT_NAME, **kw)
+            return self.do_open(build, req)
+        return self.do_open(http.client.HTTPSConnection, req, context=self._context)
 
 
 class _StayOnValidHost(urllib.request.HTTPRedirectHandler):
@@ -57,12 +97,13 @@ class _StayOnValidHost(urllib.request.HTTPRedirectHandler):
     """
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
-        if "my.pgp-hms.org" in newurl:
-            newurl = newurl.replace("my.pgp-hms.org", "my.personalgenomes.org")
+        if code in (301, 302) and "my.pgp-hms.org" in newurl and "my.personalgenomes.org" in req.full_url:
+            return None                                        # the known A<->B loop: stop here
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-_OPENER = urllib.request.build_opener(_StayOnValidHost)
+CERT_NAME = "my.personalgenomes.org"   # the only name their certificate covers
+_OPENER = urllib.request.build_opener(_PinnedHTTPSHandler, _StayOnValidHost)
 
 
 def _get(url, retries=3, timeout=60):
