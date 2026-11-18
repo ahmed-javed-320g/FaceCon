@@ -167,3 +167,126 @@ gpu/controls.json, gpu/report_back.json    simulated-cohort results
 data_prep/README_1KG.md       building the real-genotype panel
 EVALUATION.md                 what is verified and what is not
 ```
+
+---
+
+# The GPU round (Track A, remaining)
+
+Everything else in Track A is done and committed. These six steps need either a GPU or
+network access the build sandbox does not have. Run them from the repository root on the
+GPU machine, with the repository up to date (`git pull`).
+
+Nothing here overwrites a committed result. Every step writes a new file. If a step
+fails, the later steps do not depend on it except where noted.
+
+## 0. Update and check
+
+```bash
+git pull
+python -m pytest -q                 # expect 44 passed
+```
+
+## 1. The mixed architecture on real genotypes (~30 min)
+
+The architecture arms in Chapter 8 are on the simulated panel. This repeats the mixed
+arm on the 1000 Genomes panel, where the SNPs are correlated and the structure is
+continuous, which is the harder case.
+
+```bash
+python scripts/generate_matched.py config/kg_na_mix.yaml --out-dir outputs/kg_na_mix
+python -m gpu.controls --config config/kg_na_mix.yaml --na-rows --out gpu/controls_kg_na_mix.json
+```
+
+Read: the gap between ORACLE and ORACLE-NA. On the simulated panel the additive oracle
+recovered about a third of what the true coding recovered. If linkage closes that gap,
+that is a finding worth reporting; if it does not, that is equally worth reporting.
+
+## 2. Replicate cohorts for the mixed arm (~20 min)
+
+Three independently generated cohorts, so the neural comparison in step 3 gets a paired
+interval rather than one split's luck.
+
+```bash
+for s in 11 12 13; do
+  python scripts/generate_matched.py config/na_mix.yaml --seed $s --out-dir outputs/na_mix_s$s
+done
+```
+
+## 3. Neural models on non-additive signal (several hours, GPU)
+
+**This is the one result the report explicitly marks as open.** Chapter 8 says the
+linear reference wins on additive signal and that whether it still wins on non-additive
+signal has not been tested. This tests it, and both outcomes are publishable.
+
+```bash
+python -m gpu.run_all \
+  --data-dirs outputs/na_mix_s11,outputs/na_mix_s12,outputs/na_mix_s13 \
+  --feature-sets screen,screen_na \
+  --models mlp,transformer \
+  --out gpu/run_all_na_mix.json
+```
+
+Read: `max(neural) - ridge_demo_snp` on `screen_na`, as the pre-registration's primary
+comparison defines it, with the t interval across the three cohorts. A neural model that
+beats ridge here, having lost on additive signal, is the clearest case for the nets in
+the project.
+
+## 4. Regions and subgroups on real genotypes (~15 min)
+
+```bash
+python scripts/rq6_rq7.py --data-dir outputs/kg \
+  --group-names AFR,AMR,EAS,EUR,SAS --with-mlp --out gpu/rq6_rq7_kg.json
+```
+
+Read: whether the relative regional gains are still flat once the genotypes are real.
+The flat profile on simulated data is what a uniformly planted signal predicts, so it
+tests the measurement, not the biology.
+
+## 5. RQ4, published loci against matched-random panels (~45 min)
+
+The control is not optional. Without `--control-dir` the script marks its own output
+FAILED, because a published panel beating random panels is explained just as well by the
+panel being bigger or commoner unless a cohort with effects at random loci shows the
+comparison is fair.
+
+```bash
+python scripts/generate_matched.py config/kg.yaml --seed 77 --out-dir outputs/kg_randomloci
+python scripts/rq4_panels.py --data-dir outputs/kg --control-dir outputs/kg_randomloci \
+  --out gpu/rq4_panels.json
+```
+
+Read: the published panel's percentile in the matched-random null, and the control's
+percentile, which must land near the median. If the control does not, the main number
+means nothing and should not be reported.
+
+## 6. Harvard PGP eye colour (~1 hour, mostly download)
+
+Needs ordinary internet access. PGP data is CC0 with no data-use agreement. It has no
+face scans, so it tests the colour component only.
+
+```bash
+python scripts/pgp_download.py --out data/pgp --max-participants 400
+python scripts/pgp_eye_check.py --dir data/pgp --out gpu/pgp_eye.json
+```
+
+If the survey export 404s, the script says so and asks for the trait survey to be saved
+by hand as `data/pgp/surveys.csv`; the rest still runs. `data/pgp/` is gitignored —
+commit `gpu/pgp_eye.json` only, which holds aggregates and no individual's data.
+
+Read: blue-vs-rest AUC against the pre-registered 0.70, and whether it sits outside the
+1000-shuffle null. A low AUC here is a real result about a published model on consumer
+chips, not a failure of this project, and should be reported as such.
+
+## 7. Bring the results back
+
+```bash
+git add gpu/controls_kg_na_mix.json gpu/run_all_na_mix.json gpu/rq6_rq7_kg.json \
+        gpu/rq4_panels.json gpu/pgp_eye.json
+git commit -m "GPU round results"
+git push
+```
+
+Then the report needs Chapter 8 extended with steps 1, 3, 5 and 6, and the RQ status
+table updated: RQ4 and RQ8 move off "not yet answered", and RQ5 gains the non-additive
+neural comparison. PREREGISTRATION.md gets an addendum for anything that came out
+against its stated expectation — as Addenda A1 and A2 already do.
