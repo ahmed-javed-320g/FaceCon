@@ -54,7 +54,7 @@ import numpy as np
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from gpu.controls import _ridge_fit_predict, r2  # noqa: E402
+from gpu.controls import ALPHAS, _ridge_fit_predict, r2  # noqa: E402
 
 
 def _norm_chrom(x):
@@ -96,18 +96,30 @@ def splits_of(d):
 
 
 def freq_bins(G, n_bins=10):
-    """Allele-frequency decile per SNP, from the cohort's own frequencies."""
+    """Allele-frequency decile per SNP, plus the edges, from the cohort's own frequencies."""
     f = np.nanmean(G, 0) / 2.0
     f = np.minimum(f, 1 - f)                                      # fold to MAF
     edges = np.quantile(f[np.isfinite(f)], np.linspace(0, 1, n_bins + 1))
     edges[-1] += 1e-9
-    return np.clip(np.digitize(f, edges[1:-1]), 0, n_bins - 1), f
+    return np.clip(np.digitize(f, edges[1:-1]), 0, n_bins - 1), f, edges
 
 
-def matched_panel(bins, panel_idx, rng, forbid):
-    """A random panel with the same per-bin composition as `panel_idx`, avoiding `forbid`."""
+def bin_of(M, edges, n_bins=10):
+    """Bin a separate marker matrix onto the panel's frequency edges."""
+    f = np.nanmean(M, 0) / 2.0
+    f = np.minimum(f, 1 - f)
+    return np.clip(np.digitize(f, edges[1:-1]), 0, n_bins - 1)
+
+
+def matched_panel(bins, target_bins, rng, forbid):
+    """A random panel from the panel SNPs with the same per-bin composition as `target_bins`.
+
+    `target_bins` is the bin of every SNP in the panel being matched, which may come from
+    a different file (the lead markers do), so it is passed as bin values rather than as
+    column indices.
+    """
     out = []
-    for b, want in zip(*np.unique(bins[panel_idx], return_counts=True)):
+    for b, want in zip(*np.unique(target_bins, return_counts=True)):
         pool = np.setdiff1d(np.flatnonzero(bins == b), forbid, assume_unique=False)
         if len(pool) < want:                                      # bin too small: take all
             out.append(pool)
@@ -189,24 +201,46 @@ def main():
         y = (y - y.mean(0)) / (y.std(0) + 1e-9)
         X_cov = d["demographics"].astype(np.float64)
         tr, te = splits_of(d)
-        bins, maf = freq_bins(G)
+        bins, maf, edges = freq_bins(G)
+        lead_bins = bin_of(L, edges)
 
-        (pb,) = _ridge_fit_predict(X_cov[tr], y[tr], [X_cov[te]], a.alpha)
-        base_r2 = r2(y[te], pb)
+        va = np.asarray(d["split_val"])
+
+        def tuned_r2(X):
+            """Ridge with alpha chosen on the validation split, as everywhere else here.
+
+            A fixed alpha is not usable for this comparison: the panels add a few hundred
+            columns to 1,801 training subjects, and an alpha suited to the covariates
+            alone overfits them so badly that every panel, published or random, scores
+            far below the covariate baseline and the comparison measures nothing. The
+            grid is gpu.controls.ALPHAS, and it is selected per panel so the published
+            panel gets no tuning advantage over the random ones.
+            """
+            best = (-1e9, None)
+            for al in ALPHAS:
+                (pv,) = _ridge_fit_predict(X[tr], y[tr], [X[va]], al)
+                v = r2(y[va], pv)
+                if v > best[0]:
+                    best = (v, al)
+            (pt,) = _ridge_fit_predict(X[tr], y[tr], [X[te]], best[1])
+            return r2(y[te], pt)
+
+        base_r2 = tuned_r2(X_cov)
 
         def gain(extra):
-            X = np.hstack([X_cov, extra])
-            (pf,) = _ridge_fit_predict(X[tr], y[tr], [X[te]], a.alpha)
-            return r2(y[te], pf) - base_r2
+            return tuned_r2(np.hstack([X_cov, extra])) - base_r2
 
         out["arms"][name] = {"baseline_r2": float(base_r2), "n_neighbours": int(len(near)),
                              "n_leads": int(L.shape[1]), "versions": {}}
-        for ver, extra, size in (("leads + neighbours", np.hstack([L, G[:, near]]), len(near) + L.shape[1]),
-                                 ("neighbours only", G[:, near], len(near))):
+        for ver, extra, tb in (("leads only", L, lead_bins),
+                               ("leads + neighbours", np.hstack([L, G[:, near]]),
+                                np.concatenate([lead_bins, bins[near]])),
+                               ("neighbours only", G[:, near], bins[near])):
+            size = len(tb)
             obs = gain(extra)
             null = []
             for i in range(a.n_random_panels):
-                rp = matched_panel(bins, near, rng, forbid=near)
+                rp = matched_panel(bins, tb, rng, forbid=near)
                 if size > len(rp):                                # pad to equal width
                     pool = np.setdiff1d(np.arange(G.shape[1]), np.union1d(rp, near))
                     rp = np.concatenate([rp, rng.choice(pool, size - len(rp), replace=False)])
@@ -228,6 +262,10 @@ def main():
     acc = {}
     if "published_effects" in out["arms"]:
         v = out["arms"]["published_effects"]["versions"]
+        acc["leads only above the 95th percentile (POSITIVE CONTROL ON THE TEST: the effects "
+            "were planted on these very SNPs, so a failure here means the test cannot detect "
+            "signal that is certainly present, and the other two lines are uninterpretable)"] = \
+            bool(v["leads only"]["percentile"] >= 95)
         acc["leads + neighbours above the 95th percentile (near-tautological: confirms planting)"] = \
             bool(v["leads + neighbours"]["percentile"] >= 95)
         acc["neighbours only above the 95th percentile (the informative arm: linkage carries it)"] = \
