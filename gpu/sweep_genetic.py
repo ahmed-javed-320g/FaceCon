@@ -88,6 +88,13 @@ def main():
     seed = int(_find(cfg, "seed", 0))
 
     # ---- draw genotypes + demographics ONCE; fixed across all shares ----
+    # KNOWN DEFECT, deliberately left unfixed (2026-11-18): this always SIMULATES
+    # genotypes and ignores data.genotype_source, so pointing the sweep at
+    # config/kg.yaml silently runs on simulated SNPs, not 1000 Genomes. The
+    # committed output (gpu/sweep_genetic.json) is a simulated-panel result and is
+    # correct as such; `python -m gpu.controls --power` covers the share sweep on
+    # real genotypes. If this sweep is ever wanted on real genotypes, fix it in its
+    # own commit and write a new output file.
     genotypes, ancestry, _, _ = _draw_genotypes(cfg)
     n = genotypes.shape[0]
     demo, demo_names = _draw_demographics(cfg, ancestry, n)
@@ -117,7 +124,13 @@ def main():
     print(hdr); print("-" * len(hdr), flush=True)
 
     def _variance_holder(d):
-        """Return the dict that holds the genetic/demographic/noise shares."""
+        """Return the dict that holds the genetic/demographic/noise shares.
+
+        Touches face_variance ONLY. That is load-bearing, not untidy: a
+        data.genetic_architecture block (dominance / epistasis fractions OF the
+        genetic share) is left alone, so its inner split stays fixed while the
+        total genetic share is swept. Do not widen this to rewrite other keys.
+        """
         if isinstance(d, dict):
             if "genetic" in d and "noise" in d:
                 return d

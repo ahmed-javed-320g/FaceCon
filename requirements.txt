@@ -5,4 +5,4 @@ scikit-learn
 trimesh
 pytest>=7
 fast-simplification
-scipy
+torch>=2.0          # scripts/export_demo.py trains the demo MLP

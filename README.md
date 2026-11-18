@@ -28,7 +28,7 @@ evaluated honestly against **demographic baselines**.
 |---|---|
 | The pipeline finds genetic signal when it exists | Planted 20% genetic share → SNPs add **+0.173 R²** over covariates + ancestry PCs (5 seeds, 95% CIs in `gpu/controls.json`) |
 | …and reports none when it does not | Genotypes permuted across subjects → **−0.001**; planted share set to zero → **−0.001** |
-| No leakage | Subject-level splits; all scaling, PCA and feature screening fit on train only; 18 tests in `tests/` |
+| No leakage | Subject-level splits; all scaling, PCA and feature screening fit on train only; 22 tests in `tests/` |
 | Known associations are recoverable | 14/14 injected real GWAS loci detected with correct sign, **0** false hits in 246 non-injected SNP×measure pairs |
 | Feature representation dominated architecture | SNP-PCA kept only +0.004 of the available +0.173; a train-only SNP screen recovered it |
 | Simple beat complex on a linear signal | Tuned ridge **0.488** vs best deep model **0.396** (demographic baseline 0.317) |
@@ -69,8 +69,10 @@ scripts/    generate_matched.py — builds the dataset
 gpu/        training harness (MLP / Transformer / contrastive / diffusion),
             controls.py (baseline ladder + negative controls + power grid),
             run_all.py (one-command experiment set), rq5_results.tex (report section)
-tests/      18 regression tests, incl. leakage and control checks
-app/,deck/  web prototype and slides  ** contain stale pre-audit claims — see below **
+tests/      22 regression tests, incl. leakage and control checks
+app/        demonstrator (Explore / Results / Pipeline) and hologram reveal, built from the
+            corrected pipeline by scripts/export_demo.py; deploy/ is an identical copy
+deck/       presentation slides  ** contain stale pre-audit claims — see below **
 outputs/real_match/   the dataset behind the reported numbers (tracked for reproducibility)
 assets/ict/ derived ICT-FaceKit geometry (MIT, see assets/ict/ATTRIBUTION.md)
 ```
@@ -92,18 +94,21 @@ injected rather than invented:
 
 ## Known caveats
 
-1. **`app/` and `deck/` are stale.** They still carry pre-audit claims
-   (N=5,000; "SNPs add ≈0"), which the audit showed were an artefact of our own
-   feature pipeline. Do not cite them; `EVALUATION.md` and `gpu/rq5_results.tex`
-   supersede them.
+1. **`deck/` is stale.** It still carries pre-audit claims (N=5,000; "SNPs add
+   ≈0"), which the audit showed were an artefact of our own feature pipeline. Do
+   not cite it; `EVALUATION.md` and `gpu/rq5_results.tex` supersede it. The
+   demonstrator in `app/` was rebuilt on the corrected pipeline and is current.
 2. **The HIrisPlex-S coefficients were reverse-derived by probing the public web
    calculator**, not read from the publication. Replacing them with the
    published parameters is an open task.
-3. **The simulation is easier than reality**: 5,000 unlinked SNPs instead of
+3. **The simulated panel is easier than reality**: 5,000 unlinked SNPs instead of
    ~10⁶ correlated ones, dense causal effects, three cleanly separated ancestry
-   groups. All power figures are therefore optimistic upper bounds.
-4. **No LICENSE file yet** — add one before sharing publicly. Note that
-   `assets/ict/` is derived from ICT-FaceKit (MIT) and must keep its attribution.
+   groups, so its power figures are optimistic upper bounds. A second cohort uses
+   real 1000 Genomes genotypes with sparse effects (`data_prep/README_1KG.md`);
+   the faces remain simulated in both.
+4. **Licences.** The project's code is MIT (`LICENSE`). `assets/ict/` is derived
+   from ICT-FaceKit (MIT) and keeps its attribution; `app/vendor/` is three.js
+   (MIT); `app/instrument-sans.woff2` is under the SIL Open Font License.
 
 ## Citation of source studies
 
