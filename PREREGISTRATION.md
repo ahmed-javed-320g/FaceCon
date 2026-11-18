@@ -281,3 +281,28 @@ between additive and correctly coded rows, never as a measure of how much signal
 recoverable from real genotypes. The dosage-only A3 also reports "no" on this arm, which
 is the pre-declared informational outcome for a non-additive architecture and not a
 second failure.
+
+### A6 — the primary comparison, resolved against the neural models
+
+Section 4's primary comparison is the best neural model minus `ridge_demo_snp` on
+`screen_na`, paired across three independently generated mixed-architecture cohorts. It
+resolves at **$-0.065$**, $t$ interval $[-0.070, -0.061]$; the secondary comparison on
+`screen` resolves at $-0.038$, $[-0.050, -0.027]$. The ridge wins both, and the gap is
+wider on the representation that carries the non-additive information.
+
+This is recorded as an addendum because the pre-registration's expectation table listed
+this as the comparison the neural models were most likely to win, the reasoning being
+that removing the linear model's correct specification would remove its advantage. It
+did not. Nothing was changed in response: the comparison, the cohorts, the feature sets
+and the models are exactly as frozen, and the three cohorts were generated before any
+model was run.
+
+Two observations that were not pre-registered and are therefore reported as
+observations rather than tested claims. The transformer scores $+0.306$ on real and
+$+0.304$ on permuted genotypes, and $+0.306$ on both feature sets, so at this sample
+size it is drawing no usable signal from the genotypes at all and its score is the
+covariates. The MLP does use the genotypes, losing $0.075$ when they are permuted, but
+on additive features finishes below a demographics-only model. Both would need their own
+pre-registered test before either is claimed as a finding.
+
+All four permuted negative controls pass.
