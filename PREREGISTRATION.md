@@ -306,3 +306,56 @@ on additive features finishes below a demographics-only model. Both would need t
 pre-registered test before either is claimed as a finding.
 
 All four permuted negative controls pass.
+
+### A7 — RQ4 is underpowered by construction, and both runs of it are void
+
+Section 7 specifies a ridge on the published-loci panel scored against matched-random
+panels. Two runs were attempted on the 1000 Genomes cohort and **neither is reportable**.
+
+The first used a fixed ridge penalty below the project's own grid, so every panel --
+published and random alike -- scored about 0.12 below the covariate baseline, and the
+arm containing the very SNPs the effects were planted on reached only the 53rd
+percentile. The second fixed the penalty but still failed its positive control: the
+leads-only arm, whose SNPs carry the planted effects by construction, reached the 81st
+percentile against a required 95th.
+
+The cause is arithmetic, not implementation. Each of the 14 published loci affects
+exactly one of the 20 anthropometric measures, explaining on average 0.010 of that one
+measure. A score that averages R² across all 20 therefore has a ceiling of about
+14/20 x 0.010 = 0.007, against a random-panel noise standard deviation of 0.0033 -- under
+two standard deviations before any estimation loss, and nothing at all once a few hundred
+columns are fitted to 1,801 subjects. The observed leads-only excess over the random mean,
++0.0027, is the right sign and roughly the predicted size.
+
+**RQ4 as pre-registered cannot detect the effects this generator plants.** The protocol
+was written without checking that its measure could see its own signal. No further
+variant was run: adjusting the scoring after seeing which version failed, until one
+passes, is exactly the practice this document exists to prevent. The question RQ4
+approximates is already answered elsewhere and properly powered, by the locus-recovery
+check (14/14 detected under Bonferroni, zero false positives among 246 non-injected
+pairs), which tests each locus against its own measure rather than against a 20-measure
+average.
+
+Recorded as a limitation, not as a null result about published loci.
+
+### A8 — the PGP eye-colour check could not be run: the data source is not serving
+
+Section 7's eye-colour check against the Harvard PGP is implemented
+(`scripts/pgp_download.py`, `scripts/pgp_eye_check.py`) and the analysis path was
+validated end to end on a stand-in cohort: it is direction-sensitive (AUC 0.995 with
+labels correctly oriented, 0.000 reversed) and its 1000-shuffle null sits on 0.5. It has
+**not been run on real PGP data**, because the site no longer serves it.
+
+Observed directly: `my.personalgenomes.org` returns 301 to `my.pgp-hms.org`, and
+`my.pgp-hms.org` presents a Let's Encrypt certificate whose only subject is
+`my.personalgenomes.org`. Each canonical name therefore fails against the other, and the
+redirect pair forms a loop. This is a server-side misconfiguration that no client change
+resolves cleanly.
+
+This matters beyond one unrun check. openSNP, the other open source pairing genotypes
+with self-reported phenotypes, shut down permanently in April 2025. The open
+genotype-plus-phenotype ecosystem that an independent validation of a published
+appearance model depends on has largely disappeared. FaceCon therefore reports the
+HIrisPlex-S component as integrated and reproducing the official calculator, and makes
+**no claim whatever about its accuracy on real people** -- not as a matter of scope, but
+because no open cohort remained on which to test it.

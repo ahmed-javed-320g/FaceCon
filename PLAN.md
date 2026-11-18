@@ -15,9 +15,9 @@ result exists, and seed plumbing lands before any neural run.
 | 4 | Linear arms ADD, ADD-cal, DOM, EPI, MIX, NULL-NA on the simulated panel, 5 cohorts | here | done |
 | 5b | RQ6 (regions, landmarks, dimensions) and RQ7 (ancestry subgroups) | here | done |
 | 6 | FLAME fitting: fix the optimiser, validate in mm with a random-mesh control | here | done |
-| 7 | Appearance: published coefficients if openly available; Harvard PGP eye-colour check scripts; retire the legacy colour placeholder | here, then GPU machine | scripts done, run on GPU |
-| 8 | RQ4: published Shaffer loci vs matched-random panels on 1000 Genomes | script here, run on GPU machine | script done, run on GPU |
-| G | GPU round: kg MIX arm, neural runs with data-seed CIs, RQ4, PGP download and check | GPU machine | |
+| 7 | Appearance: published coefficients if openly available; Harvard PGP eye-colour check scripts; retire the legacy colour placeholder | here, then GPU machine | scripts done, run on GPU | scripts done; PGP source not serving, see A8 |
+| 8 | RQ4: published Shaffer loci vs matched-random panels on 1000 Genomes | script here, run on GPU machine | script done, run on GPU | underpowered by construction, see A7 |
+| G | GPU round: kg MIX arm, neural runs with data-seed CIs, RQ4, PGP download and check | GPU machine | | steps 1-4 done; 5 void, 6 blocked |
 | 10 | Report, deck, demonstrator; push code, report and LaTeX source | here | report done; deck open |
 
 Out of scope by design (Track B): QC of the 3DFN genotype files, FLAME registration
