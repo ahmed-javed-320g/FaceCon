@@ -44,11 +44,32 @@ SURVEY_CSV = HOST + "/google_surveys/1/download"                # trait survey e
 UA = {"User-Agent": "FaceCon-FYP/1.0 (academic; contact via repository)"}
 
 
+class _StayOnValidHost(urllib.request.HTTPRedirectHandler):
+    """Follow redirects, but keep them on the hostname whose certificate is valid.
+
+    The site answers on my.personalgenomes.org and then 302s back to my.pgp-hms.org,
+    which resolves to the same server but presents a certificate naming only
+    my.personalgenomes.org. Following that redirect therefore fails hostname
+    verification, and the two hosts are the same machine, so rewriting the redirect
+    target is the correct fix. Verification stays on: this moves the request to the
+    name the certificate actually covers instead of accepting a certificate that does
+    not match. Any other host is left alone and followed normally.
+    """
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if "my.pgp-hms.org" in newurl:
+            newurl = newurl.replace("my.pgp-hms.org", "my.personalgenomes.org")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_OPENER = urllib.request.build_opener(_StayOnValidHost)
+
+
 def _get(url, retries=3, timeout=60):
     for i in range(retries):
         try:
             req = urllib.request.Request(url, headers=UA)
-            with urllib.request.urlopen(req, timeout=timeout) as r:
+            with _OPENER.open(req, timeout=timeout) as r:
                 data = r.read()
             if data[:2] == b"\x1f\x8b":
                 data = gzip.decompress(data)
