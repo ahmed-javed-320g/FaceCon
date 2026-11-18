@@ -240,3 +240,44 @@ gradient was noise). Those runs informed the optimiser's design — alternating 
 warm start, ICP correspondences, averaged convergence window — and the ridge weight was
 then set by the MAP rule σ²/L rather than by hand. No §8 threshold was consulted in
 choosing any of them, and the reported numbers come from the single full 12-scan run.
+
+### A5 — the A3-NA positive control fails on the 1000 Genomes mixed arm (0.090, bound 0.10)
+
+Section 4 requires, as a positive control, that ORACLE-NA gain at least 0.10 in $R^2$ over
+cov+PC wherever the architecture is non-additive. On the simulated panel it gains 0.148
+and passes. On the 1000 Genomes mixed cohort (`gpu/controls_kg_na_mix.json`, 5 seeds) it
+gains **0.090** and the check FAILS. The threshold is not loosened and the arm is not
+dropped; the failure is reported here and in the report.
+
+What did and did not hold on that cohort:
+
+| | simulated panel | 1000 Genomes |
+|---|---|---|
+| ORACLE (additive codes) | +0.0581 | +0.0380 |
+| ORACLE-NA (true codes and pairs) | +0.1477 | +0.0900 |
+| ratio | 2.54x | 2.37x |
+| +SNP-screen / +SNP-screen-NA | +0.0565 / +0.0884 | +0.0270 / +0.0440 |
+| A1, A2, A1-NA, A2-NA (negative controls) | pass | pass |
+| A3-NA (positive control) | pass | **fail** |
+
+The scientific claim the arm was built to test is unaffected and in fact replicates: the
+additive oracle recovers 42 per cent of what the correctly coded oracle recovers on real
+genotypes, against 39 per cent on the simulated panel. Every negative control is clean
+(permuted -0.001 to -0.002, null share -0.000 to -0.006). What fails is the absolute
+strength of the positive control, not the comparison between rows.
+
+The most likely cause is power, and it is stated as a hypothesis rather than a
+conclusion because it was not tested. The 1000 Genomes cohort has 1,801 training
+subjects against the simulated panel's 1,802, but twice the causal SNPs (300 against
+150), so ORACLE-NA estimates roughly twice as many parameters -- additive, dominance and
+interaction terms for each causal SNP -- from the same amount of data. The planted share
+is 0.20 in both. A cohort with 150 causal SNPs on 1000 Genomes genotypes, or a larger
+training split, would distinguish a power limit from something structural about real
+linkage; neither was run, and the threshold stays at 0.10 until one is.
+
+Consequence for the report: the 1000 Genomes mixed arm is reported with its positive
+control marked failed, and its numbers are used only for the within-arm comparison
+between additive and correctly coded rows, never as a measure of how much signal is
+recoverable from real genotypes. The dosage-only A3 also reports "no" on this arm, which
+is the pre-declared informational outcome for a non-additive architecture and not a
+second failure.
