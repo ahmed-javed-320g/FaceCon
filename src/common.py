@@ -46,6 +46,18 @@ def _validate_config(cfg: dict[str, Any]) -> None:
     data = cfg.get("data", {})
     if data.get("n_causal_snps", 0) > data.get("n_snps", 0):
         raise ValueError("n_causal_snps cannot exceed n_snps.")
+    arch = data.get("genetic_architecture")
+    if arch:
+        fd = float(arch.get("dominance_frac", 0.0) or 0.0)
+        fe = float(arch.get("epistasis_frac", 0.0) or 0.0)
+        if fd < 0 or fe < 0:
+            raise ValueError("genetic_architecture fractions must be >= 0.")
+        if fd + fe > 1.0 + 1e-9:
+            raise ValueError(f"dominance_frac + epistasis_frac must be <= 1, got {fd + fe:.4f}.")
+        n_pairs = arch.get("n_interaction_pairs")
+        nc = int(data.get("n_causal_snps", 0))
+        if n_pairs is not None and int(n_pairs) > nc * (nc - 1) // 2:
+            raise ValueError("n_interaction_pairs cannot exceed n_causal_snps choose 2.")
     split = cfg.get("split", {})
     s = sum(float(split.get(k, 0.0)) for k in ("train", "val", "test"))
     if abs(s - 1.0) > 1e-6:
@@ -129,3 +141,11 @@ class GroundTruth:
     variance_shares: dict[str, float]
     # appearance: per-trait causal SNP indices (into the appearance panel)
     appearance_causal: dict[str, np.ndarray] = field(default_factory=dict)
+    # ---- non-additive genetic effects (data.genetic_architecture); None when additive ----
+    dominance_weights: np.ndarray | None = None    # (n_causal, K), on the centred het indicator
+    # interaction_pairs holds POSITIONS WITHIN causal_snp_idx (0..n_causal-1), NOT global
+    # SNP indices: pair (i, j) means causal_snp_idx[i] x causal_snp_idx[j]. Positions stay
+    # valid when the genotype matrix is subset; global indices would not.
+    interaction_pairs: np.ndarray | None = None    # (n_pairs, 2) int
+    interaction_weights: np.ndarray | None = None  # (n_pairs, K), on centred pair products
+    genetic_architecture: dict[str, Any] | None = None  # requested fracs + "realised" shares

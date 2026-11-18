@@ -148,7 +148,7 @@ def main():
     ap.add_argument("--batch", type=int, default=256)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--snp-pca", type=int, default=256, help="number of SNP features")
-    ap.add_argument("--features", default="pca", choices=["pca", "screen"],
+    ap.add_argument("--features", default="pca", choices=["pca", "screen", "screen_na"],
                     help="pca = SNP principal components (discards most causal signal on "
                          "unlinked SNPs); screen = train-only association screen")
     ap.add_argument("--log-every", type=int, default=10, help="print status every N epochs")

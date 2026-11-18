@@ -35,6 +35,16 @@ class Prepared:
 
 
 def prepare(cfg: dict) -> Prepared:
+    arch = cfg["data"].get("genetic_architecture") or {}
+    if float(arch.get("dominance_frac", 0) or 0) > 0 or float(arch.get("epistasis_frac", 0) or 0) > 0:
+        # This harness's positive control (src/eval/harness.py ablation_gwas_vs_random) is
+        # a ridge on additive dosages of the causal panel: under a non-additive target it is
+        # misspecified and would report a weak or absent effect while the planted signal is
+        # fully present. Refuse rather than return a silently wrong control.
+        raise ValueError(
+            "config has a non-additive data.genetic_architecture; the CPU harness assumes an "
+            "additive target. Use `python -m gpu.controls --config <cfg>` (ORACLE-NA, "
+            "+SNP-screen-NA) or gpu/run_all.py --features screen_na instead.")
     ds, gt, fm = load_dataset(cfg)
     train_idx = ds.splits["train"]
 

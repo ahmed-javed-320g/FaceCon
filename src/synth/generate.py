@@ -113,6 +113,60 @@ def _draw_demographics(cfg: dict, ancestry: np.ndarray, n: int):
     return np.stack(feats, axis=1), names
 
 
+def _architecture(cfg):
+    """(block, dominance_frac, epistasis_frac); fracs are shares OF the genetic share."""
+    arch = cfg["data"].get("genetic_architecture") or {}
+    return arch, float(arch.get("dominance_frac", 0.0) or 0.0), float(arch.get("epistasis_frac", 0.0) or 0.0)
+
+
+def _dim_mask(rng, rows, k, dims):
+    mask = np.zeros((rows, k), dtype=bool)
+    for i in range(rows):
+        mask[i, rng.choice(k, size=int(dims), replace=False)] = True
+    return mask
+
+
+def _nonadditive_terms(cfg, Xraw, Xc, k):
+    """Dominance and pairwise-interaction designs and raw weights for the causal SNPs.
+
+    Drawn from their own RNG stream ("faces_nonadditive"), in a fixed order whatever
+    the fractions are, so arms that share a seed share every draw: the additive part,
+    demographics and noise come from "faces_compose" and are untouched, and the DOM,
+    EPI and MIX arms share the same dominance weights, pairs and interaction weights.
+
+    Xraw  causal dosages BEFORE centring. Callers may pass mean-imputed, non-integer
+          values (gpu/controls.py:_load_real, scripts/generate_matched.py), so the
+          heterozygote indicator is a band |x - 1| < 0.5, not x == 1: equality would
+          make it all-zero at imputed cells and plant a dominance effect of nothing.
+    Xc    the centred dosages (additive coding). Products of centred codes are close
+          to orthogonal to every marginal signal, so a marginal screen is genuinely
+          blind to the interaction term; that is the point of the epistasis arm.
+    """
+    arch, _, _ = _architecture(cfg)
+    n_causal = Xraw.shape[1]
+    rng = rng_for(cfg["seed"], "faces_nonadditive")
+    cdims = cfg["data"].get("causal_dims")
+
+    Hraw = (np.abs(Xraw - 1.0) < 0.5).astype(np.float64)
+    Hc = Hraw - Hraw.mean(axis=0, keepdims=True)
+    dom_w = rng.normal(size=(n_causal, k))
+    ddims = arch.get("dominance_dims") or cdims
+    if ddims:
+        dom_w = dom_w * _dim_mask(rng, n_causal, k, ddims)
+
+    n_pairs = int(arch.get("n_interaction_pairs") or n_causal // 2)
+    iu, ju = np.triu_indices(n_causal, 1)
+    sel = np.sort(rng.choice(len(iu), size=n_pairs, replace=False))
+    pairs = np.stack([iu[sel], ju[sel]], axis=1)       # positions within the causal set
+    T = Xc[:, pairs[:, 0]] * Xc[:, pairs[:, 1]]
+    Tc = T - T.mean(axis=0, keepdims=True)
+    epi_w = rng.normal(size=(n_pairs, k))
+    edims = arch.get("epistasis_dims") or cdims
+    if edims:
+        epi_w = epi_w * _dim_mask(rng, n_pairs, k, edims)
+    return Hc, dom_w, pairs, Tc, epi_w
+
+
 def _compose_faces(cfg, genotypes, demo, demo_names, k):
     rng = rng_for(cfg["seed"], "faces_compose")
     shares = cfg["face_variance"]
@@ -122,8 +176,8 @@ def _compose_faces(cfg, genotypes, demo, demo_names, k):
     n_causal = int(cfg["data"]["n_causal_snps"])
     causal_idx = rng.choice(genotypes.shape[1], size=n_causal, replace=False)
     causal_idx.sort()
-    Xc = genotypes[:, causal_idx]
-    Xc = Xc - Xc.mean(axis=0, keepdims=True)          # centre
+    Xraw = genotypes[:, causal_idx]
+    Xc = Xraw - Xraw.mean(axis=0, keepdims=True)      # centre
     gen_w = rng.normal(size=(n_causal, k))
     # Optional sparsity (config data.causal_dims): each causal SNP affects only
     # this many of the k shape dimensions, as real loci affect particular facial
@@ -149,12 +203,39 @@ def _compose_faces(cfg, genotypes, demo, demo_names, k):
     # ---- noise ----
     E = rng.normal(size=(n, k))
 
+    # ---- optional non-additive genetic terms (data.genetic_architecture) ----
+    # Placed after the last draw from "faces_compose" and taken from a separate
+    # stream, so nothing above can shift; absent or zero fractions never construct it.
+    arch, f_d, f_e = _architecture(cfg)
+    arch_active = f_d > 0 or f_e > 0
+    if arch_active:
+        Hc, dom_w, pairs, Tc, epi_w = _nonadditive_terms(cfg, Xraw, Xc, k)
+        H0, P0 = Hc @ dom_w, Tc @ epi_w
+
     # ---- rescale each source to its target variance share ----
     def scale_to(mat, target_var):
         v = mat.var(axis=0).mean()
         return mat * np.sqrt(target_var / v) if v > 0 else mat
 
-    G = scale_to(G, shares["genetic"])
+    def factor(mat, target_var):
+        v = mat.var(axis=0).mean()
+        return np.sqrt(target_var / v) if v > 0 else 1.0
+
+    g_tot = shares["genetic"]
+    if arch_active:
+        # Inner split of the genetic share, then rescale the sum so the genetic TOTAL
+        # is exact (the blocks are only nearly uncorrelated). The inner split is a
+        # request; what was realised is measured and recorded below.
+        f_a = 1.0 - f_d - f_e
+        a_f = factor(G, g_tot * f_a) if f_a > 0 else 0.0
+        h_f = factor(H0, g_tot * f_d) if f_d > 0 else 0.0
+        p_f = factor(P0, g_tot * f_e) if f_e > 0 else 0.0
+        S = G * a_f + H0 * h_f + P0 * p_f
+        c_f = factor(S, g_tot)
+        A_part, H_part, P_part = G * (a_f * c_f), H0 * (h_f * c_f), P0 * (p_f * c_f)
+        G = S * c_f
+    else:
+        G = scale_to(G, g_tot)          # unchanged: byte-identical to the additive pipeline
     D = scale_to(D, shares["demographic"])
     E = scale_to(E, shares["noise"])
 
@@ -164,13 +245,36 @@ def _compose_faces(cfg, genotypes, demo, demo_names, k):
     s = np.sqrt(beta.var(axis=0).mean())
     beta /= s
     # rescale the stored true weights by the same factors, for the manifest
-    gen_w_scaled = gen_w * np.sqrt(shares["genetic"] / (Xc @ gen_w).var(axis=0).mean()) / s
+    na = {}
+    if arch_active:
+        gen_w_scaled = gen_w * (a_f * c_f) / s
+        tot = beta.var(axis=0).mean()
+        share = lambda m: float((m / s).var(axis=0).mean() / tot)
+        na = dict(
+            dominance_weights=dom_w * (h_f * c_f) / s,
+            interaction_pairs=pairs,
+            interaction_weights=epi_w * (p_f * c_f) / s,
+            genetic_architecture={
+                "additive_frac": f_a, "dominance_frac": f_d, "epistasis_frac": f_e,
+                "n_interaction_pairs": int(len(pairs)),
+                "dominance_dims": arch.get("dominance_dims") or cfg["data"].get("causal_dims"),
+                "epistasis_dims": arch.get("epistasis_dims") or cfg["data"].get("causal_dims"),
+                "realised": {"additive": share(A_part), "dominance": share(H_part),
+                             "epistasis": share(P_part), "genetic_total": share(G)},
+            },
+        )
+    else:
+        gen_w_scaled = gen_w * np.sqrt(shares["genetic"] / (Xc @ gen_w).var(axis=0).mean()) / s
+        if cfg["data"].get("genetic_architecture"):
+            na = dict(genetic_architecture={"additive_frac": 1.0, "dominance_frac": 0.0,
+                                            "epistasis_frac": 0.0, "realised": None})
 
     gt = GroundTruth(
         causal_snp_idx=causal_idx,
         genetic_weights=gen_w_scaled,
         demo_weights=demo_w,
         variance_shares=dict(shares),
+        **na,
     )
     return beta, gt
 

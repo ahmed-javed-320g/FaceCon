@@ -27,6 +27,7 @@ sys.path.insert(0, ROOT)
 from src.common import load_config, rng_for                      # noqa: E402
 from src.faces.morphable import load_face_model                  # noqa: E402
 from src.synth.generate import _draw_genotypes, _compose_faces   # noqa: E402
+from src.io.store import gt_nonadditive_arrays, gt_nonadditive_manifest  # noqa: E402
 
 # anthropometric landmark name -> iBUG-68 index (ICT model uses iBUG-68)
 IBUG = {
@@ -341,7 +342,7 @@ def main(cfg_path):
     np.savez_compressed(
         os.path.join(out, "ground_truth.npz"),
         causal_snp_idx=gt.causal_snp_idx, genetic_weights=gt.genetic_weights,
-        demo_weights=gt.demo_weights, **gt_app,
+        demo_weights=gt.demo_weights, **gt_app, **gt_nonadditive_arrays(gt),
     )
     manifest = {
         "mode": ("real_genotypes_1000G_simulated_faces" if K is not None else "synthetic_matched"),
@@ -362,6 +363,7 @@ def main(cfg_path):
             "applied": gwas_applied,
             "recovery_check": gwas_check,
         },
+        **gt_nonadditive_manifest(gt),
     }
     json.dump(manifest, open(os.path.join(out, "manifest.json"), "w"), indent=2)
 

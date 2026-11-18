@@ -73,6 +73,13 @@ class FaceConData:
         # "screen": the snp_pca SNPs most associated with shape on the TRAIN split,
         #           after removing demographic effects (a train-only GWAS-style
         #           screen; val/test never influence the selection).
+        # "screen_na": the same idea with a 2-df genotypic score (additive dosage AND
+        #           heterozygote indicator per SNP), keeping snp_pca // 2 SNPs and giving
+        #           the network BOTH codes, interleaved [a1, h1, a2, h2, ...], so it sees
+        #           the same number of columns as "screen". Like "screen" it residualises
+        #           on the full demographics, whereas gpu/controls.py residualises on
+        #           cov + ancestry PCs; that existing difference is kept rather than
+        #           switching conventions for one variant only.
         self.pca = None
         self.features = features
         if features == "screen" and snp_pca and snp_pca < self.M:
@@ -88,6 +95,33 @@ class FaceConData:
                 score[s:s + 5000] = ((_res(blk).T @ Yr) ** 2).sum(1)
             self.screen_idx = np.sort(np.argsort(-score)[:snp_pca])
             self.snp_feat = g[:, self.screen_idx].astype(np.float32)
+        elif features == "screen_na" and snp_pca and snp_pca // 2 < self.M:
+            C = np.c_[np.ones(len(self.tr)), self.demo[self.tr]].astype(np.float64)
+            def _res(M):
+                b, *_ = np.linalg.lstsq(C, M, rcond=None)
+                R = M - C @ b
+                return (R - R.mean(0)) / (R.std(0) + 1e-9)
+            het = lambda raw: (np.abs(raw - 1.0) < 0.5)        # band: imputed cells are non-integer
+            Yr = _res(self.beta[self.tr].astype(np.float64))
+            ntr = len(self.tr)
+            score = np.full(self.M, -np.inf)
+            for s in range(0, self.M, 5000):
+                e = min(self.M, s + 5000)
+                blk = g[self.tr, s:e].astype(np.float64)
+                hraw = het(blk * sd[s:e] + mu[s:e])              # back to dosages for the het code
+                a, h = _res(blk), _res(hraw.astype(np.float64))
+                Sah = np.clip((a * h).mean(0), -0.99, 0.99)
+                r_a, r_h = a.T @ Yr / ntr, h.T @ Yr / ntr
+                sc = ((r_a ** 2 - 2 * Sah[:, None] * r_a * r_h + r_h ** 2)
+                      / (1 - Sah ** 2 + 1e-9)[:, None]).sum(1)
+                sc[hraw.sum(0) < 10] = -np.inf                   # too few heterozygotes to trust
+                score[s:e] = sc
+            self.screen_idx = np.sort(np.argsort(-score)[:snp_pca // 2])
+            A = g[:, self.screen_idx]
+            H = het(A * sd[self.screen_idx] + mu[self.screen_idx]).astype(np.float32)
+            H = (H - H[self.tr].mean(0)) / (H[self.tr].std(0) + 1e-6)   # train-only scaling
+            self.snp_feat = np.empty((self.N, 2 * len(self.screen_idx)), np.float32)
+            self.snp_feat[:, 0::2] = A; self.snp_feat[:, 1::2] = H
         elif snp_pca and snp_pca < self.M:
             self.pca = PCA(n_components=snp_pca, random_state=seed).fit(g[self.tr])
             self.snp_feat = self.pca.transform(g).astype(np.float32)

@@ -14,6 +14,25 @@ from ..common import Dataset, GroundTruth
 from ..faces.morphable import FaceModel
 
 
+def gt_nonadditive_arrays(gt: GroundTruth) -> dict:
+    """Non-additive ground-truth arrays for ground_truth.npz; empty for an additive run.
+
+    Shared by both writers (save_bundle and scripts/generate_matched.py) so they
+    cannot drift apart. Empty means old bundles stay byte-identical.
+    """
+    out = {}
+    for name in ("dominance_weights", "interaction_pairs", "interaction_weights"):
+        v = getattr(gt, name)
+        if v is not None:
+            out[name] = v
+    return out
+
+
+def gt_nonadditive_manifest(gt: GroundTruth) -> dict:
+    """Manifest entry for the architecture; empty when the config has no such block."""
+    return {"genetic_architecture": gt.genetic_architecture} if gt.genetic_architecture else {}
+
+
 def save_bundle(out_dir: str, ds: Dataset, gt: GroundTruth, fm: FaceModel) -> None:
     os.makedirs(out_dir, exist_ok=True)
 
@@ -41,6 +60,7 @@ def save_bundle(out_dir: str, ds: Dataset, gt: GroundTruth, fm: FaceModel) -> No
         genetic_weights=gt.genetic_weights,
         demo_weights=gt.demo_weights,
         **gt_app,
+        **gt_nonadditive_arrays(gt),
     )
     extra = {}
     if fm.face_vert_idx is not None:
@@ -63,6 +83,7 @@ def save_bundle(out_dir: str, ds: Dataset, gt: GroundTruth, fm: FaceModel) -> No
         "demographic_names": ds.demographic_names,
         "variance_shares": gt.variance_shares,
         "regions": list(fm.region_masks.keys()),
+        **gt_nonadditive_manifest(gt),
     }
     with open(os.path.join(out_dir, "manifest.json"), "w", encoding="utf-8") as fh:
         json.dump(manifest, fh, indent=2)
@@ -93,6 +114,10 @@ def load_bundle(out_dir: str) -> tuple[Dataset, GroundTruth, FaceModel]:
         variance_shares=manifest["variance_shares"],
         appearance_causal={k[len("appcausal_"):]: g[k] for k in g.files
                            if k.startswith("appcausal_")},
+        dominance_weights=g["dominance_weights"] if "dominance_weights" in g.files else None,
+        interaction_pairs=g["interaction_pairs"] if "interaction_pairs" in g.files else None,
+        interaction_weights=g["interaction_weights"] if "interaction_weights" in g.files else None,
+        genetic_architecture=manifest.get("genetic_architecture"),
     )
     f = np.load(os.path.join(out_dir, "face_model.npz"))
     regions = {k[len("region_"):]: f[k] for k in f.files if k.startswith("region_")}
