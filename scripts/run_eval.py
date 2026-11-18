@@ -25,6 +25,14 @@ def main():
     for r in res["baselines"]:
         print(f"  {r['model']:30s} {r['param_r2']:+8.3f} {r['mesh_mean_mm']:8.2f} "
               f"{r['landmark_mean_mm']:7.2f} {r['retrieval_top1']:6.2f}")
+    regions = sorted(res["baselines"][0].get("region_mm", {}))
+    if regions:                                  # RQ6: these were computed but never printed
+        print("\nRegional mesh error (mm, test set):")
+        print(f"  {'model':30s}" + "".join(f"{r:>11s}" for r in regions))
+        for r in res["baselines"]:
+            print(f"  {r['model']:30s}" + "".join(f"{r['region_mm'][g]:11.2f}" for g in regions))
+    print(f"\nwrote {os.path.join(cfg['data']['out_dir'], 'eval_results.json')} "
+          "(per-region, per-landmark and per-dimension error per model)")
     print("\nGWAS-informed vs random panel:", json.dumps(res["ablation_gwas_vs_random"]))
     print("Signal recovery sanity:", json.dumps(res["sanity_signal_recovery"]))
     print("Remove-demographics ablation:", json.dumps(res["ablation_remove_demographics"]))

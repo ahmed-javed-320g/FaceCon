@@ -174,4 +174,69 @@ order before any code ran.
 
 ## Addenda
 
-(none)
+Each entry records something the protocol above got wrong, or did not anticipate, after
+the result was seen. No threshold above has been changed. Entries are append-only.
+
+### A1 — the ORACLE-NA calibration penalty is larger than expected (0.032, not 0.02)
+
+§4 expected ORACLE-NA to sit below ORACLE on an additive target by about 0.02 R², the
+cost of fitting dominance and interaction columns that carry no signal. Measured:
+
+| measurement | penalty (R²) |
+|---|---|
+| single cohort, seed 20261016 (`tests/test_nonadditive.py`) | +0.0318 |
+| mean over the 5 cohorts of `gpu/controls_na_addcal.json` | +0.0301 |
+
+Per the calibration rule frozen in §4 ("if the measured penalty is larger than 0.02,
+that is reported as a finding and the calibration test records the measured value with a
+note, instead of being loosened silently"), the 0.02 figure stands as the record of what
+was expected and the test now records +0.0318 with a tolerance of 0.004.
+
+Consequence, carried into the report: ORACLE-NA is **not** a drop-in replacement for
+ORACLE. The two are compared only within an arm, never across arms, and a lower
+ORACLE-NA than ORACLE on an additive target is the expected direction, not a failure.
+The penalty is well below the gains the NA rows produce where the architecture is
+actually non-additive (+0.055 on DOM, +0.032 on MIX for the screen; the NA oracle gains
+0.148 over cov+PC on MIX against the dosage oracle's 0.058), so those gains are not an
+artefact of the extra columns. The penalty's size is why it has to be stated: a reader
+comparing ORACLE-NA on MIX against ORACLE on ADD would otherwise read a 0.03 modelling
+cost as a 0.03 loss of signal.
+
+### A2 — the 2-df screen loses on the pure-epistasis arm
+
+§4 expected the NA screen to beat the additive screen on every non-additive arm. It does
+on DOM (0.4107 → 0.4656) and MIX (0.3669 → 0.3988), but **not** on EPI
+(0.3815 → 0.3638, i.e. −0.0177). This was not anticipated and is reported as found.
+
+The reason is a property of the screen, not a bug: the per-SNP 2-df score tests a
+genotype's own het deviation, so it has power against dominance and none against a
+pairwise A×A product whose marginals are flat. On EPI the extra column per SNP is
+therefore noise, and it costs what A1 above measures. The pre-registered expectation
+table was wrong to treat "non-additive" as one case. ORACLE-NA, which is given the true
+interaction pairs, recovers the signal on EPI (0.4591) just as on the other arms, which
+is what isolates the cause to the screen's power rather than to the representation.
+
+No new row or screen was added in response: a pair-aware screen is named as future work
+in the report and is not run here, because designing it after seeing this result would
+make its result unpublishable under this protocol.
+
+### A3 — "error" for the FLAME random-mesh control means fit residual
+
+§8 asks that the random-mesh control show an error "≥5×" the face fit's. For a mesh of
+per-vertex noise there is no true β to compare against, so "error" cannot mean the
+vertex error used for the recovery check. The quantity reported for both is the mean
+symmetric nearest-neighbour **fit residual** between the scan points and the fitted face
+region. Measured on the noise-free condition: 0.264 mm for a real face against 2.280 mm
+for the control, a ratio of 8.6×. This is a clarification of an ambiguous term in the
+protocol, decided by what the control can be measured on at all, not a change of the
+threshold.
+
+### A4 — smoke-run disclosure
+
+The fitter in `gpu/flame_fit.py` was rewritten before its validation was run, and two
+intermediate versions were run on 3 scans each while diagnosing why the first version
+failed both §8 checks (warm start from the mean-face pose, and a resampled chamfer whose
+gradient was noise). Those runs informed the optimiser's design — alternating closed-form
+warm start, ICP correspondences, averaged convergence window — and the ridge weight was
+then set by the MAP rule σ²/L rather than by hand. No §8 threshold was consulted in
+choosing any of them, and the reported numbers come from the single full 12-scan run.

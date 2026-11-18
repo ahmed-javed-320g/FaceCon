@@ -1,0 +1,37 @@
+{
+ "n_scans": 12,
+ "units": "mm",
+ "mm_per_unit": 8.68171110738119,
+ "conditions": {
+  "noise_free": {
+   "vert_mm": 0.49759190777937573,
+   "face_mm": 0.316436434785525,
+   "warm_start_vert_mm": 1.0443000098069508,
+   "beta_err": 2.4733006351716385,
+   "beta_norm": 7.076703696654932,
+   "residual_mm": 0.26424353472806555,
+   "converged": 1.0,
+   "iterations": 618.8333333333334,
+   "vert_mm_max": 0.66880202293396
+  },
+  "noisy (0.5 mm points, 1.5 mm landmarks)": {
+   "vert_mm": 0.6089037905136744,
+   "face_mm": 0.4853510061899821,
+   "warm_start_vert_mm": 1.322793851296107,
+   "beta_err": 3.076111820014193,
+   "beta_norm": 6.958562168686317,
+   "residual_mm": 0.8277421318274101,
+   "converged": 1.0,
+   "iterations": 709.1666666666666,
+   "vert_mm_max": 0.7364274859428406
+  }
+ },
+ "random_mesh_control": {
+  "displacement_rms_mm": 5.047105312347412,
+  "residual_mm": 2.2800523432804183
+ },
+ "acceptance": {
+  "recovery: mean vertex error <= 1.0 mm (noise-free)": true,
+  "control: random-mesh residual >= 5x face residual (noise-free)": true
+ }
+}

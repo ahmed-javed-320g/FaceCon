@@ -29,21 +29,14 @@ class FaceConData:
                  identity_scale=None, features="pca", data_dir="outputs/real_match",
                  train_n=None, permute_snps=False, split_seed=None):
         self.device = device
-        if identity_scale is None:                      # read it from the config
-            import yaml
-            cfgp = os.path.join(root, "config/real_match.yaml")
-            identity_scale = (yaml.safe_load(open(cfgp))["face_model"].get("identity_scale", 1.0)
-                              if os.path.isfile(cfgp) else 1.0)
         ds_path = _find([os.path.join(root, data_dir, "dataset.npz"),
                          os.path.join(root, "dataset.npz")])
-        fm_path = _find([os.path.join(root, "outputs/real_match/face_model.npz"),
-                         os.path.join(root, "assets/ict/ict_face_model.npz"),
-                         os.path.join(root, "face_model.npz")])
         d = np.load(ds_path, allow_pickle=True)
         self.geno = d["genotypes"].astype(np.float32)          # (N, M) with NaN
         self.demo = d["demographics"].astype(np.float32)       # (N, D)
         self.beta = d["face_params"].astype(np.float32)        # (N, K) target
         self.tr = d["split_train"]; self.va = d["split_val"]; self.te = d["split_test"]
+        self.ancestry = d["ancestry"] if "ancestry" in d.files else None   # for subgroup analysis (RQ7)
         if split_seed is not None:
             # Re-draw train/val/test exactly as scripts/generate_matched._make_splits does,
             # from the named "splits" stream. split_seed == the cohort's own seed reproduces
@@ -145,14 +138,24 @@ class FaceConData:
         self.D = self.demo.shape[1]
 
         # ---- face model (for mesh-error metric) ----
-        f = np.load(fm_path, allow_pickle=True)
-        self.mean = f["mean"].astype(np.float32)               # (V,3)
-        # The generator scales the identity basis by face_model.identity_scale
-        # (src/faces/morphable.py). Apply the SAME factor here, otherwise mesh
-        # errors are under-reported by that factor (was 9.5x too small).
-        self.basis = f["basis"].astype(np.float32) * float(identity_scale)   # (K,3V)
-        self.mm_per_unit = float(f["mm_per_unit"]) if "mm_per_unit" in f.files else 100.0
+        # Through the project's one loader (src/faces/morphable.load_face_model), which
+        # applies face_model.identity_scale exactly as the generator does; re-reading the
+        # npz here once under-reported mesh error 9.5x. Swapping in FLAME changes only
+        # that loader.
+        from src.common import load_config
+        from src.faces.morphable import load_face_model
+        cfg = load_config(os.path.join(root, "config/real_match.yaml"))
+        if identity_scale is not None:
+            cfg["face_model"]["identity_scale"] = float(identity_scale)
+        fm = load_face_model(cfg)
+        self.face_model = fm
+        self.mean = fm.mean.astype(np.float32)                 # (V,3)
+        self.basis = fm.basis.astype(np.float32)               # (K,3V), identity scale applied
+        self.mm_per_unit = float(fm.mm_per_unit)
         self.V = self.mean.shape[0]
+        # facial regions and landmarks, for the regional analysis (RQ6)
+        self.regions = {k: np.asarray(v, bool) for k, v in fm.region_masks.items()}
+        self.landmark_idx = fm.landmark_idx
 
     def tensors(self, split):
         idx = {"train": self.tr, "val": self.va, "test": self.te}[split]
@@ -185,3 +188,24 @@ class FaceConData:
         top1 = float((d2.argmin(1) == np.arange(len(bt))).mean())
         return {"param_r2": round(param_r2, 4), "mesh_mm": round(mesh_mm, 3),
                 "retrieval_top1": round(top1, 4)}
+
+    def evaluate_detail(self, beta_true, beta_pred):
+        """Unrounded breakdown for RQ6/RQ7: per subject, region, landmark and shape dimension.
+
+        Returns arrays so callers can bootstrap over subjects. Region and landmark errors
+        are mean vertex distances in the same nominal millimetres as evaluate().
+        """
+        bt = np.asarray(beta_true, np.float32); bp = np.asarray(beta_pred, np.float32)
+        ss_res = ((bt - bp) ** 2).sum(0); ss_tot = ((bt - bt.mean(0)) ** 2).sum(0) + 1e-9
+        subj, reg, lmk = [], {k: [] for k in self.regions}, []
+        for s in range(0, len(bt), 256):
+            dist = np.linalg.norm(self.decode_mm(bp[s:s + 256]) - self.decode_mm(bt[s:s + 256]), axis=2)
+            subj.append(dist.mean(1))
+            for k, m in self.regions.items():
+                reg[k].append(dist[:, m].mean(1))
+            if self.landmark_idx is not None:
+                lmk.append(dist[:, self.landmark_idx])
+        return {"per_dim_r2": 1 - ss_res / ss_tot,
+                "subject_mm": np.concatenate(subj),
+                "region_subject_mm": {k: np.concatenate(v) for k, v in reg.items()},
+                "landmark_subject_mm": np.concatenate(lmk) if lmk else None}

@@ -248,6 +248,28 @@ def load_ict_face_model(cfg: dict) -> FaceModel:
     )
 
 
+def render_parts(fm: FaceModel) -> list[np.ndarray]:
+    """Triangle arrays to draw for display: the skin, plus the eyeballs if the model has them.
+
+    This is the only model-specific display knowledge in the project. The ICT mesh has
+    56 parts (skin, eyeballs, teeth, lashes ...): the skin is the largest connected part
+    and the eyeballs are the two 800-vertex spheres. A model without such parts (FLAME,
+    or the procedural head) returns its whole mesh, so swapping the model needs no change
+    elsewhere.
+    """
+    import trimesh
+    m = trimesh.Trimesh(fm.mean, fm.faces, process=False)
+    comps = sorted(m.split(only_watertight=False), key=lambda c: -len(c.vertices))
+    if len(comps) == 1:
+        return [np.asarray(fm.faces)]
+    tree_idx = {tuple(v): i for i, v in enumerate(np.round(fm.mean, 9).tolist())}
+    def faces_of(c):
+        vid = np.array([tree_idx[tuple(v)] for v in np.round(c.vertices, 9).tolist()])
+        return vid[np.asarray(c.faces)]
+    eyes = [c for c in comps[1:6] if len(c.vertices) == 800]
+    return [faces_of(comps[0])] + [faces_of(e) for e in eyes]
+
+
 def load_face_model(cfg: dict) -> FaceModel:
     """Build or load the face model from config.
 

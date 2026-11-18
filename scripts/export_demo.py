@@ -37,6 +37,8 @@ sys.path.insert(0, os.path.join(ROOT, "scripts"))
 from gpu.data import FaceConData                      # noqa: E402
 from gpu.train import train_torch, _param_r2          # noqa: E402
 from src.appearance.hirisplex import HirisplexPredictor, LABELS   # noqa: E402
+from src.common import load_config                   # noqa: E402
+from src.faces.morphable import load_face_model, render_parts  # noqa: E402
 
 TARGET_FACES = 11000
 
@@ -55,25 +57,27 @@ def pack_i16(arr):
     return d
 
 
-def head_mesh(fm_mean, fm_faces):
-    """Skin of head and neck plus the two eyeballs, decimated.
+def head_mesh(fm):
+    """Decimated mesh for the browser: whatever parts the model says to draw.
 
-    The ICT mesh has 56 parts (skin, eyeballs, teeth, lashes ...). The skin is
-    the largest part; the eyeballs are the two ~800-vertex spheres. Without them
-    the sockets render as holes.
+    Which parts those are is the face model's business, not the exporter's:
+    `src.faces.morphable.render_parts` returns the skin plus the eyeballs for the ICT
+    model and the whole mesh for a model without separate parts, so swapping the model
+    does not touch this script. Without the eyeballs the sockets render as holes.
     """
-    m = trimesh.Trimesh(fm_mean, fm_faces, process=False)
-    comps = sorted(m.split(only_watertight=False), key=lambda c: -len(c.vertices))
-    head = comps[0]
-    eyes = [c for c in comps[1:6] if len(c.vertices) == 800]
-    parts = [head.simplify_quadric_decimation(face_count=TARGET_FACES)] + \
-            [e.simplify_quadric_decimation(face_count=500) for e in eyes]
+    groups = render_parts(fm)
+    budgets = [TARGET_FACES] + [500] * (len(groups) - 1)
+    def submesh(g):                                   # drop vertices this part does not use
+        vid = np.unique(g)
+        remap = np.full(len(fm.mean), -1, np.int64); remap[vid] = np.arange(len(vid))
+        return trimesh.Trimesh(fm.mean[vid], remap[g], process=False)
+    parts = [submesh(g).simplify_quadric_decimation(face_count=b) for g, b in zip(groups, budgets)]
     v, f, part, off = [], [], [], 0
     for j, p in enumerate(parts):                     # part: 0 skin, 1 and 2 eyeballs
         v.append(np.asarray(p.vertices)); f.append(np.asarray(p.faces) + off); off += len(p.vertices)
         part.append(np.full(len(p.vertices), j, np.uint8))
     v, f, part = np.vstack(v), np.vstack(f), np.concatenate(part)
-    _, nn = cKDTree(fm_mean).query(v)                 # decimated vertex -> original vertex
+    _, nn = cKDTree(fm.mean).query(v)                 # decimated vertex -> original vertex
     return v, f, nn, part
 
 
@@ -192,7 +196,7 @@ def main():
         })
 
     # ---- mesh for the browser: decimated head, basis in mm ------------------
-    v, f, nn, part = head_mesh(D.mean, np.load(os.path.join(ROOT, "assets/ict/ict_face_model.npz"))["faces"])
+    v, f, nn, part = head_mesh(load_face_model(load_config(os.path.join(ROOT, "config/real_match.yaml"))))
     K = D.basis.shape[0]
     basis = D.basis.reshape(K, D.V, 3)[:, nn, :] * D.mm_per_unit       # (K, Vd, 3) in mm per unit beta
     mean = D.mean[nn] * D.mm_per_unit

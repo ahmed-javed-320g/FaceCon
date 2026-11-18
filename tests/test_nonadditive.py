@@ -181,3 +181,45 @@ def test_nonadditive_null_share_reports_nothing():
     base = r2(bt, P["cov+PC"])
     assert abs(r2(bt, P["+SNP-screen-NA"]) - base) <= 0.01
     assert abs(r2(bt, P["ORACLE-NA"]) - base) <= 0.01
+
+
+def test_oracle_na_column_count_penalty_on_additive_arm():
+    """Calibration (PREREGISTRATION.md §4, Addendum A1): on an additive target ORACLE-NA
+    sits below ORACLE by the cost of fitting columns with no signal in them.
+
+    The pre-registration expected that penalty to be about 0.02. Measured, it is larger:
+    +0.0318 on this single cohort and +0.0301 averaged over the five cohorts of
+    `gpu/controls_na_addcal.json`. Per the frozen calibration rule, the threshold is not
+    loosened to accommodate it; the measured value is recorded here and reported as a
+    finding, and the consequence -- that ORACLE-NA is not a drop-in replacement for
+    ORACLE and the two are only compared within an arm, never across arms -- is carried
+    into the report.
+
+    What this test still guards is the sign and the scale: the penalty is a cost, not a
+    gain (so the additive oracle is not beaten by the larger design), and it is well
+    under the gains the NA rows produce on the non-additive arms (~0.055 on DOM, ~0.09
+    on MIX), so those gains cannot be an artefact of the extra columns.
+    """
+    from gpu.controls import make_data, ladder, r2
+    cfg = load_config(os.path.join(ROOT, "config", "real_match.yaml"))
+    D = make_data(cfg, int(cfg["seed"]))
+    P, bt, _ = ladder(D, do_pca256=False, na_rows=True)
+    base = r2(bt, P["cov+PC"])
+    gap = (r2(bt, P["ORACLE"]) - base) - (r2(bt, P["ORACLE-NA"]) - base)
+    assert gap > 0, f"penalty {gap:+.4f} is not a cost: the NA design should not win on an additive target"
+    assert abs(gap - 0.0318) <= 0.004, f"recorded penalty moved: {gap:+.4f}, recorded +0.0318"
+    assert gap <= 0.05, f"penalty {gap:+.4f} is no longer small against the NA gains it must not explain"
+
+
+def test_dominance_arm_two_df_screen_beats_additive_screen():
+    """On DOM, the 2-df screen gains more than the additive one; both are ~0 when permuted."""
+    from gpu.controls import make_data, ladder, r2
+    cfg = load_config(os.path.join(ROOT, "config", "na_dom.yaml"))
+    D = make_data(cfg, int(cfg["seed"]), n=1000)
+    P, bt, _ = ladder(D, do_pca256=False, na_rows=True)
+    base = r2(bt, P["cov+PC"])
+    assert r2(bt, P["+SNP-screen-NA"]) - base > r2(bt, P["+SNP-screen"]) - base
+    Pp, _, _ = ladder(D, do_pca256=False, permute_seed=1, na_rows=True)
+    pb = r2(bt, Pp["cov+PC"])
+    assert abs(r2(bt, Pp["+SNP-screen"]) - pb) <= 0.01
+    assert abs(r2(bt, Pp["+SNP-screen-NA"]) - pb) <= 0.01

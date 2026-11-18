@@ -23,11 +23,15 @@ def param_errors(pred: np.ndarray, true: np.ndarray) -> dict:
         t, p = true[:, j], pred[:, j]
         if t.std() > 1e-9 and p.std() > 1e-9:
             corrs.append(np.corrcoef(t, p)[0, 1])
+    ss_res = (diff ** 2).sum(0)
+    ss_tot = ((true - true.mean(0)) ** 2).sum(0) + 1e-12
     return {
         "param_mse": mse,
         "param_rmse": float(np.sqrt(mse)),
         "param_mae": mae,
         "param_mean_corr": float(np.mean(corrs)) if corrs else 0.0,
+        "per_dim_r2": [float(x) for x in 1 - ss_res / ss_tot],     # RQ6: which shape dimensions
+        "per_dim_rmse": [float(x) for x in np.sqrt((diff ** 2).mean(0))],
     }
 
 
@@ -66,6 +70,7 @@ def geometric_metrics(fm, d) -> dict:
         "mesh_mean_mm": float(d.mean()),
         "mesh_median_mm": float(np.median(d)),
         "landmark_mean_mm": float(d[:, fm.landmark_idx].mean()),
+        "landmark_mm": [float(x) for x in d[:, fm.landmark_idx].mean(0)],   # RQ6: all 68, not just the mean
         "region_mm": region,
     }
 
