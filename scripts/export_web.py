@@ -71,53 +71,14 @@ SHAPE_TO_APP = {
 
 
 def _appearance_export(prep, demo_sel):
-    ds = prep.ds
-    if ds.appearance_snps is None:
-        return None, None
-    from sklearn.preprocessing import StandardScaler
-    from src.appearance.models import build_appearance_models
-    from src.appearance.traits import TRAITS
+    """Removed: the simulated-appearance ladder is gone.
 
-    traits = ds.appearance_traits
-    tr = prep.idx("train")
-    sc = StandardScaler().fit(ds.appearance_snps[tr])
-    snp_tr = sc.transform(ds.appearance_snps[tr])
-    snp_sel = sc.transform(ds.appearance_snps[demo_sel])
-    demo_tr = ds.demographics[tr]
-    demo_sel_feat = ds.demographics[demo_sel]
-    y_tr = ds.appearance_labels[tr]
-
-    models = build_appearance_models(traits)
-    preds = {}   # app_key -> (preds dict, probs dict)
-    for m in models:
-        m.fit(snp_tr, demo_tr, y_tr)
-        preds[m.key] = m.predict(snp_sel, demo_sel_feat)
-
-    # per-subject: for each appearance model, class + confidence per trait
-    by_subject = []
-    for r in range(len(demo_sel)):
-        entry = {"true": {}, "pred": {}}
-        for ti, tk in enumerate(traits):
-            entry["true"][tk] = int(ds.appearance_labels[demo_sel[r], ti])
-        for app_key, (pr, pb) in preds.items():
-            entry["pred"][app_key] = {}
-            for tk in traits:
-                cls = int(pr[tk][r])
-                conf = 1.0
-                if pb[tk] is not None:
-                    proba, classes = pb[tk]
-                    conf = float(proba[r].max())
-                entry["pred"][app_key][tk] = [cls, round(conf, 3)]
-        by_subject.append(entry)
-
-    meta = {
-        "traits": [{"key": t, "name": TRAITS[t].name, "classes": TRAITS[t].classes,
-                    "palette": TRAITS[t].palette, "render": TRAITS[t].render}
-                   for t in traits],
-        "shape_to_app": SHAPE_TO_APP,
-        "app_model_names": {m.key: m.name for m in models},
-    }
-    return meta, by_subject
+    Its labels were generated from the same SNP panel its "snp" model used as
+    features, so recovering them measured the generator rather than prediction.
+    Colour now comes from the real HIrisPlex-S model (src/appearance/hirisplex.py),
+    which is applied in scripts/export_demo.py and fits nothing.
+    """
+    return None, None
 
 
 def main():

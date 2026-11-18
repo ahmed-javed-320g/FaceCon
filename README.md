@@ -28,7 +28,7 @@ evaluated honestly against **demographic baselines**.
 |---|---|
 | The pipeline finds genetic signal when it exists | Planted 20% genetic share → SNPs add **+0.173 R²** over covariates + ancestry PCs (5 seeds, 95% CIs in `gpu/controls.json`) |
 | …and reports none when it does not | Genotypes permuted across subjects → **−0.001**; planted share set to zero → **−0.001** |
-| No leakage | Subject-level splits; all scaling, PCA and feature screening fit on train only; 22 tests in `tests/` |
+| No leakage | Subject-level splits; all scaling, PCA and feature screening fit on train only; 44 tests in `tests/` |
 | Known associations are recoverable | 14/14 injected real GWAS loci detected with correct sign, **0** false hits in 246 non-injected SNP×measure pairs |
 | Feature representation dominated architecture | SNP-PCA kept only +0.004 of the available +0.173; a train-only SNP screen recovered it |
 | Simple beat complex on a linear signal | Tuned ridge **0.488** vs best deep model **0.396** (demographic baseline 0.317) |

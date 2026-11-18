@@ -34,7 +34,7 @@ Audited: generator, config, GPU harness, deck, RQ5 draft, public-data notes. **M
 **Can:** pipeline correctness, leakage control, baseline logic, sensitivity to planted signal, an optimistic power bound, real-data readiness.
 **Cannot:** any accuracy, heritability or model-ranking claim about real faces; real-data power (~10⁶ correlated SNPs, far weaker effects).
 
-## 4. What I changed (22 tests pass)
+## 4. What I changed (44 tests pass)
 
 - `gpu/controls.py` (new). Question: do SNPs add beyond covariates + PCs, and can the pipeline tell when they do not? Five seeds, bootstrap CIs. Ladder R²: covariates 0.205; +PCs 0.315; +SNP-PCA256 0.319; +screened SNPs 0.488; oracle 0.488. Negative controls: permuted genotypes −0.001; genetic share 0, −0.001. All four acceptance tests pass. *Disclosure:* A1 first failed because I wrote it two-sided; a slightly negative delta is correct null behaviour, so it now tests "no gain".
 - Power grid (optimistic): N=3,118, share 0.1 → +0.070, 0.2 → +0.177; N=1,000 → +0.022, +0.119.

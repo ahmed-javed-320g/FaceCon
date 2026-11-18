@@ -32,15 +32,11 @@ def generate(cfg: dict) -> tuple[Dataset, GroundTruth, FaceModel]:
 
     beta, gt = _compose_faces(cfg, genotypes, demo, demo_names, k)
 
-    # ---- appearance module (optional) ----
-    app_snps = app_labels = None
-    app_traits = []
-    if cfg.get("appearance", {}).get("enable", True):
-        from ..appearance.generate import generate_appearance
-        age_z = demo[:, demo_names.index("age_z")]
-        app_snps, app_labels, app_causal, app_traits = generate_appearance(
-            cfg, ancestry, age_z)
-        gt.appearance_causal = app_causal
+    # Appearance is NOT simulated. Colour comes from the real HIrisPlex-S model
+    # (src/appearance/hirisplex.py) applied to genotypes; there is nothing to plant
+    # and nothing to fit. The simulated-appearance ladder that used to live here
+    # was removed: its labels were generated from the same panel its "snp" model
+    # used as features, so recovering them measured the generator, not prediction.
 
     subject_ids = np.array([f"SUBJ-{i:05d}" for i in range(genotypes.shape[0])])
     geno_missing = _inject_missingness(cfg, genotypes)
@@ -59,9 +55,6 @@ def generate(cfg: dict) -> tuple[Dataset, GroundTruth, FaceModel]:
             "structured_snp_mask": structured_mask,
             "n_shape_dims": k,
         },
-        appearance_snps=app_snps,
-        appearance_labels=app_labels,
-        appearance_traits=app_traits,
     )
     ds.check()
     return ds, gt, face_model

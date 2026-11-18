@@ -70,8 +70,8 @@ eval:
   landmark_count: 12
   retrieval_gallery: 50
 
-appearance:
-  enable: true
-  n_panel_snps: 300          # dedicated pigmentation/appearance SNP panel
-  structured_fraction: 0.45  # ancestry structure in the panel (pigmentation is ancestry-linked)
-  # per-trait definitions and calibration live in src/appearance/traits.py
+# Appearance (eye / hair / skin colour) is NOT simulated and has no settings here.
+# Colour comes from the real HIrisPlex-S model, src/appearance/hirisplex.py, applied
+# to genotypes: nothing is planted and nothing is fitted, so there is no accuracy for
+# FaceCon to claim. The simulated-appearance panel and its ladder were removed because
+# the labels were generated from the same panel the "snp" model used as features.

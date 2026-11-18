@@ -21,3 +21,4 @@ outputs/large/
 .idea/
 .vscode/
 tmp/
+data/pgp/

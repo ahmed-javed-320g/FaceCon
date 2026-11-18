@@ -125,9 +125,6 @@ def run_full_eval(prep: Prepared, out_dir: str | None = None) -> dict:
         "sanity_signal_recovery": sanity_signal_recovery(prep),
         "variance_shares": prep.gt.variance_shares if prep.gt else None,
     }
-    if prep.ds.appearance_snps is not None:
-        from ..appearance.evaluate import evaluate_appearance
-        results["appearance"] = evaluate_appearance(prep)
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
         with open(os.path.join(out_dir, "eval_results.json"), "w", encoding="utf-8") as fh:
