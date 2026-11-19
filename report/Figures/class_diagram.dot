@@ -1,0 +1,116 @@
+// FaceCon class diagram (Figure 6.2). Rendered to vector PDF by
+//   dot -Tpdf Figures/class_diagram.dot -o Figures/class_diagram.pdf
+// It replaces a 1518-pixel PlantUML raster whose labels printed at about 5 pt.
+// Classes and relationships are those of the original; ContrastiveModel and
+// DiffusionModel are added because Table 6.1 and Chapter 7 list them as implemented.
+digraph FaceCon {
+  graph [rankdir=TB, nodesep=0.18, ranksep=0.40, splines=spline, pad=0.05,
+         fontname="TeX Gyre Termes"];
+  node  [shape=plain, fontname="TeX Gyre Termes", fontsize=19];
+  edge  [fontname="TeX Gyre Termes", fontsize=16, color="#3b3b52", arrowsize=0.8,
+         penwidth=1.1];
+
+  // ---- a UML class: name | attributes | operations ----
+  WebUI [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><b>WebUI</b></td></tr><hr/>
+    <tr><td align="left">+selectSubject()<br align="left"/>+showComparison()<br align="left"/>+showDetailedEval()<br align="left"/></td></tr></table>>];
+
+  InferenceController [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><b>InferenceController</b></td></tr><hr/>
+    <tr><td align="left">+loadSubject()<br align="left"/>+predict()<br align="left"/>+getMetrics()<br align="left"/></td></tr></table>>];
+
+  ExperimentRunner [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><b>ExperimentRunner</b></td></tr><hr/>
+    <tr><td align="left">-config<br align="left"/>-seed<br align="left"/></td></tr><hr/>
+    <tr><td align="left">+run()<br align="left"/>+ablate()<br align="left"/></td></tr></table>>];
+
+  HirisplexExtractor [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><b>HirisplexExtractor</b></td></tr><hr/>
+    <tr><td align="left">+extractMarkers()<br align="left"/></td></tr></table>>];
+
+  Evaluator [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><b>Evaluator</b></td></tr><hr/>
+    <tr><td align="left">+metrics()<br align="left"/>+baselines()<br align="left"/>+ablations()<br align="left"/></td></tr></table>>];
+
+  DatasetBuilder [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><b>DatasetBuilder</b></td></tr><hr/>
+    <tr><td align="left">-splits<br align="left"/></td></tr><hr/>
+    <tr><td align="left">+match()<br align="left"/>+split()<br align="left"/></td></tr></table>>];
+
+  HirisplexPredictor [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><font point-size="15">«external: HIrisPlex-S»</font></td></tr>
+    <tr><td><b>HirisplexPredictor</b></td></tr><hr/>
+    <tr><td align="left">+predict()<br align="left"/></td></tr></table>>];
+
+  Visualizer [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><b>Visualizer</b></td></tr><hr/>
+    <tr><td align="left">+renderMesh()<br align="left"/>+rotate()<br align="left"/>+zoom()<br align="left"/></td></tr></table>>];
+
+  Model [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><font point-size="15">«interface»</font></td></tr>
+    <tr><td><b><i>Model</i></b></td></tr><hr/>
+    <tr><td align="left">+fit()<br align="left"/>+predict()<br align="left"/></td></tr></table>>];
+
+  GenotypeProcessor [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><b>GenotypeProcessor</b></td></tr><hr/>
+    <tr><td align="left">-qcConfig<br align="left"/>-panel<br align="left"/></td></tr><hr/>
+    <tr><td align="left">+runQC()<br align="left"/>+buildPanel()<br align="left"/></td></tr></table>>];
+
+  FlameFitter [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><b>FlameFitter</b></td></tr><hr/>
+    <tr><td align="left">-flameModel<br align="left"/></td></tr><hr/>
+    <tr><td align="left">+fitScan()<br align="left"/>+exportParams()<br align="left"/></td></tr></table>>];
+
+  DataLoader [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><font point-size="15">«interface»</font></td></tr>
+    <tr><td><b><i>DataLoader</i></b></td></tr><hr/>
+    <tr><td align="left">+load()<br align="left"/></td></tr></table>>];
+
+  AppearanceRenderer [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><b>AppearanceRenderer</b></td></tr><hr/>
+    <tr><td align="left">+applySkinColour()<br align="left"/>+applyEyeColour()<br align="left"/>+reportHairColour()<br align="left"/></td></tr></table>>];
+
+  FlameDecoder [label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="3" bgcolor="#eef0ff" color="#6a6ad0">
+    <tr><td><b>FlameDecoder</b></td></tr><hr/>
+    <tr><td align="left">+decode()<br align="left"/></td></tr></table>>];
+
+  // concrete models and loaders: name only
+  node [shape=box, style=filled, fillcolor="#eef0ff", color="#6a6ad0", margin="0.10,0.06"];
+  MeanFaceModel; DemographicRegressor; RidgeModel; MLPModel; TransformerModel;
+  ContrastiveModel; DiffusionModel; RealLoader; SyntheticLoader;
+
+  // ---- associations (one class uses another) ----
+  WebUI -> InferenceController   [label=" requests"];
+  WebUI -> Visualizer            [label=" displays"];
+  InferenceController -> HirisplexExtractor [label=" extracts"];
+  InferenceController -> Evaluator          [label=" reads metrics"];
+  InferenceController -> Model              [label=" runs"];
+  ExperimentRunner -> Evaluator      [label=" runs"];
+  ExperimentRunner -> Model          [label=" trains"];
+  ExperimentRunner -> DatasetBuilder [label=" uses"];
+  HirisplexExtractor -> HirisplexPredictor [label=" markers"];
+  HirisplexPredictor -> AppearanceRenderer [label=" colours"];
+  Evaluator -> Model           [label=" scores"];
+  DatasetBuilder -> DataLoader [label=" reads via"];
+  Visualizer -> AppearanceRenderer [label=" uses"];
+
+  // ---- dependencies (consumes another's output or type) ----
+  edge [style=dashed];
+  InferenceController -> FlameDecoder [label=" decodes"];
+  DatasetBuilder -> GenotypeProcessor [label=" consumes"];
+  DatasetBuilder -> FlameFitter       [label=" consumes"];
+  Visualizer -> FlameDecoder          [label=" uses"];
+  Model -> FlameDecoder               [label=" decoded by"];
+
+  // ---- inheritance (realises an interface): hollow triangle at the parent ----
+  edge [style=solid, dir=back, arrowtail=onormal, arrowsize=1.1];
+  Model -> {MeanFaceModel DemographicRegressor RidgeModel MLPModel TransformerModel ContrastiveModel DiffusionModel};
+  DataLoader -> {RealLoader SyntheticLoader};
+
+  // stack the seven models in two rows so the diagram is not one very wide band
+  edge [style=invis, dir=forward, arrowtail=none];
+  MeanFaceModel -> MLPModel; DemographicRegressor -> TransformerModel;
+  RidgeModel -> ContrastiveModel; RidgeModel -> DiffusionModel;
+  {rank=same; MeanFaceModel; DemographicRegressor; RidgeModel;}
+  {rank=same; MLPModel; TransformerModel; ContrastiveModel; DiffusionModel;}
+}

@@ -1,9 +1,10 @@
 \begin{thebibliography}{10}
 
 \bibitem{ref:wang}
-C.~Wang {\em et~al.}, ``Forensic {DNA} phenotyping: A 19-{SNP} prediction
-  system,'' {\em Forensic Sciences Research}, 2026.
-\newblock As cited in the project proposal; DOI not independently verified.
+C.~Wang, D.~Wen, W.~Qu, R.~Xu, Y.~Liu, H.~Jia, X.~Tang, J.~Li, and L.~Zha,
+  ``Forensic {DNA} phenotyping: Construction and evaluation of a 19-{SNP}
+  phenotype prediction system based on the {Chinese} population,'' {\em
+  Forensic Sciences Research}, vol.~11, no.~1, pp.~50--61, 2026.
 
 \bibitem{ref:richmond}
 S.~Richmond, L.~J. Howe, S.~J. Lewis, E.~Stergiakouli, and A.~Zhurov, ``Facial
@@ -15,7 +16,7 @@ S.~Richmond, L.~J. Howe, S.~J. Lewis, E.~Stergiakouli, and A.~Zhurov, ``Facial
 Z.~Xiong, Y.~Li, X.~Liu, H.~Lu, P.~G. Hysi, L.~M. Pardo, {\em et~al.},
   ``Combined genome-wide association study of facial traits in {Europeans}
   increases explained variance and improves prediction,'' {\em Nature
-  Communications}, vol.~16, p.~6562, 2025.
+  Communications}, vol.~16, no.~1, p.~6562, 2025.
 \newblock doi:10.1038/s41467-025-61761-7.
 
 \bibitem{ref:claes}
@@ -35,19 +36,21 @@ M.~Jiao, J.~Li, B.~Zhong, S.~Du, S.~Li, M.~Zhang, Q.~Zhang, Z.~Liang, F.~Liu,
 J.~K. Wagner, N.~Claessens, C.~M. Maloney, and P.~Claes, ``Comment on ``de novo
   reconstruction of {3D} human facial images from {DNA} sequence'','' {\em
   Advanced Science}, 2025.
-\newblock Available: \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC12931204}.
+\newblock doi:10.1002/advs.202513207.
 
 \bibitem{ref:facebase}
 M.~L. Marazita, S.~M. Weinberg, and Z.~Raffensperger, ``{3D} facial norms
   database.'' FaceBase Consortium.
 \newblock Available:
-  \url{https://www.facebase.org/resources/human/facial_norms/}.
+  \url{https://www.facebase.org/resources/human/facial_norms/}. Accessed: Nov.
+  19, 2026.
 
 \bibitem{ref:dbgap}
 {National Center for Biotechnology Information}, ``Genetic analysis of normal
   human facial variation.'' dbGaP accession no. phs000949.v1.p1.
 \newblock Available:
   \url{https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000949.v1.p1}.
+  Accessed: Nov. 19, 2026.
 
 \bibitem{ref:flame}
 T.~Li, T.~Bolkart, M.~J. Black, H.~Li, and J.~Romero, ``Learning a model of
@@ -139,7 +142,7 @@ A.~Radford, J.~W. Kim, C.~Hallacy, A.~Ramesh, {\em et~al.}, ``Learning
 \bibitem{ref:transformer}
 A.~Vaswani, N.~Shazeer, N.~Parmar, {\em et~al.}, ``Attention is all you need,''
   in {\em Advances in Neural Information Processing Systems (NeurIPS)},
-  vol.~30, 2017.
+  vol.~30, pp.~5998--6008, 2017.
 
 \bibitem{ref:plink}
 C.~C. Chang, C.~C. Chow, L.~C. A.~M. Tellier, S.~Vattikuti, S.~M. Purcell, and
@@ -176,7 +179,8 @@ A.~Paszke, S.~Gross, F.~Massa, A.~Lerer, J.~Bradbury, G.~Chanan, T.~Killeen,
 
 \bibitem{ref:threejs}
 {three.js authors}, ``three.js: {JavaScript} {3D} library, release r147.''
-  \url{https://threejs.org}, released 30 November 2022, MIT License, 2022.
+  Released Nov. 30, 2022, MIT License, 2022.
+\newblock Available: \url{https://threejs.org}. Accessed: Nov. 19, 2026.
 
 \bibitem{ref:kgenomes}
 {The 1000 Genomes Project Consortium}, ``A global reference for human genetic

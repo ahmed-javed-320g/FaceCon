@@ -1,5 +1,5 @@
 \chapter{Supporting Documentation}
-This appendix provides supporting documentation referenced in the main chapters. It is optional supplementary material and not a substitute for any chapter.
+This appendix provides supporting documentation referenced in the main chapters. It is supplementary material and not a substitute for any chapter. The first section defines the schema in which the SNP panel will be documented once the real genotypes are processed, so that every SNP used by a model can be traced to its source and its quality checks. The second traces each requirement of Chapter~\ref{ch:srs} to the evaluation that tests it, so that a reader can confirm that no requirement was left unverified.
 
 \section{SNP Panel Documentation Schema}
 As required by the methodology, every SNP included in a FaceCon panel is documented with the fields in Table~\ref{tab:snpschema}, so that the genetic input is transparent and reproducible rather than an opaque list.
@@ -9,7 +9,7 @@ As required by the methodology, every SNP included in a FaceCon panel is documen
 \caption{Documentation schema recorded for each SNP in a FaceCon panel.}
 \label{tab:snpschema}
 \small
-\begin{tabular}{|p{3.4cm}|p{10.0cm}|}
+\begin{tabular}{|P{3.4cm}|P{10.0cm}|}
 \hline
 \textbf{Field} & \textbf{Description} \\ \hline
 rsID & Reference SNP cluster identifier. \\ \hline
@@ -30,7 +30,7 @@ Table~\ref{tab:trace} maps the research questions to the methodology and evaluat
 \caption{Traceability from research questions to methodology and evaluation.}
 \label{tab:trace}
 \small
-\begin{tabular}{|p{1.5cm}|p{6.0cm}|p{5.8cm}|}
+\begin{tabular}{|P{1.5cm}|P{6.0cm}|P{5.8cm}|}
 \hline
 \textbf{RQ} & \textbf{Addressed by} & \textbf{Evaluated by} \\ \hline
 RQ1 & Pipeline construction (Ch.~5, Ch.~6) & Reproducible end-to-end run \\ \hline

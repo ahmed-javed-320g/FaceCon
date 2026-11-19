@@ -11,16 +11,16 @@
 \multicolumn{1}{|l|}{\textbf{Test case Version:}} & \multicolumn{1}{l|}{1.0} & \multicolumn{1}{l|}{\textbf{Reviewed By:}} & FaceCon project team \\ \hline
 \multicolumn{1}{|l|}{\textbf{Test Date:}} & \multicolumn{1}{l|}{13 November 2026} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Use Case \\ Reference(s):\end{tabular}}} & UC-01, UC-03 \\ \hline
 \multicolumn{1}{|l|}{\textbf{Revision History:}} & \multicolumn{3}{l|}{None} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Objective:}} & \multicolumn{3}{p{11.9cm}|}{Verify that no subject appears in more than one of the training, validation, and test sets, and that every subject is assigned.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Product/Ver/\\ Module:\end{tabular}}} & \multicolumn{3}{p{11.9cm}|}{FaceCon prototype, simulated cohort generator, split construction.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Environment:}} & \multicolumn{3}{p{11.9cm}|}{Python 3 with the project requirements, processor only, executed with pytest from the project root.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Assumptions:}} & \multicolumn{3}{p{11.9cm}|}{The generator configuration is valid and the random seed is fixed.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Pre-Requisite:}} & \multicolumn{3}{p{11.9cm}|}{None.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Objective:}} & \multicolumn{3}{P{11.9cm}|}{Verify that no subject appears in more than one of the training, validation, and test sets, and that every subject is assigned.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Product/Ver/\\ Module:\end{tabular}}} & \multicolumn{3}{P{11.9cm}|}{FaceCon prototype, simulated cohort generator, split construction.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Environment:}} & \multicolumn{3}{P{11.9cm}|}{Python 3 with the project requirements, processor only, executed with pytest from the project root.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Assumptions:}} & \multicolumn{3}{P{11.9cm}|}{The generator configuration is valid and the random seed is fixed.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Pre-Requisite:}} & \multicolumn{3}{P{11.9cm}|}{None.} \\ \hline
 \multicolumn{1}{|l|}{\textbf{Step No.}} & \multicolumn{1}{l|}{\textbf{Execution description}} & \multicolumn{2}{l|}{\textbf{Procedure result}} \\ \hline
-\multicolumn{1}{|l|}{1} & \multicolumn{1}{p{5.6cm}|}{Generate a small simulated cohort of 500 subjects.} & \multicolumn{2}{p{6.3cm}|}{Cohort generated with three index sets.} \\ \hline
-\multicolumn{1}{|l|}{2} & \multicolumn{1}{p{5.6cm}|}{Concatenate the three index sets and count unique subjects.} & \multicolumn{2}{p{6.3cm}|}{The number of unique subjects equals the cohort size.} \\ \hline
-\multicolumn{1}{|l|}{3} & \multicolumn{1}{p{5.6cm}|}{Compare the total number of assigned indices with the cohort size.} & \multicolumn{2}{p{6.3cm}|}{The two numbers are equal, so there is no overlap and no omission.} \\ \hline
-\multicolumn{4}{|p{15.2cm}|}{\textbf{Comments:} The controls script repeats this check on every full-size cohort as acceptance check A4.} \\ \hline
+\multicolumn{1}{|l|}{1} & \multicolumn{1}{P{5.6cm}|}{Generate a small simulated cohort of 500 subjects.} & \multicolumn{2}{P{6.3cm}|}{Cohort generated with three index sets.} \\ \hline
+\multicolumn{1}{|l|}{2} & \multicolumn{1}{P{5.6cm}|}{Concatenate the three index sets and count unique subjects.} & \multicolumn{2}{P{6.3cm}|}{The number of unique subjects equals the cohort size.} \\ \hline
+\multicolumn{1}{|l|}{3} & \multicolumn{1}{P{5.6cm}|}{Compare the total number of assigned indices with the cohort size.} & \multicolumn{2}{P{6.3cm}|}{The two numbers are equal, so there is no overlap and no omission.} \\ \hline
+\multicolumn{4}{|P{15.2cm}|}{\textbf{Comments:} The controls script repeats this check on every full-size cohort as acceptance check A4.} \\ \hline
 \multicolumn{4}{|c|}{\textbf{Passed}} \\ \hline
 \end{tabular}
 \end{table}
@@ -37,16 +37,16 @@
 \multicolumn{1}{|l|}{\textbf{Test case Version:}} & \multicolumn{1}{l|}{1.0} & \multicolumn{1}{l|}{\textbf{Reviewed By:}} & FaceCon project team \\ \hline
 \multicolumn{1}{|l|}{\textbf{Test Date:}} & \multicolumn{1}{l|}{13 November 2026} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Use Case \\ Reference(s):\end{tabular}}} & UC-03, UC-06 \\ \hline
 \multicolumn{1}{|l|}{\textbf{Revision History:}} & \multicolumn{3}{l|}{None} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Objective:}} & \multicolumn{3}{p{11.9cm}|}{Verify that the training harness decodes shape vectors with the same face basis and scale as the generator, so that mesh error in millimetres is correct.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Product/Ver/\\ Module:\end{tabular}}} & \multicolumn{3}{p{11.9cm}|}{FaceCon prototype, training harness data loader and face model.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Environment:}} & \multicolumn{3}{p{11.9cm}|}{Python 3 with the project requirements, processor only, executed with pytest from the project root.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Assumptions:}} & \multicolumn{3}{p{11.9cm}|}{The stand-in face model file and the generated cohort are present.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Pre-Requisite:}} & \multicolumn{3}{p{11.9cm}|}{Matched simulated cohort generated.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Objective:}} & \multicolumn{3}{P{11.9cm}|}{Verify that the training harness decodes shape vectors with the same face basis and scale as the generator, so that mesh error in millimetres is correct.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Product/Ver/\\ Module:\end{tabular}}} & \multicolumn{3}{P{11.9cm}|}{FaceCon prototype, training harness data loader and face model.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Environment:}} & \multicolumn{3}{P{11.9cm}|}{Python 3 with the project requirements, processor only, executed with pytest from the project root.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Assumptions:}} & \multicolumn{3}{P{11.9cm}|}{The stand-in face model file and the generated cohort are present.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Pre-Requisite:}} & \multicolumn{3}{P{11.9cm}|}{Matched simulated cohort generated.} \\ \hline
 \multicolumn{1}{|l|}{\textbf{Step No.}} & \multicolumn{1}{l|}{\textbf{Execution description}} & \multicolumn{2}{l|}{\textbf{Procedure result}} \\ \hline
-\multicolumn{1}{|l|}{1} & \multicolumn{1}{p{5.6cm}|}{Load the cohort through the training harness.} & \multicolumn{2}{p{6.3cm}|}{The harness holds a face basis.} \\ \hline
-\multicolumn{1}{|l|}{2} & \multicolumn{1}{p{5.6cm}|}{Load the face model through the generator's own loader.} & \multicolumn{2}{p{6.3cm}|}{The generator holds a face basis.} \\ \hline
-\multicolumn{1}{|l|}{3} & \multicolumn{1}{p{5.6cm}|}{Compare the two bases element by element.} & \multicolumn{2}{p{6.3cm}|}{The bases agree within a relative tolerance of $10^{-4}$.} \\ \hline
-\multicolumn{4}{|p{15.2cm}|}{\textbf{Comments:} Written after a review found that the harness omitted the identity scale and under-reported mesh error by a factor of 9.5. The defect is fixed.} \\ \hline
+\multicolumn{1}{|l|}{1} & \multicolumn{1}{P{5.6cm}|}{Load the cohort through the training harness.} & \multicolumn{2}{P{6.3cm}|}{The harness holds a face basis.} \\ \hline
+\multicolumn{1}{|l|}{2} & \multicolumn{1}{P{5.6cm}|}{Load the face model through the generator's own loader.} & \multicolumn{2}{P{6.3cm}|}{The generator holds a face basis.} \\ \hline
+\multicolumn{1}{|l|}{3} & \multicolumn{1}{P{5.6cm}|}{Compare the two bases element by element.} & \multicolumn{2}{P{6.3cm}|}{The bases agree within a relative tolerance of $10^{-4}$.} \\ \hline
+\multicolumn{4}{|P{15.2cm}|}{\textbf{Comments:} Written after a review found that the harness omitted the identity scale and under-reported mesh error by a factor of 9.5. The defect is fixed.} \\ \hline
 \multicolumn{4}{|c|}{\textbf{Passed}} \\ \hline
 \end{tabular}
 \end{table}
@@ -63,16 +63,16 @@
 \multicolumn{1}{|l|}{\textbf{Test case Version:}} & \multicolumn{1}{l|}{1.0} & \multicolumn{1}{l|}{\textbf{Reviewed By:}} & FaceCon project team \\ \hline
 \multicolumn{1}{|l|}{\textbf{Test Date:}} & \multicolumn{1}{l|}{13 November 2026} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Use Case \\ Reference(s):\end{tabular}}} & UC-01 \\ \hline
 \multicolumn{1}{|l|}{\textbf{Revision History:}} & \multicolumn{3}{l|}{None} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Objective:}} & \multicolumn{3}{p{11.9cm}|}{Verify that each published lead SNP is generated once even when it is the lead for several traits, and that the X-chromosome SNP respects sex.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Product/Ver/\\ Module:\end{tabular}}} & \multicolumn{3}{p{11.9cm}|}{FaceCon prototype, injection of published association signals.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Environment:}} & \multicolumn{3}{p{11.9cm}|}{Python 3 with the project requirements, processor only, executed with pytest from the project root.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Assumptions:}} & \multicolumn{3}{p{11.9cm}|}{The effect table lists one lead SNP per trait.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Pre-Requisite:}} & \multicolumn{3}{p{11.9cm}|}{Matched simulated cohort generated.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Objective:}} & \multicolumn{3}{P{11.9cm}|}{Verify that each published lead SNP is generated once even when it is the lead for several traits, and that the X-chromosome SNP respects sex.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Product/Ver/\\ Module:\end{tabular}}} & \multicolumn{3}{P{11.9cm}|}{FaceCon prototype, injection of published association signals.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Environment:}} & \multicolumn{3}{P{11.9cm}|}{Python 3 with the project requirements, processor only, executed with pytest from the project root.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Assumptions:}} & \multicolumn{3}{P{11.9cm}|}{The effect table lists one lead SNP per trait.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Pre-Requisite:}} & \multicolumn{3}{P{11.9cm}|}{Matched simulated cohort generated.} \\ \hline
 \multicolumn{1}{|l|}{\textbf{Step No.}} & \multicolumn{1}{l|}{\textbf{Execution description}} & \multicolumn{2}{l|}{\textbf{Procedure result}} \\ \hline
-\multicolumn{1}{|l|}{1} & \multicolumn{1}{p{5.6cm}|}{Read the marker identifiers and the marker matrix.} & \multicolumn{2}{p{6.3cm}|}{The number of columns equals the number of unique identifiers.} \\ \hline
-\multicolumn{1}{|l|}{2} & \multicolumn{1}{p{5.6cm}|}{Select male subjects at the X-chromosome SNP.} & \multicolumn{2}{p{6.3cm}|}{No male subject has a dosage of one.} \\ \hline
-\multicolumn{1}{|l|}{3} & \multicolumn{1}{p{5.6cm}|}{Select female subjects at the same SNP.} & \multicolumn{2}{p{6.3cm}|}{Dosages of one are present, as expected for two copies.} \\ \hline
-\multicolumn{4}{|p{15.2cm}|}{\textbf{Comments:} Written after a review found a lead SNP generated as two unrelated columns and an X-chromosome SNP generated without regard to sex. Both defects are fixed.} \\ \hline
+\multicolumn{1}{|l|}{1} & \multicolumn{1}{P{5.6cm}|}{Read the marker identifiers and the marker matrix.} & \multicolumn{2}{P{6.3cm}|}{The number of columns equals the number of unique identifiers.} \\ \hline
+\multicolumn{1}{|l|}{2} & \multicolumn{1}{P{5.6cm}|}{Select male subjects at the X-chromosome SNP.} & \multicolumn{2}{P{6.3cm}|}{No male subject has a dosage of one.} \\ \hline
+\multicolumn{1}{|l|}{3} & \multicolumn{1}{P{5.6cm}|}{Select female subjects at the same SNP.} & \multicolumn{2}{P{6.3cm}|}{Dosages of one are present, as expected for two copies.} \\ \hline
+\multicolumn{4}{|P{15.2cm}|}{\textbf{Comments:} Written after a review found a lead SNP generated as two unrelated columns and an X-chromosome SNP generated without regard to sex. Both defects are fixed.} \\ \hline
 \multicolumn{4}{|c|}{\textbf{Passed}} \\ \hline
 \end{tabular}
 \end{table}
@@ -89,16 +89,16 @@
 \multicolumn{1}{|l|}{\textbf{Test case Version:}} & \multicolumn{1}{l|}{1.0} & \multicolumn{1}{l|}{\textbf{Reviewed By:}} & FaceCon project team \\ \hline
 \multicolumn{1}{|l|}{\textbf{Test Date:}} & \multicolumn{1}{l|}{13 November 2026} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Use Case \\ Reference(s):\end{tabular}}} & UC-03 \\ \hline
 \multicolumn{1}{|l|}{\textbf{Revision History:}} & \multicolumn{3}{l|}{None} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Objective:}} & \multicolumn{3}{p{11.9cm}|}{Verify that an association scan adjusted for covariates detects the injected SNP and measurement pairs, and does not report pairs that were not injected.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Product/Ver/\\ Module:\end{tabular}}} & \multicolumn{3}{p{11.9cm}|}{FaceCon prototype, association recovery check stored with the cohort.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Environment:}} & \multicolumn{3}{p{11.9cm}|}{Python 3 with the project requirements, processor only, executed with pytest from the project root.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Assumptions:}} & \multicolumn{3}{p{11.9cm}|}{Both the measurements and the dosages are adjusted for sex, age, age squared, height, weight, and ancestry before testing.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Pre-Requisite:}} & \multicolumn{3}{p{11.9cm}|}{Matched simulated cohort generated.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Objective:}} & \multicolumn{3}{P{11.9cm}|}{Verify that an association scan adjusted for covariates detects the injected SNP and measurement pairs, and does not report pairs that were not injected.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Product/Ver/\\ Module:\end{tabular}}} & \multicolumn{3}{P{11.9cm}|}{FaceCon prototype, association recovery check stored with the cohort.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Environment:}} & \multicolumn{3}{P{11.9cm}|}{Python 3 with the project requirements, processor only, executed with pytest from the project root.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Assumptions:}} & \multicolumn{3}{P{11.9cm}|}{Both the measurements and the dosages are adjusted for sex, age, age squared, height, weight, and ancestry before testing.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Pre-Requisite:}} & \multicolumn{3}{P{11.9cm}|}{Matched simulated cohort generated.} \\ \hline
 \multicolumn{1}{|l|}{\textbf{Step No.}} & \multicolumn{1}{l|}{\textbf{Execution description}} & \multicolumn{2}{l|}{\textbf{Procedure result}} \\ \hline
-\multicolumn{1}{|l|}{1} & \multicolumn{1}{p{5.6cm}|}{Test all 260 pairs of SNP and measurement.} & \multicolumn{2}{p{6.3cm}|}{A p-value is obtained for every pair.} \\ \hline
-\multicolumn{1}{|l|}{2} & \multicolumn{1}{p{5.6cm}|}{Apply a Bonferroni threshold to the 14 injected pairs (positive control).} & \multicolumn{2}{p{6.3cm}|}{All 14 are detected with the published direction of effect.} \\ \hline
-\multicolumn{1}{|l|}{3} & \multicolumn{1}{p{5.6cm}|}{Apply the same threshold to the 246 pairs that were not injected (negative control).} & \multicolumn{2}{p{6.3cm}|}{None is detected, and 2.8 per cent fall below 0.05, which is consistent with chance.} \\ \hline
-\multicolumn{4}{|p{15.2cm}|}{\textbf{Comments:} The acceptance rule requires at least 80 per cent of injected pairs to be detected and no false detection.} \\ \hline
+\multicolumn{1}{|l|}{1} & \multicolumn{1}{P{5.6cm}|}{Test all 260 pairs of SNP and measurement.} & \multicolumn{2}{P{6.3cm}|}{A p-value is obtained for every pair.} \\ \hline
+\multicolumn{1}{|l|}{2} & \multicolumn{1}{P{5.6cm}|}{Apply a Bonferroni threshold to the 14 injected pairs (positive control).} & \multicolumn{2}{P{6.3cm}|}{All 14 are detected with the published direction of effect.} \\ \hline
+\multicolumn{1}{|l|}{3} & \multicolumn{1}{P{5.6cm}|}{Apply the same threshold to the 246 pairs that were not injected (negative control).} & \multicolumn{2}{P{6.3cm}|}{None is detected, and 2.8 per cent fall below 0.05, which is consistent with chance.} \\ \hline
+\multicolumn{4}{|P{15.2cm}|}{\textbf{Comments:} The acceptance rule requires at least 80 per cent of injected pairs to be detected and no false detection.} \\ \hline
 \multicolumn{4}{|c|}{\textbf{Passed}} \\ \hline
 \end{tabular}
 \end{table}
@@ -115,15 +115,15 @@
 \multicolumn{1}{|l|}{\textbf{Test case Version:}} & \multicolumn{1}{l|}{1.0} & \multicolumn{1}{l|}{\textbf{Reviewed By:}} & FaceCon project team \\ \hline
 \multicolumn{1}{|l|}{\textbf{Test Date:}} & \multicolumn{1}{l|}{13 November 2026} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Use Case \\ Reference(s):\end{tabular}}} & UC-03 \\ \hline
 \multicolumn{1}{|l|}{\textbf{Revision History:}} & \multicolumn{3}{l|}{None} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Objective:}} & \multicolumn{3}{p{11.9cm}|}{Verify that screened SNPs improve prediction beyond covariates and ancestry components when a genetic share is planted, and that the improvement disappears when the genotype rows are shuffled.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Product/Ver/\\ Module:\end{tabular}}} & \multicolumn{3}{p{11.9cm}|}{FaceCon prototype, controls script.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Environment:}} & \multicolumn{3}{p{11.9cm}|}{Python 3 with the project requirements, processor only, executed with pytest from the project root.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Assumptions:}} & \multicolumn{3}{p{11.9cm}|}{A genetic share of 0.20 is planted. Screening and all scaling use the training set only.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Pre-Requisite:}} & \multicolumn{3}{p{11.9cm}|}{None. The test generates its own cohort of 1{,}000 subjects.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Objective:}} & \multicolumn{3}{P{11.9cm}|}{Verify that screened SNPs improve prediction beyond covariates and ancestry components when a genetic share is planted, and that the improvement disappears when the genotype rows are shuffled.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Product/Ver/\\ Module:\end{tabular}}} & \multicolumn{3}{P{11.9cm}|}{FaceCon prototype, controls script.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Environment:}} & \multicolumn{3}{P{11.9cm}|}{Python 3 with the project requirements, processor only, executed with pytest from the project root.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Assumptions:}} & \multicolumn{3}{P{11.9cm}|}{A genetic share of 0.20 is planted. Screening and all scaling use the training set only.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Pre-Requisite:}} & \multicolumn{3}{P{11.9cm}|}{None. The test generates its own cohort of 1{,}000 subjects.} \\ \hline
 \multicolumn{1}{|l|}{\textbf{Step No.}} & \multicolumn{1}{l|}{\textbf{Execution description}} & \multicolumn{2}{l|}{\textbf{Procedure result}} \\ \hline
-\multicolumn{1}{|l|}{1} & \multicolumn{1}{p{5.6cm}|}{Fit the ladder on the generated cohort (positive control).} & \multicolumn{2}{p{6.3cm}|}{The gain from screened SNPs exceeds 0.03 in $R^2$.} \\ \hline
-\multicolumn{1}{|l|}{2} & \multicolumn{1}{p{5.6cm}|}{Shuffle the genotype rows and fit again (negative control).} & \multicolumn{2}{p{6.3cm}|}{The gain is below 0.01 in $R^2$.} \\ \hline
-\multicolumn{4}{|p{15.2cm}|}{\textbf{Comments:} The full-size version of this test, with five cohorts and confidence intervals, is reported in Chapter~\ref{ch:results}.} \\ \hline
+\multicolumn{1}{|l|}{1} & \multicolumn{1}{P{5.6cm}|}{Fit the ladder on the generated cohort (positive control).} & \multicolumn{2}{P{6.3cm}|}{The gain from screened SNPs exceeds 0.03 in $R^2$.} \\ \hline
+\multicolumn{1}{|l|}{2} & \multicolumn{1}{P{5.6cm}|}{Shuffle the genotype rows and fit again (negative control).} & \multicolumn{2}{P{6.3cm}|}{The gain is below 0.01 in $R^2$.} \\ \hline
+\multicolumn{4}{|P{15.2cm}|}{\textbf{Comments:} The full-size version of this test, with five cohorts and confidence intervals, is reported in Chapter~\ref{ch:results}.} \\ \hline
 \multicolumn{4}{|c|}{\textbf{Passed}} \\ \hline
 \end{tabular}
 \end{table}
@@ -140,27 +140,29 @@
 \multicolumn{1}{|l|}{\textbf{Test case Version:}} & \multicolumn{1}{l|}{1.0} & \multicolumn{1}{l|}{\textbf{Reviewed By:}} & FaceCon project team \\ \hline
 \multicolumn{1}{|l|}{\textbf{Test Date:}} & \multicolumn{1}{l|}{13 November 2026} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Use Case \\ Reference(s):\end{tabular}}} & UC-03, UC-05 \\ \hline
 \multicolumn{1}{|l|}{\textbf{Revision History:}} & \multicolumn{3}{l|}{None} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Objective:}} & \multicolumn{3}{p{11.9cm}|}{Verify that the appearance module does not assign nearly every subject to one category for eye, hair, or skin colour.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Product/Ver/\\ Module:\end{tabular}}} & \multicolumn{3}{p{11.9cm}|}{FaceCon prototype, appearance module and marker generation.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Environment:}} & \multicolumn{3}{p{11.9cm}|}{Python 3 with the project requirements, processor only, executed with pytest from the project root.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Assumptions:}} & \multicolumn{3}{p{11.9cm}|}{The marker allele frequencies stored with the project are used.} \\ \hline
-\multicolumn{1}{|l|}{\textbf{Pre-Requisite:}} & \multicolumn{3}{p{11.9cm}|}{Matched simulated cohort generated.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Objective:}} & \multicolumn{3}{P{11.9cm}|}{Verify that the appearance module does not assign nearly every subject to one category for eye, hair, or skin colour.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Product/Ver/\\ Module:\end{tabular}}} & \multicolumn{3}{P{11.9cm}|}{FaceCon prototype, appearance module and marker generation.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Environment:}} & \multicolumn{3}{P{11.9cm}|}{Python 3 with the project requirements, processor only, executed with pytest from the project root.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Assumptions:}} & \multicolumn{3}{P{11.9cm}|}{The marker allele frequencies stored with the project are used.} \\ \hline
+\multicolumn{1}{|l|}{\textbf{Pre-Requisite:}} & \multicolumn{3}{P{11.9cm}|}{Matched simulated cohort generated.} \\ \hline
 \multicolumn{1}{|l|}{\textbf{Step No.}} & \multicolumn{1}{l|}{\textbf{Execution description}} & \multicolumn{2}{l|}{\textbf{Procedure result}} \\ \hline
-\multicolumn{1}{|l|}{1} & \multicolumn{1}{p{5.6cm}|}{Predict eye, hair, and skin colour for every subject.} & \multicolumn{2}{p{6.3cm}|}{A category is returned for each trait and subject.} \\ \hline
-\multicolumn{1}{|l|}{2} & \multicolumn{1}{p{5.6cm}|}{Compute the share of the most frequent category for each trait.} & \multicolumn{2}{p{6.3cm}|}{The share is below 90 per cent for all three traits.} \\ \hline
-\multicolumn{4}{|p{15.2cm}|}{\textbf{Comments:} Written after regenerating the cohort silently reset the marker frequencies and every subject was predicted to have red hair. This test checks plausibility of the simulated inputs and is not a measure of accuracy.} \\ \hline
+\multicolumn{1}{|l|}{1} & \multicolumn{1}{P{5.6cm}|}{Predict eye, hair, and skin colour for every subject.} & \multicolumn{2}{P{6.3cm}|}{A category is returned for each trait and subject.} \\ \hline
+\multicolumn{1}{|l|}{2} & \multicolumn{1}{P{5.6cm}|}{Compute the share of the most frequent category for each trait.} & \multicolumn{2}{P{6.3cm}|}{The share is below 90 per cent for all three traits.} \\ \hline
+\multicolumn{4}{|P{15.2cm}|}{\textbf{Comments:} Written after regenerating the cohort silently reset the marker frequencies and every subject was predicted to have red hair. This test checks plausibility of the simulated inputs and is not a measure of accuracy.} \\ \hline
 \multicolumn{4}{|c|}{\textbf{Passed}} \\ \hline
 \end{tabular}
 \end{table}
 
-\begin{table}[H]
-\centering
-\caption{The complete automated test suite. All 44 test cases passed in the final run.}
-\label{tab:tcall}
-\small\setstretch{1.1}
-\begin{tabular}{|p{0.9cm}|p{9.3cm}|p{1.9cm}|p{1.9cm}|}
+{\small\setstretch{1.1}\setlength{\LTpre}{6pt}\setlength{\LTpost}{0pt}
+\begin{longtable}{|P{0.9cm}|P{9.3cm}|P{1.9cm}|P{1.9cm}|}
+\caption{The complete automated test suite. All 44 test cases passed in the final run.}\label{tab:tcall}\\
 \hline
 \textbf{No.} & \textbf{What the test verifies} & \textbf{Type} & \textbf{Detailed in} \\ \hline
+\endfirsthead
+\multicolumn{4}{l}{\small\itshape Table~\thetable\ continued} \\
+\hline
+\textbf{No.} & \textbf{What the test verifies} & \textbf{Type} & \textbf{Detailed in} \\ \hline
+\endhead
 T01 & Published lead SNPs generated once, with sex-aware X chromosome & Control & TC-03 \\ \hline
 T02 & Injected associations recovered, with no false detections & Control & TC-04 \\ \hline
 T03 & Feature matrices have the expected shapes & Unit & --- \\ \hline
@@ -201,5 +203,5 @@ T41 & The iterative stage improves on the closed-form landmark warm start & Inte
 T42 & A mesh of noise gives a far larger fit residual than a real face & Control & --- \\ \hline
 T43 & Scan fitting is reproducible from its seed & Unit & --- \\ \hline
 T44 & The fitting layer works in millimetres, applying the model's scale & Unit & --- \\ \hline
-\end{tabular}
-\end{table}
+\end{longtable}
+}

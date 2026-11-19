@@ -1,6 +1,7 @@
-% FaceCon FYP bibliography -- all entries verified against primary sources
-% (Crossref / OpenAlex) unless explicitly noted. Prefers 2021-2026 where possible;
-% a few seminal/method papers are older but are the methods actually used.
+% FaceCon FYP bibliography. On 19 Nov 2026 ref:wang and ref:comment were found to
+% carry wrong author names and, for ref:wang, the wrong title; both were corrected
+% against the publishers' records, and ref:xiong was checked and given its issue.
+% Web references carry access dates as IEEE style requires.
 
 @article{ref:difface,
   author  = {Mingqi Jiao and Jiarui Li and Bingxu Zhong and Siyuan Du and Shuning Li and Manfei Zhang and Qibin Zhang and Zhongming Liang and Fan Liu and Chunman Zuo and Sijia Wang and Luonan Chen},
@@ -14,11 +15,11 @@
 }
 
 @article{ref:comment,
-  author  = {Jennifer K. Wagner and Nele Claessens and Casey M. Maloney and Peter Claes},
+  author  = {Jennifer K. Wagner and Nina Claessens and Caitlin M. Maloney and Peter Claes},
   title   = {Comment on ``De Novo Reconstruction of {3D} Human Facial Images from {DNA} Sequence''},
   journal = {Advanced Science},
   year    = {2025},
-  note    = {Available: \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC12931204}}
+  note    = {doi:10.1002/advs.202513207}
 }
 
 @article{ref:flame,
@@ -33,11 +34,13 @@
 }
 
 @article{ref:wang,
-  author  = {Chao Wang and others},
-  title   = {Forensic {DNA} Phenotyping: A 19-{SNP} Prediction System},
+  author  = {Chudong Wang and Dan Wen and Weifeng Qu and Ruyi Xu and Yi Liu and Hongtao Jia and Xuan Tang and Jienan Li and Lagabaiyila Zha},
+  title   = {Forensic {DNA} Phenotyping: Construction and Evaluation of a 19-{SNP} Phenotype Prediction System Based on the {Chinese} Population},
   journal = {Forensic Sciences Research},
-  year    = {2026},
-  note    = {As cited in the project proposal; DOI not independently verified}
+  volume  = {11},
+  number  = {1},
+  pages   = {50--61},
+  year    = {2026}
 }
 
 @article{ref:xiong,
@@ -45,6 +48,7 @@
   title   = {Combined Genome-Wide Association Study of Facial Traits in {Europeans} Increases Explained Variance and Improves Prediction},
   journal = {Nature Communications},
   volume  = {16},
+  number  = {1},
   pages   = {6562},
   year    = {2025},
   note    = {doi:10.1038/s41467-025-61761-7}
@@ -54,14 +58,14 @@
   author  = {Mary L. Marazita and Seth M. Weinberg and Zachary Raffensperger},
   title   = {{3D} Facial Norms Database},
   howpublished = {FaceBase Consortium},
-  note    = {Available: \url{https://www.facebase.org/resources/human/facial_norms/}}
+  note    = {Available: \url{https://www.facebase.org/resources/human/facial_norms/}. Accessed: Nov. 19, 2026}
 }
 
 @misc{ref:dbgap,
   author  = {{National Center for Biotechnology Information}},
   title   = {Genetic Analysis of Normal Human Facial Variation},
   howpublished = {dbGaP accession no. phs000949.v1.p1},
-  note    = {Available: \url{https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000949.v1.p1}}
+  note    = {Available: \url{https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000949.v1.p1}. Accessed: Nov. 19, 2026}
 }
 
 @article{ref:white,
@@ -187,6 +191,7 @@
   title     = {Attention Is All You Need},
   booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
   volume    = {30},
+  pages     = {5998--6008},
   year      = {2017}
 }
 
@@ -290,5 +295,6 @@
   author       = {{three.js authors}},
   title        = {three.js: {JavaScript} {3D} Library, release r147},
   year         = {2022},
-  howpublished = {\url{https://threejs.org}, released 30 November 2022, MIT License}
+  howpublished = {Released Nov. 30, 2022, MIT License},
+  note         = {Available: \url{https://threejs.org}. Accessed: Nov. 19, 2026}
 }

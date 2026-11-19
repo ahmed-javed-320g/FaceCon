@@ -23,6 +23,16 @@
 }
 
 \emergencystretch=3em
+% ---- command-line listings for the User Manual ----
+\lstdefinestyle{shell}{basicstyle=\small\ttfamily,breaklines=true,columns=fullflexible,frame=single,
+  framesep=4pt,xleftmargin=6pt,xrightmargin=6pt,aboveskip=8pt,belowskip=0pt,showstringspaces=false}
+% ---- table cells set ragged right: justified narrow columns produced wide gaps ----
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+% ---- tighter, uniform space around floats (the template's defaults left visible gaps) ----
+\setlength{\intextsep}{8pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{12pt plus 2pt minus 4pt}
+\setlength{\floatsep}{10pt plus 2pt minus 2pt}
+
 \begin{document}
 \newcommand{\supervisor}{Ms. Rushda Muneer}
 \newcommand{\university}{National University of Computer and Emerging Sciences, Lahore}
@@ -88,7 +98,7 @@ This states Authors' declaration that the work presented in the report is their 
 \pagebreak
 
 \section*{Abstract}
-Reconstructing a three-dimensional human face from DNA is an open problem spanning statistical genetics, geometry processing, and machine learning. The recent Difface system mapped single-nucleotide polymorphisms (SNPs) to a 3D facial mesh, but was trained on private data with an unpublished SNP panel, and independent commentary questions whether its accuracy reflects individual genetics or mainly age, gender, and ancestry. FaceCon builds a reproducible genotype-to-3D-face pipeline on documented data, using a documented SNP panel and the shared FLAME representation, and integrates an established forensic DNA phenotyping method, HIrisPlex-S, to provide eye colour, hair colour, and skin colour from the same genotype. It predicts FLAME shape parameters through a baselines-first progression of models measured against demographic baselines, so that any individual-level genetic contribution to facial shape is reported honestly, while eye, hair, and skin colour are obtained by integrating the established HIrisPlex-S method rather than a newly trained appearance model. Controlled access to the real cohort was still pending at the time of writing, so the complete pipeline was implemented and validated on a simulated cohort that follows the public description of the 3D Facial Norms study and carries published facial association signals. On this simulated data the pipeline recovers planted genetic signal, reports none under negative controls, and shows that a simple regularised linear model outperforms the deep models tested. These results establish that the pipeline is correct and ready for real data, and they make no claim about the prediction of real faces.
+FaceCon is a reproducible pipeline that predicts three-dimensional facial shape from genotype and reports how much the genotype adds beyond age, sex, and ancestry. It represents faces in a shared parametric model, compares each model with a demographic baseline, and integrates the established HIrisPlex-S method for eye, hair, and skin colour. Access to the real cohort was pending, so the pipeline was validated on a simulated cohort following the 3D Facial Norms study, first with generated and then with real human genotypes. The pipeline recovered planted genetic signal and reported none under negative controls. A regularised linear model outperformed every neural model, including when the planted effects were not additive. These results show the pipeline is correct and make no claim about predicting real faces.
 \pagebreak
 
 \section*{Executive Summary}
@@ -114,6 +124,7 @@ Reconstructing a three-dimensional human face from DNA is an open problem spanni
 \input{ch5_methodology}
 \input{ch6_design}
 \input{ch7_implementation}
+\input{ch7b_usermanual}
 \input{ch8_results}
 \input{ch9_conclusion}
 

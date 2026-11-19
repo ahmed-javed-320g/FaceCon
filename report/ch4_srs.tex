@@ -1,11 +1,12 @@
 \chapter{Software Requirement Specifications}
+\label{ch:srs}
 This chapter specifies the requirements of the FaceCon system. FaceCon is a research and development pipeline with a demonstration front end rather than a conventional multi-user application, so its users are the researcher-developer who builds and runs the pipeline, the evaluator who inspects the results, and a demonstration user who views predicted faces. The chapter sets out the system features, the functional and non-functional requirements, the quality attributes, the assumptions, the use cases, the hardware and software requirements, the user interface, the data design, and a risk analysis. Each requirement is written so that it is specific, testable, and traceable to the methodology and design that follow.
 
 \section{List of Features}
 The system provides the following features.
 \begin{itemize}
-\item F1. Ingest genotype data, build a subject by SNP dosage matrix, and apply documented quality control.
-\item F2. Reduce the quality controlled genotypes to a documented, GWAS informed SNP panel.
+\item F1. Ingest genotype data, build a subject by SNP dosage matrix, and apply documented QC.
+\item F2. Reduce the genotypes that pass QC to a documented, GWAS-informed SNP panel.
 \item F3. Ingest 3D scans and demographics, and register scans to FLAME to export shape parameters.
 \item F4. Pair subjects that have both a valid genotype and a valid FLAME target.
 \item F5. Train demographics only, SNP only, and combined predictive models through a baselines first progression.
@@ -21,7 +22,7 @@ The system provides the following features.
 The functional requirements describe the external behaviour of the system and are stated as testable ``shall'' requirements.
 \begin{itemize}
 \item FR-01. The system shall ingest genotype data and construct a subject-by-SNP allele-dosage matrix.
-\item FR-02. The system shall perform genotype quality control, including filtering by missingness, minor-allele frequency, Hardy--Weinberg equilibrium, and relatedness, and shall produce a documented SNP panel.
+\item FR-02. The system shall perform genotype QC, including filtering by missingness, minor-allele frequency, Hardy--Weinberg equilibrium, and relatedness, and shall produce a documented SNP panel.
 \item FR-03. The system shall ingest 3D facial scans and their associated demographic attributes.
 \item FR-04. The system shall register facial scans to the FLAME model and export FLAME shape and identity parameters as prediction targets.
 \item FR-05. The system shall match subjects that have both a valid genotype and a valid FLAME target, and shall generate subject-level training, validation, and test splits.
@@ -44,7 +45,7 @@ The non-functional requirements constrain how the system behaves and are likewis
 \item NFR-02. The system shall fit any dataset-derived SNP-selection and normalization statistics using training data only.
 \item NFR-03. The system shall be configuration-driven, so that every experiment can be reproduced from a stored configuration and random seed.
 \item NFR-04. The system shall allow model complexity to be matched to the final paired sample size.
-\item NFR-05. The system's preprocessing, quality control, and baseline models shall be executable on standard development hardware, while more computationally demanding neural training shall be able to run on higher-capacity GPU resources such as those provided by shared or institutional computing facilities.
+\item NFR-05. The system's preprocessing, QC, and baseline models shall be executable on standard development hardware, while more computationally demanding neural training shall be able to run on higher-capacity GPU resources such as those provided by shared or institutional computing facilities.
 \item NFR-06. The system shall support honest reporting, including repeated evaluation or confidence estimates where feasible, and shall not present results that overstate predictive performance.
 \item NFR-07. The system shall handle controlled genetic and biometric data strictly under the approved data-use agreement, and shall not expose raw individual-level data or permit re-identification.
 \end{itemize}
@@ -192,10 +193,10 @@ This section presents the use cases of the system in the standard tabular format
 This section lists the hardware and software needed to develop, train, and run FaceCon. The requirements are modest for the preprocessing and baseline stages and rise only for the neural models, which benefit from GPU acceleration.
 
 \subsection{Hardware Requirements}
-The data preprocessing, SNP quality control, and baseline models are designed to run on standard development hardware with a modern multi-core processor, sufficient system memory for genotype processing, and adequate disk space for scans, genotypes, and model checkpoints. The neural models use GPU acceleration. More demanding neural training is expected to require a higher-capacity GPU than routine development, which can be provided by shared or institutional computing resources rather than by any one specific device.
+The data preprocessing, SNP QC, and baseline models are designed to run on standard development hardware with a modern multi-core processor, sufficient system memory for genotype processing, and adequate disk space for scans, genotypes, and model checkpoints. The neural models use GPU acceleration. More demanding neural training is expected to require a higher-capacity GPU than routine development, which can be provided by shared or institutional computing resources rather than by any one specific device.
 
 \subsection{Software Requirements}
-The system uses the Python scientific stack (NumPy and SciPy), PyTorch for neural models, the FLAME~2020 model files under their academic licence, mesh input/output and geometry utilities such as trimesh, genotype tooling for quality control based on a PLINK-style workflow, and standard experiment-configuration and plotting utilities.
+The system uses the Python scientific stack (NumPy and SciPy), PyTorch for neural models, the FLAME~2020 model files under their academic licence, mesh input/output and geometry utilities such as trimesh, genotype tooling for QC based on a PLINK-style workflow, and standard experiment-configuration and plotting utilities.
 
 \section{Graphical User Interface}
 \label{sec:gui}
@@ -242,7 +243,7 @@ Table~\ref{tab:datadict} is the data dictionary for the principal FaceCon artifa
 \caption{Data dictionary for the principal FaceCon data artifacts.}
 \label{tab:datadict}
 \small
-\begin{tabular}{|p{2.6cm}|p{2.6cm}|p{2.2cm}|p{5.4cm}|}
+\begin{tabular}{|P{2.6cm}|P{2.6cm}|P{2.2cm}|P{5.4cm}|}
 \hline
 \textbf{Entity} & \textbf{Field} & \textbf{Type} & \textbf{Description} \\ \hline
 Subject & subject\_id & String & De-identified key linking genotype and scan. \\ \hline
@@ -263,7 +264,7 @@ Prediction & baseline\_params & Float array & Demographic-baseline FLAME shape f
 This section identifies the main risks to the project, together with their category, cause, potential impact, likelihood, severity, and the mitigation and contingency measures planned for each. Because FaceCon is a research and development project that depends on controlled-access data and uncertain experimental outcomes, the most significant risks are concentrated in the data, methodological, and evaluation categories rather than in conventional software-failure categories. Table~\ref{tab:risk} summarizes the analysis.
 
 {\footnotesize\setlength{\LTpre}{6pt}\setlength{\LTpost}{0pt}
-\begin{longtable}{|p{2.5cm}|p{3.3cm}|p{2.5cm}|p{1.6cm}|p{3.0cm}|}
+\begin{longtable}{|P{2.5cm}|P{3.3cm}|P{2.5cm}|P{1.6cm}|P{3.0cm}|}
 \caption{Risk analysis for the FaceCon project.}\label{tab:risk}\\
 \hline
 \textbf{Risk / Category} & \textbf{Description and Cause} & \textbf{Potential Impact} & \textbf{Likelihood / Severity} & \textbf{Mitigation and Contingency} \\ \hline
@@ -274,7 +275,7 @@ This section identifies the main risks to the project, together with their categ
 \hline
 \endfoot
 Delayed or denied data access \newline (Access / Data) & Approval for dbGaP and FaceBase may be slow or refused, owing to institutional review and data-use-agreement processes. & Training on real data is blocked and the schedule may slip. & Medium / High & Develop and validate the pipeline on synthetic data in parallel. Contingency: continue methodological and synthetic-data work and escalate the access request. \\ \hline
-Small usable paired-sample size \newline (Data / Methodological) & Few subjects may have both a genotype and a valid 3D scan after quality control, because of scarcity and filtering. & Low statistical power and a tendency for complex models to overfit. & High / High & Prefer simple, regularized models and strong baselines, and report confidence intervals. Contingency: restrict scope to baselines and report limits honestly. \\ \hline
+Small usable paired-sample size \newline (Data / Methodological) & Few subjects may have both a genotype and a valid 3D scan after QC, because of scarcity and filtering. & Low statistical power and a tendency for complex models to overfit. & High / High & Prefer simple, regularized models and strong baselines, and report confidence intervals. Contingency: restrict scope to baselines and report limits honestly. \\ \hline
 Poor scan to FLAME fitting \newline (Data quality / Preprocessing) & Some scans may register poorly to FLAME, owing to noise, missing regions, or landmark errors. & Label noise in training targets and biased evaluation. & Medium / Medium & Enforce fitting-error thresholds and exclude or flag poor fits. Contingency: correct landmarks manually or exclude the subject with documentation. \\ \hline
 Demographic and population confounding \newline (Methodological / Evaluation) & Age, gender, and ancestry drive facial variation and can inflate apparent genotype accuracy. & Overstated individual-level genetic contribution. & High / Medium & Evaluate demographic-only, genotype-only, and combined models and report the incremental gain. Contingency: stratified analysis and explicit reporting of confounding. \\ \hline
 Data leakage across splits \newline (Methodological / Evaluation) & Subjects or fitted statistics could leak between splits through relatedness or statistics fitted on all data. & Optimistic, irreproducible results. & Medium / High & Use subject-level splits that respect relatedness and fit statistics on training folds only. Contingency: re-run with corrected splits and discard affected results. \\ \hline
@@ -286,4 +287,4 @@ Schedule compression \newline (Schedule) & Research uncertainty and data delays 
 }
 
 \section{Conclusion}
-This chapter has specified FaceCon's features, its functional and non-functional requirements in a formal and testable form, the quality attributes, the assumptions, the central use cases, the hardware and software needs, a privacy-respecting demonstration interface, a file data design with a data dictionary, and a detailed risk analysis. The next chapter develops the proposed approach and methodology that satisfy these requirements.
+This chapter has specified what FaceCon must do and how well it must do it. The features were turned into functional requirements written in a testable form, so that each can be traced to a test case in Chapter~\ref{ch:impl}, and the non-functional requirements fixed the properties that matter most for a research system of this kind: reproducibility, protection of controlled-access data, and the separation of training data from everything used to judge a model. The use cases describe how a user selects a held-out subject, generates a prediction, and compares it with the demographic baseline and the ground truth, and the interface designs give those use cases a concrete form. The data design records the artefacts the pipeline produces in a data dictionary rather than a relational schema, since FaceCon stores structured files and not transactions. The risk analysis anticipated the most serious problem the project met, the delay in data access, and its mitigation, a simulated cohort, is what made the rest of this phase possible. The next chapter develops the methodology that meets these requirements.

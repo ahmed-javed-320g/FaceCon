@@ -1,0 +1,84 @@
+\chapter{User Manual}
+\label{ch:manual}
+This chapter explains how to install FaceCon, how to reproduce the results reported in Chapter~\ref{ch:results}, and how to use the demonstrator. FaceCon has two kinds of user, and the chapter serves both. A researcher runs the pipeline from the command line to generate a cohort, train and evaluate the models, and check the controls. A reader of the results, such as a supervisor or an examiner, opens the demonstrator in a web browser to inspect individual predictions and the evidence behind each finding. The pipeline is a set of Python scripts driven by configuration files, so every experiment is repeated by running the same command with the same configuration, and no step requires editing the code. The commands below are given exactly as they are typed from the root folder of the repository. The generator refuses to overwrite the cohort on which the reported results depend, and every stored result file is kept under version control, so a regenerated result can always be compared with the stored one before it is accepted.
+
+\section{System Requirements}
+\label{sec:manual-req}
+The pipeline runs on any computer with a current version of Python~3 under Windows, macOS, or Linux; it was developed and tested with Python~3.12 and 3.13. The linear models, the controls, the scan-fitting validation, and the test suite run on an ordinary processor in minutes. The neural models of Chapter~\ref{ch:impl} also run on a processor, but a graphics card with CUDA support shortens their training considerably, and it is detected automatically when present. The experiment on real genotypes additionally needs PLINK~2~\cite{ref:plink} and the public 1000 Genomes files~\cite{ref:kgenomes}, which are converted once into the format the pipeline reads. The demonstrator needs only a current web browser. It reads one precomputed data file and needs no server and no internet connection, so it can be opened directly from a USB drive on a presentation machine.
+
+\section{Installation}
+\label{sec:manual-install}
+The code is obtained from the project repository and its Python dependencies are installed into a virtual environment. The dependencies are listed in one requirements file and comprise NumPy, SciPy, scikit-learn, PyTorch, trimesh, PyYAML, and pytest. Installing them in a virtual environment keeps them separate from any other Python software on the computer.
+\par\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=shell]
+git clone https://github.com/ahmed-javed-320g/FaceCon.git
+cd FaceCon
+python -m venv .venv
+.venv\Scripts\activate          (on macOS or Linux: source .venv/bin/activate)
+python -m pip install -r requirements.txt
+\end{lstlisting}
+\end{minipage}\par
+The installation is checked by running the automated test suite described in Chapter~\ref{ch:impl}. All 44 tests should pass, and a failure at this stage almost always means that a dependency is missing or that the commands were run from a folder other than the repository root.
+\par\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=shell]
+python -m pytest -q
+\end{lstlisting}
+\end{minipage}\par
+
+\section{Running the Pipeline}
+\label{sec:manual-run}
+The pipeline is run in three steps, each of which reads the output of the one before. The first step generates a simulated cohort from a configuration file. The configuration fixes the number of subjects, the SNP panel, the size of the planted genetic share, and, for the experiments of Section~\ref{sec:res-nonadd}, whether that share is additive. Passing a seed and an output folder produces an independent replicate cohort without touching any existing one.
+\par\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=shell]
+python scripts/generate_matched.py config/na_mix.yaml --seed 11 --out-dir outputs/na_mix_s11
+\end{lstlisting}
+\end{minipage}\par
+The second step runs the linear ladder and the controls. It fits each model of the ladder over five cohorts, applies the shuffled-genotype and zero-share controls, and prints a pass or fail line for every acceptance check, stopping with an error if any check fails. A result whose checks do not pass should not be reported.
+\par\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=shell]
+python -m gpu.controls --config config/real_match.yaml --out gpu/check_controls.json
+\end{lstlisting}
+\end{minipage}\par
+The third step trains the neural models and compares them with the linear reference. Given several cohorts, it reports the gap between the best neural model and the linear reference for each cohort, together with a confidence interval over the cohorts.
+\par\noindent\begin{minipage}{\linewidth}
+\begin{lstlisting}[style=shell]
+python -m gpu.run_all --data-dirs outputs/na_mix_s11,outputs/na_mix_s12,outputs/na_mix_s13 --feature-sets screen,screen_na --models mlp,transformer --out gpu/check_run_all.json
+\end{lstlisting}
+\end{minipage}\par
+
+\section{Reproducing the Reported Results}
+\label{sec:manual-repro}
+Each result in Chapter~\ref{ch:results} is stored in the repository as a file, and each can be regenerated with one command. Table~\ref{tab:manual-repro} lists the main results with the command that produces them and the file in which they are kept. Each command in the table writes to a new file, so the regenerated result can be compared with the stored one to confirm that it has been reproduced. The scan-fitting and demonstrator commands have no output option and write to their stored location, which version control then shows as changed or unchanged.
+
+\begin{table}[!ht]
+\centering
+\caption{Commands that reproduce the main results of Chapter~\ref{ch:results}.}
+\label{tab:manual-repro}
+\small\setstretch{1.15}
+\begin{tabular}{|P{3.3cm}|P{6.6cm}|P{3.6cm}|}
+\hline
+\textbf{Result} & \textbf{Command} & \textbf{Stored file} \\ \hline
+Baseline ladder and controls & \texttt{python -m gpu.controls}\newline\texttt{--config config/real\_match.yaml}\newline\texttt{--out gpu/check\_controls.json} & \texttt{gpu/controls.json} \\ \hline
+Non-additive cohorts & \texttt{python -m gpu.controls}\newline\texttt{--config config/na\_mix.yaml}\newline\texttt{--out gpu/check\_na\_mix.json} & \texttt{gpu/controls\_}\newline\texttt{na\_mix.json} \\ \hline
+Regions and subgroups & \texttt{python scripts/rq6\_rq7.py}\newline\texttt{--out gpu/check\_rq6\_rq7.json} & \texttt{gpu/rq6\_rq7.json} \\ \hline
+Scan-fitting validation & \texttt{python -m gpu.flame\_fit} & \texttt{gpu/flame\_fit\_}\newline\texttt{validation.json} \\ \hline
+Demonstrator data & \texttt{python scripts/export\_demo.py} & \texttt{app/data/demo.js} \\ \hline
+\end{tabular}
+\end{table}
+
+\section{Using the Demonstrator}
+\label{sec:manual-demo}
+The demonstrator is opened by double-clicking the file \texttt{app/index.html}, which loads in the default web browser. It opens in a dark theme, and a button at the top right switches to a light theme for bright rooms. Three views are reached from the links at the top of the page. A notice beside them states that the faces are simulated, and it remains visible in every view so that no screenshot can be mistaken for a prediction of a real person.
+
+\subsection{Explore View}
+The Explore view, shown in Figure~\ref{fig:demo-explore}, is where individual predictions are examined. The user first selects a held-out subject from the list on the left, which can be narrowed by sex and by ancestry group, and which shows beside each subject how many millimetres closer the SNP model gets than the demographic baseline. The predicted and true faces then appear side by side and rotate together. The buttons above them choose which model is shown: the mean face, the demographic baseline, the ridge model on demographics and SNPs, or the neural network. When the option to colour the prediction by its error is ticked, each point of the predicted face is shaded by its distance from the true face, so the regions a model gets wrong are visible at a glance. The faces can be turned by dragging, set to face forward, or left to turn slowly. The panel on the right lists the subject's details, the error of every model for that subject, and the eye, hair, and skin colour probabilities from the HIrisPlex-S module.
+
+\subsection{Results View}
+The Results view, shown in Figure~\ref{fig:demo-results}, presents the findings of Chapter~\ref{ch:results}. Two tabs switch between the experiments on real genotypes from the 1000 Genomes Project and those on simulated genotypes. Each finding is stated in a sentence, illustrated with a chart, and followed by the name of the result file it comes from, so that any number on the page can be traced to the file that produced it and to the command in Table~\ref{tab:manual-repro} that regenerates it. The Pipeline view, the third, lists the stages of the pipeline and the data on which each has been tested, and makes clear which stages still await the real cohort. A separate page, opened from the Explore view, presents the same predictions as an animated reveal for use in a presentation.
+
+\section{Troubleshooting}
+\label{sec:manual-trouble}
+A few problems account for nearly all failures, and each produces a recognisable message. If Python reports that a module cannot be found, the virtual environment is not active or the requirements were not installed, and the installation steps should be repeated. If a script reports that a file or folder does not exist, it was almost certainly run from a folder other than the repository root. If the cohort generator refuses to write its output, the chosen folder is the one on which the reported results depend, and a different output folder should be given; the generator overrides this protection only when explicitly asked to. If the neural models train slowly, no graphics card was found and they are running on the processor, which is correct but slower. If the demonstrator shows an empty page, its data file is missing and is restored by rerunning the export command in Table~\ref{tab:manual-repro}.
+
+\section{Conclusion}
+This chapter has described how FaceCon is installed, run, and used. The pipeline is operated entirely through commands and configuration files, so that an experiment is repeated exactly by repeating its command, and each result in this report can be regenerated from the repository and compared with the stored version. The demonstrator makes the same results accessible to readers who do not run code, and it ties every number it shows to the file that produced it. Together, the command-line pipeline and the demonstrator meet the reproducibility requirement set out in Chapter~\ref{ch:srs}: a third party can obtain the code, regenerate every reported result, and inspect individual predictions without relying on the authors' own account of them. When the real cohort arrives, the same commands will run on it unchanged, with only the configuration pointing at the new data. The next chapter reports the experiments that these tools produced.

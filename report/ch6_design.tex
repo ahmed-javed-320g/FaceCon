@@ -1,11 +1,12 @@
 \chapter{High-Level and Low-Level Design}
-This chapter presents the design of FaceCon, from the overall architecture down to the classes, modules, and interface contracts that implement it. The design realizes the methodology of the previous chapter and keeps the pipeline stages modular, so that any stage can be developed, tested, or replaced independently and so that simple and complex models share common data and decode interfaces. Throughout the chapter it is important to keep three ideas distinct: the system (software) architecture, which is how the code and its components are organized; the machine-learning model architecture, which is the internal structure of a particular predictor such as an MLP or a transformer; and the modelling strategy, which is the baselines first progression described in Chapter~5. This chapter concerns the first of these, and refers to the other two only where the software must accommodate them.
+\label{ch:design}
+This chapter presents the design of FaceCon, from the overall architecture down to the classes, modules, and interface contracts that implement it. The design realizes the methodology of the previous chapter and keeps the pipeline stages modular, so that any stage can be developed, tested, or replaced independently and so that simple and complex models share common data and decode interfaces. Throughout the chapter it is important to keep three ideas distinct: the system (software) architecture, which is how the code and its components are organized; the machine-learning model architecture, which is the internal structure of a particular predictor such as an MLP or a transformer; and the modelling strategy, which is the baselines first progression described in Chapter~\ref{ch:method}. This chapter concerns the first of these, and refers to the other two only where the software must accommodate them.
 
 \section{System Overview}
 FaceCon is a layered, modular system. A thin interface layer exposes configuration-driven tools for the researcher-developer and evaluator, together with a lightweight local web demonstrator. Beneath it, a processing layer contains the pipeline modules for genotype QC and SNP selection, scan to FLAME fitting, subject matching and splitting, model training, and evaluation. A model layer holds the interchangeable shape predictors (mean-face, demographic, ridge, MLP, and optional advanced models) together with the shared FLAME decoder, and a parallel appearance component that integrates the established HIrisPlex-S predictor and renders its eye, hair, and skin colour outputs onto the decoded face. A data layer persists genotypes, registered meshes, FLAME parameters, splits, checkpoints, and results. This separation lets the scientific logic, the model definitions, and the storage evolve independently, and it keeps the demonstrator a thin client over the trained shape models and the integrated appearance predictor.
 
 \section{Design Considerations}
-This section records the assumptions, constraints, and guiding goals that shape the design before the architecture is presented, together with the development method followed.
+This section records the assumptions, constraints, and guiding goals that shape the design before the architecture is presented, together with the development method followed. They are stated first because they explain choices that might otherwise look arbitrary, such as why the system stores files rather than a database, why every model sits behind one interface, and why the simplest adequate model is always preferred.
 
 \subsection{Assumptions and Dependencies}
 FaceCon assumes access to the required FLAME model files, genotype-processing tools, deep learning libraries, and 3D mesh utilities. It also depends on approved access to the 3DFN genotype and facial data, which must be stored and processed according to the applicable data-use agreement. The system assumes a consistent FLAME topology for facial representation. The main pipeline is intended for technical users, while the final demonstrator is designed so that evaluators can view and compare predictions without needing knowledge of the underlying implementation.
@@ -46,7 +47,7 @@ Figure~\ref{fig:arch} shows the layered architecture. Control flows downward fro
 The processing layer is decomposed into two loosely-coupled subsystems that share the data layer. The data-preparation subsystem, which performs QC, SNP selection, FLAME fitting, subject matching, and splitting, is deterministic and runs once per data release to produce the paired dataset and fixed splits. The learning and evaluation subsystem, which contains the models, the FLAME decoder, the metrics, the baselines, and the ablations, is run many times during experimentation. Separating them ensures that the costly preparation is not repeated during model iteration and that either subsystem can be tested in isolation against fixed artifacts. The codebase organization mirrors this decomposition, with top-level packages for \texttt{data}, \texttt{preprocessing}, \texttt{flame}, \texttt{models}, \texttt{appearance}, \texttt{training}, \texttt{evaluation}, \texttt{experiments}, and \texttt{configs}. The \texttt{appearance} package holds the HIrisPlex-S marker extraction, the integration wrapper around the external HIrisPlex-S predictor, and the renderer; it reuses the same genotype loaders as the shape pipeline but trains no model of its own.
 
 \section{Architectural Strategies}
-This section evaluates the main software-architecture strategies that were considered for FaceCon and states which were adopted. These are decisions about how the system is structured, and they are distinct from the choice of machine-learning model architecture and from the modelling strategy, both of which belong to Chapter~5.
+This section evaluates the main software-architecture strategies that were considered for FaceCon and states which were adopted. These are decisions about how the system is structured, and they are distinct from the choice of machine-learning model architecture and from the modelling strategy, both of which belong to Chapter~\ref{ch:method}.
 
 \subsection{Monolithic Script}
 A monolithic design would place preprocessing, modelling, and evaluation in a single script or notebook. It is quick to start and needs no interface design. However, it tightly couples unrelated concerns, makes reproducibility and testing difficult, and would force the expensive data preparation to be repeated on every run. For a project that must run many model experiments on fixed data, this approach was judged inappropriate.
@@ -69,12 +70,12 @@ FaceCon adopts a layered modular pipeline in which models are interchangeable be
 \section{Domain Model / Class Diagram}
 Figure~\ref{fig:class} shows the principal classes of FaceCon, their key responsibilities, and their relationships. The diagram distinguishes three relationship types: solid lines for associations (one class uses another), dashed arrows for dependencies (one class consumes another's output or type), and hollow-triangle arrows for inheritance (a concrete class realizes an interface). It covers both the research pipeline and the demonstrator. Table~\ref{tab:models} then lists the model inventory that the \texttt{Model} interface makes interchangeable.
 
-\begin{figure}[!ht]
+\begin{sidewaysfigure}
 \centering
-\includegraphics[width=\textwidth]{Figures/class_diagram.png}
+\includegraphics[width=0.98\textheight,height=0.86\textwidth,keepaspectratio]{Figures/class_diagram.pdf}
 \caption{Class diagram of FaceCon.}
 \label{fig:class}
-\end{figure}
+\end{sidewaysfigure}
 
 The diagram reflects the architecture directly. On the research side, \texttt{ExperimentRunner} is the orchestrator and is associated with \texttt{DatasetBuilder}, the \texttt{Model} interface, and \texttt{Evaluator}. \texttt{DatasetBuilder} depends on the outputs of \texttt{GenotypeProcessor} and \texttt{FlameFitter} and reads data through the \texttt{DataLoader} interface, which is realized by \texttt{SyntheticLoader} and \texttt{RealLoader} so that synthetic and real data are interchangeable. Every concrete predictor, from \texttt{MeanFaceModel} and \texttt{DemographicRegressor} through \texttt{RidgeModel}, \texttt{MLPModel}, and \texttt{TransformerModel}, realizes the single \texttt{Model} interface and is therefore interchangeable. Each model's predicted FLAME parameters are decoded by the shared \texttt{FlameDecoder}, and \texttt{Evaluator} computes metrics and baselines over the decoded meshes and the predicted parameters. The appearance component is a thin integration rather than a trained model: \texttt{HirisplexExtractor} selects the HIrisPlex-S marker SNPs from the same genotype, and \texttt{HirisplexPredictor} wraps the external, already-validated HIrisPlex-S method to return eye, hair, and skin colour; \texttt{AppearanceRenderer} then applies the predicted skin colour and eye colour to the decoded mesh and reports hair colour, rendering it only where suitable hair geometry exists. No appearance model is trained or scored by \texttt{Evaluator}. On the demonstrator side, \texttt{WebUI} requests predictions from \texttt{InferenceController}, which runs the trained \texttt{Model} and the integrated \texttt{HirisplexPredictor}, decodes the result through \texttt{FlameDecoder}, colours it through \texttt{AppearanceRenderer}, and reads metrics from \texttt{Evaluator}, while \texttt{Visualizer} renders the resulting faces in the interface. These demonstrator classes are the software counterparts of the interactions shown in the sequence diagrams of Section~\ref{sec:seq}.
 
@@ -83,7 +84,7 @@ The diagram reflects the architecture directly. On the research side, \texttt{Ex
 \caption{Model inventory, all realizing the common Model interface and shared FLAME-decode contract.}
 \label{tab:models}
 \small
-\begin{tabular}{|p{3.6cm}|p{3.2cm}|p{2.4cm}|p{3.0cm}|}
+\begin{tabular}{|P{3.6cm}|P{3.2cm}|P{2.4cm}|P{3.0cm}|}
 \hline
 \textbf{Model} & \textbf{Input} & \textbf{Output} & \textbf{Role} \\ \hline
 Mean face & --- & mean $Y_{\mathrm{face}}$ & Baseline 0 \\ \hline
@@ -127,16 +128,17 @@ Figure~\ref{fig:seq2} shows the evaluation and results interaction (UC-06), in w
 Figure~\ref{fig:seq3} shows the simple return interaction, in which the user navigates from the evaluation and results view back to subject selection and the system resets the viewers and reloads the list of held-out subjects.
 
 \begin{figure}[!ht]
-\centering
-\includegraphics[width=0.85\textwidth]{Figures/seq3.png}
+\centering\setstretch{1}
+\input{Figures/seq3_tikz}
 \caption{Sequence diagram for returning to subject selection (UC-06, UC-04).}
 \label{fig:seq3}
 \end{figure}
 
 \section{Policies and Tactics}
-This section records design policies and tactics that shape the implementation without altering the high-level architecture.
+This section records design policies and tactics that shape the implementation without altering the high-level architecture. Where the architecture fixes which components exist, these policies fix how they must behave, and most of them exist to protect the validity of the results. They cover the contracts between components, the handling of controlled-access data, reproducibility, the prevention of data leakage, input validation, and the traceability of tests to requirements.
 
 \subsection{Interface Contracts}
+\label{sec:interfaces}
 The system is held together by six small, explicit interface contracts, which also make synthetic and real data interchangeable.
 \begin{itemize}
 \item The genotype interface produces $X_{\mathrm{snp}}$ and subject identifiers, and is interchangeable between synthetic and real data loaders.
@@ -163,4 +165,4 @@ Each module validates its inputs and fails safely on malformed data, reporting t
 Coding conventions require modular packages per pipeline stage, typed function signatures, and no hard-coded machine-specific paths. Each module is unit-tested on synthetic inputs, and an end-to-end integration test runs on synthetic data before real data is used. Requirements traceability is maintained by linking each functional requirement to a use case and a planned test.
 
 \section{Conclusion}
-This chapter has presented FaceCon's design as a four-layer, modular architecture that realizes the methodology. It evaluated and selected the software-architecture strategies, presented a detailed class model with explicit inheritance, association, and dependency relationships, and recorded the interface contracts and the policies for privacy, reproducibility, leakage prevention, validation, and traceability. Together with the preceding chapters, it specifies a system that can be implemented and evaluated reproducibly once controlled-access data is available.
+This chapter has presented FaceCon's design as a four-layer modular architecture. The interface layer, the processing layer, the model layer, and the data layer each have one responsibility, and they communicate only through the small set of explicit contracts recorded in this chapter. Several architectural strategies were considered, and a layered pipeline with interchangeable models behind a shared interface was selected because it lets the simplest baseline and the most complex network be trained, evaluated, and compared through exactly the same code. The class diagram makes that structure precise, distinguishing the associations, dependencies, and inheritance between the components, and the sequence diagrams show how the main use cases move through them at run time. The policies and tactics turn the requirements of Chapter~\ref{ch:srs} into rules the code must follow, covering privacy and access control, reproducibility, the prevention of data leakage, input validation, and the traceability of tests to requirements. The next chapter describes the prototype that implements this design and the test cases that verify it.
