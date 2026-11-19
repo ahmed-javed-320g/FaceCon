@@ -346,11 +346,24 @@ validated end to end on a stand-in cohort: it is direction-sensitive (AUC 0.995 
 labels correctly oriented, 0.000 reversed) and its 1000-shuffle null sits on 0.5. It has
 **not been run on real PGP data**, because the site no longer serves it.
 
-Observed directly: `my.personalgenomes.org` returns 301 to `my.pgp-hms.org`, and
-`my.pgp-hms.org` presents a Let's Encrypt certificate whose only subject is
-`my.personalgenomes.org`. Each canonical name therefore fails against the other, and the
-redirect pair forms a loop. This is a server-side misconfiguration that no client change
-resolves cleanly.
+Observed directly, with `scripts/pgp_probe.py`, which issues one request per URL and
+follows no redirects. Two independent faults:
+
+1. `my.pgp-hms.org` presents a Let's Encrypt certificate whose only subject is
+   `my.personalgenomes.org`, so requests to the canonical host fail hostname
+   verification. This one is survivable: the downloader pins verification to the name
+   the certificate carries, which was tested offline against a local TLS server
+   (correct name accepted, wrong name and untrusted issuer both refused).
+2. Fatal, and the reason the check cannot run: **every URL on `my.pgp-hms.org` returns
+   301 to itself.** `/users` redirects to `/users`, `/` to `/`, and so on, over both
+   HTTPS and plain HTTP, with browser and non-browser user agents alike. A target
+   identical to the request is the signature of an origin behind a load balancer that
+   does not know the connection is already TLS and applies its http-to-https rule
+   unconditionally. `my.personalgenomes.org` is not in a cycle with it; it forwards once
+   to `my.pgp-hms.org`, which then loops on itself.
+
+No client can resolve a server that redirects every request to itself, so this is not a
+limitation of our implementation and no further attempt is warranted.
 
 This matters beyond one unrun check. openSNP, the other open source pairing genotypes
 with self-reported phenotypes, shut down permanently in April 2025. The open

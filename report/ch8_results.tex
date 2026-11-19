@@ -161,7 +161,15 @@ Skin colour & intermediate 72.5, pale 14.0, very pale 12.2, dark to black 1.1, d
 \end{tabular}
 \end{table}
 
-These figures show that the module runs end to end on the same genotype file as the shape models and returns a varied and plausible mix of categories, which is what RQ8 asks of the integration. They are not a measure of accuracy. The marker frequencies in the simulation are synthetic, the cohort has no colour labels to compare against, and, as stated in Section~\ref{sec:impl-appearance}, the coefficients in the module reproduce the public calculator and have not yet been checked against the published parameters.
+These figures show that the module runs end to end on the same genotype file as the shape models and returns a varied and plausible mix of categories, which is what RQ8 asks of the integration. They are not a measure of accuracy. The marker frequencies in the simulation are synthetic and the cohort has no colour labels to compare against.
+
+\subsection{Why the Colour Component Was Not Tested on Real People}
+\label{sec:res-appearance-untested}
+Colour is the one part of FaceCon that could in principle have been checked against real human phenotypes, because the model is a published one that this project did not fit, and because self-reported eye colour is the kind of label an open cohort might carry. The check was written: it maps survey answers onto the model's three categories, scores one-against-rest areas under the curve, and compares them against a null built from a thousand label shuffles. It was validated end to end on a stand-in cohort, where it proved sensitive to the direction of the labels, scoring $0.995$ with them correctly oriented and $0.000$ reversed, with the shuffled null centred on one half as it should be.
+
+It was never run, because the data source stopped serving. The intended cohort was the Harvard Personal Genome Project, whose participants publish genotype files and trait surveys under a public-domain dedication, making it usable without an access application. Its site now answers every request with a redirect to the identical address, over both plain and encrypted connections and regardless of the client, which no client can resolve; a separate fault leaves its certificate valid only for a hostname that forwards to the one that loops. The other candidate, openSNP, which paired consumer genotypes with self-reported traits, shut down permanently in April 2025 and deleted its data.
+
+This is worth stating as more than an inconvenience. The open genotype-and-phenotype resources on which an independent check of a published appearance model depends have largely ceased to exist, and a project without institutional data access has no remaining route to one. FaceCon therefore reports its colour component as integrated and faithful to the official calculator, and makes no claim whatever about its accuracy on real people. That silence is not a choice of scope: it is the honest consequence of there being nothing left to test against.
 
 \section{Experiments on Real Genotypes}
 \label{sec:res-real}

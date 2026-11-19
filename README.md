@@ -98,9 +98,13 @@ injected rather than invented:
    ≈0"), which the audit showed were an artefact of our own feature pipeline. Do
    not cite it; `EVALUATION.md` and `gpu/rq5_results.tex` supersede it. The
    demonstrator in `app/` was rebuilt on the corrected pipeline and is current.
-2. **The HIrisPlex-S coefficients were reverse-derived by probing the public web
-   calculator**, not read from the publication. Replacing them with the
-   published parameters is an open task.
+2. **The colour component is untested on real people, and will stay that way.**
+   The HIrisPlex-S coefficients were recovered by probing the official calculator
+   and validated against it, and FaceCon fits nothing. The check against real
+   self-reported eye colour is written and validated on a stand-in cohort but
+   cannot run: Harvard PGP now redirects every URL to itself (see
+   `scripts/pgp_probe.py` and PREREGISTRATION.md A8), and openSNP shut down in
+   April 2025. No accuracy claim is made for this component.
 3. **The simulated panel is easier than reality**: 5,000 unlinked SNPs instead of
    ~10⁶ correlated ones, dense causal effects, three cleanly separated ancestry
    groups, so its power figures are optimistic upper bounds. A second cohort uses
