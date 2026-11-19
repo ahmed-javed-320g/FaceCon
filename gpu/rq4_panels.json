@@ -1,0 +1,84 @@
+{
+ "n_leads_found": 13,
+ "ld_window_bp": 250000,
+ "n_random_panels": 100,
+ "arms": {
+  "published_effects": {
+   "baseline_r2": 0.2691331877321184,
+   "n_neighbours": 278,
+   "n_leads": 13,
+   "versions": {
+    "leads only": {
+     "panel_size": 13,
+     "gain": -0.0009521957578113582,
+     "random_mean": -0.0036668259659388587,
+     "random_sd": 0.0033070178974715083,
+     "random_p05": -0.009339051540232915,
+     "random_p95": 0.0011140520177727673,
+     "percentile": 81.0
+    },
+    "leads + neighbours": {
+     "panel_size": 291,
+     "gain": -0.06461400104821716,
+     "random_mean": -0.05666557774571542,
+     "random_sd": 0.010348621616536468,
+     "random_p05": -0.07324663177717164,
+     "random_p95": -0.040276601194529256,
+     "percentile": 24.0
+    },
+    "neighbours only": {
+     "panel_size": 278,
+     "gain": -0.06526618919985655,
+     "random_mean": -0.055211791023122236,
+     "random_sd": 0.010696767444292548,
+     "random_p05": -0.0726595751139946,
+     "random_p95": -0.038407691564844866,
+     "percentile": 15.0
+    }
+   }
+  },
+  "control": {
+   "baseline_r2": 0.2700272732443156,
+   "n_neighbours": 278,
+   "n_leads": 0,
+   "versions": {
+    "leads only": {
+     "panel_size": 0,
+     "gain": 0.0,
+     "random_mean": 0.0,
+     "random_sd": 0.0,
+     "random_p05": 0.0,
+     "random_p95": 0.0,
+     "percentile": 0.0
+    },
+    "leads + neighbours": {
+     "panel_size": 278,
+     "gain": -0.06655218668343599,
+     "random_mean": -0.055569519996991446,
+     "random_sd": 0.010752749961999571,
+     "random_p05": -0.0737507369886237,
+     "random_p95": -0.03989060784524467,
+     "percentile": 14.000000000000002
+    },
+    "neighbours only": {
+     "panel_size": 278,
+     "gain": -0.06655218668343599,
+     "random_mean": -0.05487091189607698,
+     "random_sd": 0.011357972041579269,
+     "random_p05": -0.07390544425721106,
+     "random_p95": -0.03445403339689295,
+     "percentile": 15.0
+    }
+   }
+  }
+ },
+ "target": "anthro_measures: the published-locus effects are injected onto the measurements only, never onto face_params",
+ "acceptance": {
+  "leads only above the 95th percentile (POSITIVE CONTROL ON THE TEST: the effects were planted on these very SNPs, so a failure here means the test cannot detect signal that is certainly present, and the other two lines are uninterpretable)": false,
+  "leads + neighbours above the 95th percentile (near-tautological: confirms planting)": false,
+  "neighbours only above the 95th percentile (the informative arm: linkage carries it)": false,
+  "control, leads only: near the median (25-75) when the loci carry nothing": false,
+  "control, leads + neighbours: near the median (25-75) when the loci carry nothing": false,
+  "control, neighbours only: near the median (25-75) when the loci carry nothing": false
+ }
+}

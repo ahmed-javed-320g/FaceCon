@@ -61,6 +61,8 @@ Each result in Chapter~\ref{ch:results} is stored in the repository as a file, a
 Baseline ladder and controls & \texttt{python -m gpu.controls}\newline\texttt{--config config/real\_match.yaml}\newline\texttt{--out gpu/check\_controls.json} & \texttt{gpu/controls.json} \\ \hline
 Non-additive cohorts & \texttt{python -m gpu.controls}\newline\texttt{--config config/na\_mix.yaml}\newline\texttt{--out gpu/check\_na\_mix.json} & \texttt{gpu/controls\_}\newline\texttt{na\_mix.json} \\ \hline
 Regions and subgroups & \texttt{python scripts/rq6\_rq7.py}\newline\texttt{--out gpu/check\_rq6\_rq7.json} & \texttt{gpu/rq6\_rq7.json} \\ \hline
+Neural models, non-additive & \texttt{python -m gpu.run\_all}\newline\texttt{--data-dirs <three na\_mix cohorts>}\newline\texttt{--out gpu/check\_run\_all.json} & \texttt{gpu/run\_all\_}\newline\texttt{na\_mix.json} \\ \hline
+Mixed cohort, real genotypes & \texttt{python -m gpu.controls}\newline\texttt{--config config/kg\_na\_mix.yaml}\newline\texttt{--out gpu/check\_kg.json} & \texttt{gpu/controls\_}\newline\texttt{kg\_na\_mix.json} \\ \hline
 Scan-fitting validation & \texttt{python -m gpu.flame\_fit} & \texttt{gpu/flame\_fit\_}\newline\texttt{validation.json} \\ \hline
 Demonstrator data & \texttt{python scripts/export\_demo.py} & \texttt{app/data/demo.js} \\ \hline
 \end{tabular}

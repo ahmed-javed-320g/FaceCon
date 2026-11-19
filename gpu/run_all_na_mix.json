@@ -1,0 +1,208 @@
+{
+ "device": "cuda",
+ "replicates": [
+  [
+   "outputs/na_mix_s11",
+   {}
+  ],
+  [
+   "outputs/na_mix_s12",
+   {}
+  ],
+  [
+   "outputs/na_mix_s13",
+   {}
+  ]
+ ],
+ "over": "independently generated cohorts (each with its own split) and initialisations",
+ "results": {
+  "A | screen": {
+   "mean_face": [
+    -0.0015,
+    -0.0022,
+    -0.0024
+   ],
+   "demographics": [
+    0.3081,
+    0.3048,
+    0.3089
+   ],
+   "ridge_snp": [
+    0.0768,
+    0.0543,
+    0.0297
+   ],
+   "ridge_demo_snp": [
+    0.3488,
+    0.3426,
+    0.3415
+   ],
+   "_n_train": [
+    2182,
+    2182,
+    2182
+   ],
+   "mlp": [
+    0.2978,
+    0.2917,
+    0.2916
+   ],
+   "mlp_mesh": [
+    2.918,
+    3.034,
+    3.023
+   ],
+   "transformer": [
+    0.3062,
+    0.3031,
+    0.3082
+   ],
+   "transformer_mesh": [
+    2.93,
+    3.002,
+    2.998
+   ]
+  },
+  "C NEGATIVE CONTROL permuted | screen": {
+   "mean_face": [
+    -0.0015
+   ],
+   "demographics": [
+    0.3081
+   ],
+   "ridge_snp": [
+    -0.1666
+   ],
+   "ridge_demo_snp": [
+    0.3081
+   ],
+   "_n_train": [
+    2182
+   ],
+   "mlp": [
+    0.2497
+   ],
+   "mlp_mesh": [
+    3.055
+   ],
+   "transformer": [
+    0.3057
+   ],
+   "transformer_mesh": [
+    2.932
+   ]
+  },
+  "A | screen_na": {
+   "mean_face": [
+    -0.0015,
+    -0.0022,
+    -0.0024
+   ],
+   "demographics": [
+    0.3081,
+    0.3048,
+    0.3089
+   ],
+   "ridge_snp": [
+    0.1126,
+    0.1057,
+    0.0607
+   ],
+   "ridge_demo_snp": [
+    0.3904,
+    0.392,
+    0.3904
+   ],
+   "_n_train": [
+    2182,
+    2182,
+    2182
+   ],
+   "mlp": [
+    0.3251,
+    0.3249,
+    0.327
+   ],
+   "mlp_mesh": [
+    2.865,
+    2.935,
+    2.944
+   ],
+   "transformer": [
+    0.3065,
+    0.3043,
+    0.3078
+   ],
+   "transformer_mesh": [
+    2.93,
+    2.995,
+    2.994
+   ]
+  },
+  "C NEGATIVE CONTROL permuted | screen_na": {
+   "mean_face": [
+    -0.0015
+   ],
+   "demographics": [
+    0.3081
+   ],
+   "ridge_snp": [
+    -0.1573
+   ],
+   "ridge_demo_snp": [
+    0.308
+   ],
+   "_n_train": [
+    2182
+   ],
+   "mlp": [
+    0.2505
+   ],
+   "mlp_mesh": [
+    3.067
+   ],
+   "transformer": [
+    0.3043
+   ],
+   "transformer_mesh": [
+    2.939
+   ]
+  }
+ },
+ "checks": {
+  "C/screen: permuted SNP models gain <= 0.01 over demographics": true,
+  "C/screen: permuted ridge(demographics+SNP) gains <= 0.01 over demographics": true,
+  "C/screen_na: permuted SNP models gain <= 0.01 over demographics": true,
+  "C/screen_na: permuted ridge(demographics+SNP) gains <= 0.01 over demographics": true
+ },
+ "deep_vs_linear": {
+  "screen": {
+   "best_model": "transformer",
+   "gap_per_replicate": [
+    -0.04259999999999997,
+    -0.039500000000000035,
+    -0.03330000000000005
+   ],
+   "gap_mean": -0.038466666666666684,
+   "ci95": [
+    -0.05023082348789455,
+    -0.026702509845438812
+   ],
+   "ci_note": "t interval over replicates (t=4.303 for 3)"
+  },
+  "screen_na": {
+   "best_model": "mlp",
+   "gap_per_replicate": [
+    -0.06530000000000002,
+    -0.06709999999999999,
+    -0.06340000000000001
+   ],
+   "gap_mean": -0.06526666666666668,
+   "ci95": [
+    -0.06986325185364091,
+    -0.06067008147969245
+   ],
+   "ci_note": "t interval over replicates (t=4.303 for 3)"
+  }
+ }
+}
